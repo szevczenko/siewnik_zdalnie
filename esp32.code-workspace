@@ -1,0 +1,43 @@
+{
+    "folders": [
+        {
+            "path": "."
+        },
+        {
+            "path": "..//ESP8266_RTOS_SDK"
+        },
+        {
+            "name": "Tets",
+            "path": "../../../../../Users/Demetriusz/Documents/PlatformIO/Projects/Tets"
+        }
+    ],
+    
+    
+
+    "settings": {
+        "idf.openOcdConfigs": [
+            "board/esp32-wrover.cfg"
+        ],
+        "idf.customExtraVars": "",
+        "terminal.integrated.env.windows": {
+            "CHERE_INVOKING": "1",
+            "MSYSTEM": "MINGW32",
+            "PATH": "${env:PATH}:/home/Demetriusz/esp/xtensa-lx106-elf/bin",
+            "IDF_PATH": "/home/Demetriusz/esp/ESP8266_RTOS_SDK",
+            "OPENOCD_SCRIPTS": "${env:IDF_TOOLS_PATH}/tools/openocd-esp32/v0.10.0-esp32-20200309/openocd-esp32/share/openocd/scripts",
+        },
+        "terminal.integrated.shell.windows": "C:/msys32/usr/bin/bash.exe",
+        "terminal.integrated.shellArgs.windows": [
+            "--login",
+        ],
+        "editor.insertSpaces": false,
+        "editor.tabCompletion": "on",
+        "git.ignoreLimitWarning": true,
+        "files.associations": {
+            "cmd_server.h": "c",
+            "config.h": "c",
+            "*.inc": "c",
+            "ssd1306.h": "c"
+        },
+    }
+}    
