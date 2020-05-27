@@ -2,7 +2,7 @@
 #include "ssd1306.h"
 #include "console.h"
 
-#define debug_msg(...) consolePrintfTimeout(&con0, serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+#define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 bool bitmap[] = 
 {
@@ -49,6 +49,47 @@ int ssdFigureDrawLoadBar(loadBar_t * figure)
 			else if (y == figure->y || y == figure->height + figure->y - 1) {
 				ssd1306_DrawPixel(x, y, (SSD1306_COLOR) White);
 			}
+		}
+	}
+	return TRUE;
+}
+
+int ssdFigureDrawScrollBar(scrollBar_t * figure)
+{
+	if (figure == NULL) return FALSE;
+	if (figure->y_start > SSD1306_HEIGHT) return FALSE;
+	if (figure->all_line == 0) return FALSE;
+	float width = (float)figure->line_max / ((float)figure->all_line);
+	if (width >= 1.0) return FALSE;
+	int width_px = width * (SSD1306_HEIGHT - figure->y_start);
+	int step = (SSD1306_HEIGHT - figure->y_start - width_px)/figure->all_line; 
+	int start_scroll_y = step * (figure->actual_line + 1) + figure->y_start;
+	debug_msg("width_px %d, step %d, start_scroll_y %d\n", width_px, step, start_scroll_y);
+	for (int x = SSD1306_WIDTH - 4; x < SSD1306_WIDTH; x++)
+	{
+		for (int y = figure->y_start; y < SSD1306_HEIGHT; y++)
+		{
+			if (x <= SSD1306_WIDTH - 4 || x == SSD1306_WIDTH - 1) {
+				ssd1306_DrawPixel(x, y, (SSD1306_COLOR) White);
+				continue;
+			}
+			else if (y == figure->y_start || (y >= start_scroll_y && y <=start_scroll_y + width_px) || y == SSD1306_HEIGHT)  {
+				ssd1306_DrawPixel(x, y, (SSD1306_COLOR) White);
+				continue;
+			}
+			ssd1306_DrawPixel(x, y, (SSD1306_COLOR) Black);
+		}
+	}
+	return TRUE;
+}
+
+int ssdFigureFillLine(int y_start, int height)
+{
+	for(int y = y_start; y <= y_start + height; y++)
+	{
+		for (int x = 0; x < SSD1306_WIDTH; x++)
+		{
+			ssd1306_DrawPixel(x, y, (SSD1306_COLOR) White);
 		}
 	}
 	return TRUE;

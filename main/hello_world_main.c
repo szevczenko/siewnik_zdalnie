@@ -17,7 +17,9 @@
 #include "cmd_server.h"
 #include "but.h"
 #include "fast_add.h"
+#include "ssd1306.h"
 #include "ssd1306_tests.h"
+#include "menu.h"
 
 uint8_t test_value;
 uint8_t test_value_2 = 10;
@@ -73,18 +75,21 @@ void app_main()
     configInit();
     consoleStart();
     wifiDrvInit();
-    // if (config.dev_type != T_DEV_TYPE_SERVER)
-    // {
-    //     init_buttons();
-    //     fastProcessStartTask();
-    //     button1.rise_callback = bytton_rise_callback;
-    //     button1.fall_callback = bytton_fall_callback;
-    //     button1.timer_callback = bytton_time_callback;
-    //     button2.rise_callback = bytton2_rise_callback;
-    //     button2.fall_callback = bytton2_fall_callback;
-    //     button2.timer_callback = bytton2_time_callback;
-    // }
-    ssd1306_TestAll();
+    if (config.dev_type != T_DEV_TYPE_SERVER)
+    {
+        init_buttons();
+        fastProcessStartTask();
+        ssd1306_Init();
+        init_menu();
+        // button1.rise_callback = bytton_rise_callback;
+        // button1.fall_callback = bytton_fall_callback;
+        // button1.timer_callback = bytton_time_callback;
+        // button2.rise_callback = bytton2_rise_callback;
+        // button2.fall_callback = bytton2_fall_callback;
+        // button2.timer_callback = bytton2_time_callback;
+        // ssd1306_TestAll();
+    }
+    
     while(1)
     {
         vTaskDelay(MS2ST(1000));

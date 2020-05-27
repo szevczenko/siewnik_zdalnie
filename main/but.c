@@ -17,7 +17,7 @@
 extern uint8_t test_number;
 
 but_t button1, button2, button3, button4, button5, button6, button7, button8, button9, button10;
-but_t *but_tab[BUTTON_CNT] = {&button1, &button2, &button3};//, &button4, &button5, &button6, &button7, &button8, &button9, &button10};
+but_t *but_tab[BUTTON_CNT] = {&button1, &button2, &button3, &button4, &button5, &button6};// , &button7, &button8, &button9, &button10};
 extern time_t mktime;
 
 uint8_t read_button(but_t *but)
@@ -109,6 +109,7 @@ static void process_button(void * arg)
 	while(1)
 	{
 		//process
+		taskENTER_CRITICAL();
 		for (uint8_t i=0; i<BUTTON_CNT; i++)
 		{
 			red_val = read_button(but_tab[i]);
@@ -138,6 +139,7 @@ static void process_button(void * arg)
 				but_tab[i]->state = 0;
 			}
 		} // end for
+		taskEXIT_CRITICAL();
 		vTaskDelay(20 / portTICK_RATE_MS);
 	}// end while
 }
@@ -153,9 +155,13 @@ static void set_bit_mask(uint32_t *mask)
 void init_buttons(void)
 {
 	gpio_config_t io_conf;
+	//disable interrupt
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    //disable pull-down mode
+    io_conf.pull_down_en = 0;
 	init_but_struct();
 	//interrupt of rising edge
-    io_conf.intr_type = GPIO_INTR_POSEDGE;
+	io_conf.pin_bit_mask = 0;
     //bit mask of the pins, use GPIO4/5 here
 	set_bit_mask(&io_conf.pin_bit_mask);
     //set as input mode
@@ -163,7 +169,7 @@ void init_buttons(void)
     //enable pull-up mode
     io_conf.pull_up_en = 1;
     gpio_config(&io_conf);
-	xTaskCreate(process_button, "gpio_task", 2048, NULL, 10, NULL);
+	xTaskCreate(process_button, "gpio_task", 1024, NULL, 10, NULL);
 }
 
 /*

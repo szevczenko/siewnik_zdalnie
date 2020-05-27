@@ -1,33 +1,75 @@
 #include "config.h"
 #include "menu.h"
+#include "ssd1306.h"
+#include "ssdFigure.h"
+#include "but.h"
+#include "console.h"
+#include "semphr.h"
+#include "wifidrv.h"
+
+#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
+
+menu_token_t * entered_menu_tab[8];
+static SemaphoreHandle_t xSemaphore = NULL;
+static char wifi_device_list[16][33];
+static char devName[33];
+static uint16_t dev_count;
+static TickType_t connect_timeout;
 
 typedef enum
 {
-	T_ARG_TYPE_BOOL,
-	T_ARG_TYPE_VALUE,
-	T_ARG_TYPE_MENU,
-	T_ARG_TYPE_START,
-}menu_token_type_t;
-
-typedef struct menu_token
-{
-	int token;
-	char *name;
-	char *help;
-	void (*new_value)(uint32_t value);
-	menu_token_type_t arg_type;
-	struct menu_token **menu_list;
-	uint32_t * value;
-} menu_token_t;
-
-menu_token_t * entered_menu_tab[8];
+	ST_WIFI_FIND_DEVICE,
+	ST_WIFI_DEVICE_LIST,
+	ST_WIFI_DEVICE_TRY_CONNECT,
+	ST_WIFI_DEVICE_CONNECTED_FAILED,
+	ST_WIFI_CONNECT,
+}stateWifiMenu_t;
+static stateWifiMenu_t wifiState;
 
 uint32_t test_val_ = 43;
 bool test_bool_;
 
+uint32_t motor_value;
+uint32_t servo_value;
+bool motor_on;
+bool servo_on;
+
 menu_token_t test_val = 
 {
-	.name = "test_val",
+	.name = "test_val1",
+	.arg_type = T_ARG_TYPE_VALUE,
+	.value = &test_val_
+};
+
+menu_token_t test_val1 = 
+{
+	.name = "test_val2",
+	.arg_type = T_ARG_TYPE_VALUE,
+	.value = &test_val_
+};
+
+menu_token_t test_val2 = 
+{
+	.name = "test_val3",
+	.arg_type = T_ARG_TYPE_VALUE,
+	.value = &test_val_
+};
+
+menu_token_t test_val3 = 
+{
+	.name = "test_val4",
+	.arg_type = T_ARG_TYPE_VALUE,
+	.value = &test_val_
+};
+
+menu_token_t test_val4 = 
+{
+	.name = "test_val5",
 	.arg_type = T_ARG_TYPE_VALUE,
 	.value = &test_val_
 };
@@ -36,29 +78,568 @@ menu_token_t test_bool =
 {
 	.name = "test_bool",
 	.arg_type = T_ARG_TYPE_BOOL,
-	.value = &test_bool_
+	.value = (uint32_t *)&test_bool_
 };
 
+menu_token_t *setting_tokens[] = {&test_val, &test_bool, &test_val1, &test_val2, &test_val3, &test_val4, NULL};
+
+menu_token_t start_menu = 
+{
+	.name = "START",
+	.arg_type = T_ARG_TYPE_START,
+};
+
+menu_token_t wifi_menu = 
+{
+	.name = "DEVICES",
+	.arg_type = T_ARG_TYPE_WIFI,
+};
 
 menu_token_t setings = 
 {
 	.name = "SETINGS",
 	.arg_type = T_ARG_TYPE_MENU,
-	.menu_list = 
-	{
-		&test_val_,
-		&test_bool_,
-		{0},
-	},
+	.menu_list = setting_tokens
 };
+
+menu_token_t* main_menu_tokens[] = {/*&start_menu,*/ &setings, &wifi_menu, NULL} ;
 
 menu_token_t main_menu = 
 {
 	.name = "MENU",
 	.arg_type = T_ARG_TYPE_MENU,
-	.menu_list = 
-	{
-		&setings,
-		{0},
-	},
+	.menu_list = main_menu_tokens
 };
+
+static int len_menu(menu_token_t * menu)
+{
+	if (menu->menu_list == NULL)
+	{
+		debug_msg("menu->menu_list == NULL (%s)\n", menu->name);
+		return 0;
+	}
+	int len = 0;
+	menu_token_t ** actual_token = menu->menu_list;
+	do
+	{
+		if (actual_token[len] == NULL)
+		{
+			return len;
+		}
+		len++;
+	} while (len < 255);
+	return 0;
+}
+
+static menu_token_t * last_tab_element(void)
+{
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		if (entered_menu_tab[i] == NULL && i != 0)
+			return entered_menu_tab[i - 1];
+	}
+	return NULL;
+}
+
+static int tab_len(void)
+{
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		if (entered_menu_tab[i] == NULL)
+			return i;
+	}
+	return 0;
+}
+
+static void add_menu_tab(menu_token_t * menu)
+{
+	int pos = tab_len();
+	entered_menu_tab[pos] = menu;
+}
+
+static void remove_last_menu_tab(void)
+{
+	int pos = tab_len();
+	if (pos > 1)
+		entered_menu_tab[pos - 1] = NULL;
+}
+
+static void update_screen(void)
+{
+	xSemaphoreGive( xSemaphore );
+}
+
+void menu_start_find_device_I(void)
+{
+	if (last_tab_element() != &wifi_menu) return;
+	wifiState = ST_WIFI_FIND_DEVICE;
+	uint16_t ap_count = 0;
+	char dev_name[33];
+	wifiDrvStartScan();
+	wifiDrvGetScanResult(&ap_count);
+	for (uint16_t i = 0; i < ap_count; i++)
+	{
+		wifiDrvGetNameFromScannedList(i, dev_name);
+		debug_msg("%s\n", dev_name);
+		if (memcmp(dev_name, "Zefir", strlen("Zefir")) == 0)
+		{
+			strcpy(wifi_device_list[dev_count++], dev_name);
+		}
+	}
+	wifiState = ST_WIFI_DEVICE_LIST;
+}
+
+void menu_start_find_device(void)
+{
+	taskEXIT_CRITICAL();
+	menu_start_find_device_I();
+	taskENTER_CRITICAL();
+}
+
+static int connectToDevice(char *dev)
+{
+
+	if (memcmp("Zefir", dev, strlen("Zefir")) == 0)
+	{
+		strcpy(devName, dev);
+		debug_msg("Try connect %s", devName);
+		entered_menu_tab[1] = &wifi_menu;
+		for (uint8_t i = 2; i < 8; i++)
+		{
+			entered_menu_tab[i] = NULL;
+		}
+		wifiDrvSetAPName(dev, strlen(dev));
+		wifiDrvSetPassword("12345678", strlen("12345678"));
+		wifiDrvConnect();
+		wifiState = ST_WIFI_DEVICE_TRY_CONNECT;
+		connect_timeout = xTaskGetTickCount() + MS2ST(3000);
+		update_screen();
+		return TRUE;
+	}
+	return FALSE;
+}
+
+#define LINE_HEIGHT 10
+#define MENU_HEIGHT 18
+
+#define MAX_LINE (SSD1306_HEIGHT - MENU_HEIGHT) / LINE_HEIGHT
+
+static scrollBar_t scrollBar = {
+	.line_max = MAX_LINE,
+	.y_start = MENU_HEIGHT
+};
+
+static int line_start, line_end, last_button;
+
+void button_up_callback(void * arg)
+{
+	last_button = 1;
+	menu_token_t * menu = last_tab_element();
+	
+	debug_msg("Name %s\n", menu->name);
+	if (menu == NULL) 
+	{
+		debug_msg("Error button_up_callback: menu == NULL\n", len_menu(menu), menu->position);
+		return;
+	}
+
+	if (menu->arg_type == T_ARG_TYPE_START)
+	{
+		motor_value++;
+		update_screen();
+		return;
+	}
+
+	if (menu->position > 0)
+	{
+		menu->position--;
+		update_screen();
+	}
+	debug_msg("button_up_callback Len: %d, Pos: %d\n", len_menu(menu), menu->position);
+}
+
+void button_down_callback(void * arg)
+{
+	last_button = 0;
+	menu_token_t * menu = last_tab_element();
+	debug_msg("Name %s\n", menu->name);
+	if (menu == NULL) 
+	{
+		debug_msg("Error button_down_callback: menu == NULL\n", len_menu(menu), menu->position);
+		return;
+	}
+
+	if (menu->arg_type == T_ARG_TYPE_WIFI)
+	{
+		if (menu->position < dev_count - 1)
+		{
+			menu->position++;
+			update_screen();
+		}
+		return;
+	}
+
+	if (menu->position < len_menu(menu) - 1)
+	{
+		menu->position++;
+		update_screen();
+	}
+	debug_msg("button_down_callback Len: %d, Pos: %d\n", len_menu(menu), menu->position);
+}
+
+void button_plus_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type)
+	{
+		case T_ARG_TYPE_BOOL:
+			if (menu->value == NULL) return;
+			if (*menu->value == 0)
+				*menu->value = *menu->value + 1;
+		break;
+
+		case T_ARG_TYPE_VALUE:
+			if (menu->value == NULL) return;
+			if (*menu->value < 100)
+				*menu->value = *menu->value + 1;
+		break;
+
+		case T_ARG_TYPE_MENU:
+			if (menu->menu_list == NULL || menu->menu_list[menu->position] == NULL) return;
+			add_menu_tab(menu->menu_list[menu->position]);
+			if (last_tab_element() == &wifi_menu)
+			{
+				debug_msg("Enter wifi_menu\n");
+				menu_start_find_device();
+			}
+		break;
+
+		case T_ARG_TYPE_START:
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void button_minus_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type)
+	{
+		case T_ARG_TYPE_BOOL:
+			if (menu->value == NULL) return;
+			if (*menu->value == 1)
+				*menu->value = 0;
+		break;
+
+		case T_ARG_TYPE_VALUE:
+			if (menu->value == NULL) return;
+			if (*menu->value > 0)
+				*menu->value = *menu->value - 1;
+		break;
+
+		case T_ARG_TYPE_MENU:
+			remove_last_menu_tab();
+		break;
+
+		case T_ARG_TYPE_START:
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void button_enter_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	debug_msg("Enter cur (%s)\n", menu->name);
+	if (menu == NULL) return;
+	switch(menu->arg_type)
+	{
+		case T_ARG_TYPE_BOOL:
+			remove_last_menu_tab();
+		break;
+
+		case T_ARG_TYPE_VALUE:
+			remove_last_menu_tab();
+		break;
+
+		case T_ARG_TYPE_MENU:
+			if (menu->menu_list == NULL || menu->menu_list[menu->position] == NULL) return;
+			add_menu_tab(menu->menu_list[menu->position]);
+			if (last_tab_element() == &wifi_menu)
+			{
+				debug_msg("Enter wifi_menu\n");
+				menu_start_find_device();
+			}
+		break;
+
+		case T_ARG_TYPE_START:
+		break;
+
+		case T_ARG_TYPE_WIFI:
+			if (wifiState == ST_WIFI_DEVICE_LIST)
+			{
+				connectToDevice(wifi_device_list[menu->position]);
+			}
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void button_exit_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	debug_msg("Exit\n", len_menu(menu), menu->position);
+	if (menu == NULL) return;
+	switch(menu->arg_type)
+	{
+		case T_ARG_TYPE_BOOL:
+			remove_last_menu_tab();
+		break;
+
+		case T_ARG_TYPE_VALUE:
+			remove_last_menu_tab();
+		break;
+
+		case T_ARG_TYPE_MENU:
+			remove_last_menu_tab();
+		break;
+
+		case T_ARG_TYPE_START:
+			remove_last_menu_tab();
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+static void menu_task(void * arg)
+{
+	(void) arg;
+	menu_token_t * menu;
+	while(1)
+	{
+		xSemaphoreTake( xSemaphore, ( TickType_t ) MS2ST(100) );
+		//taskENTER_CRITICAL();
+		menu = last_tab_element();
+		if (menu == NULL) 
+		{
+			debug_msg("MENU_ERROR: menu_task\n");
+			taskEXIT_CRITICAL();
+			vTaskDelay(MS2ST(100));
+			continue;
+		}
+		ssd1306_Fill(Black);
+		ssd1306_SetCursor(2, 0);
+		ssd1306_WriteString(menu->name, Font_11x18, White);
+		switch(menu->arg_type)
+		{
+			case T_ARG_TYPE_BOOL:
+				if (menu->value == NULL) return;
+				ssd1306_SetCursor(50, MENU_HEIGHT + 5);
+				if (*((bool*)menu->value) == 1)
+					ssd1306_WriteString("ON", Font_11x18, White);
+				else
+					ssd1306_WriteString("OFF", Font_11x18, White);
+				ssd1306_SetCursor(2, MENU_HEIGHT + 3*LINE_HEIGHT);
+				ssd1306_WriteString("+/- For edit", Font_7x10, White);
+			break;
+
+			case T_ARG_TYPE_VALUE:
+				if (menu->value == NULL) return;
+				{
+					ssd1306_SetCursor(55, MENU_HEIGHT + 5);
+					char buff[8];
+					sprintf(buff, "%d", *menu->value);
+					ssd1306_WriteString(buff, Font_11x18, White);
+					ssd1306_SetCursor(2, MENU_HEIGHT + 3*LINE_HEIGHT - 1);
+					ssd1306_WriteString("+/- For edit", Font_7x10, White);
+				}
+			break;
+
+			case T_ARG_TYPE_MENU:
+				if (menu->menu_list == NULL || menu->menu_list[menu->position] == NULL) return;
+				{
+					if (line_end - line_start != MAX_LINE - 1)
+					{
+						line_start = menu->position;
+						line_end = line_start + MAX_LINE - 1;
+					}
+					if (menu->position < line_start || menu->position > line_end)
+					{
+						if (last_button)
+						{
+							line_start = menu->position;
+							line_end = line_start + MAX_LINE - 1;
+						}
+						else
+						{
+							line_end = menu->position;
+							line_start = line_end - MAX_LINE + 1;
+						}
+					}
+					//debug_msg("line_start %d, line_end %d, position %d, last_button %d\n", line_start, line_end, menu->position, last_button);
+					int line = 0;
+					do
+					{
+						ssd1306_SetCursor(2, MENU_HEIGHT + LINE_HEIGHT*line);
+						if (line + line_start == menu->position)
+						{
+							ssdFigureFillLine(MENU_HEIGHT + LINE_HEIGHT*line, LINE_HEIGHT);
+							ssd1306_WriteString(menu->menu_list[line + line_start]->name, Font_7x10, Black);
+						}
+						else
+						{
+							ssd1306_WriteString(menu->menu_list[line + line_start]->name, Font_7x10, White);
+						}
+						
+						line++;
+					} while (menu->menu_list[line + line_start] != NULL && line < MAX_LINE);
+					scrollBar.actual_line = menu->position;
+					scrollBar.all_line = len_menu(menu) - 1;
+					ssdFigureDrawScrollBar(&scrollBar);
+				}
+			break;
+
+			case T_ARG_TYPE_START:
+			break;
+
+			case T_ARG_TYPE_WIFI:
+				if (wifiState == ST_WIFI_DEVICE_LIST)
+				{
+					if (dev_count == 0)
+					{
+						ssd1306_SetCursor(2, MENU_HEIGHT + LINE_HEIGHT);
+						ssd1306_WriteString("Devices not found.", Font_7x10, White);
+						ssd1306_SetCursor(2, MENU_HEIGHT + 2*LINE_HEIGHT);
+						ssd1306_WriteString("Click button for", Font_7x10, White);
+						ssd1306_SetCursor(2, MENU_HEIGHT + 3*LINE_HEIGHT);
+						ssd1306_WriteString("try found device", Font_7x10, White);
+						break;
+					}
+					if (line_end - line_start != MAX_LINE - 1)
+					{
+						line_start = menu->position;
+						line_end = line_start + MAX_LINE - 1;
+					}
+					if (menu->position < line_start || menu->position > line_end)
+					{
+						if (last_button)
+						{
+							line_start = menu->position;
+							line_end = line_start + MAX_LINE - 1;
+						}
+						else
+						{
+							line_end = menu->position;
+							line_start = line_end - MAX_LINE + 1;
+						}
+					}
+					//debug_msg("position %d, dev_count %d\n", menu->position, dev_count);
+					int line = 0;
+					do
+					{
+						ssd1306_SetCursor(2, MENU_HEIGHT + LINE_HEIGHT*line);
+						if (line + line_start == menu->position)
+						{
+							ssdFigureFillLine(MENU_HEIGHT + LINE_HEIGHT*line, LINE_HEIGHT);
+							ssd1306_WriteString(wifi_device_list[line + line_start], Font_7x10, Black);
+						}
+						else
+						{
+							ssd1306_WriteString(wifi_device_list[line + line_start], Font_7x10, White);
+						}
+						
+						line++;
+					} while (line + line_start < dev_count - 1 && line < MAX_LINE);
+					scrollBar.actual_line = menu->position;
+					scrollBar.all_line = dev_count - 1;
+					ssdFigureDrawScrollBar(&scrollBar);
+				}
+				else if (wifiState == ST_WIFI_FIND_DEVICE)
+				{
+					ssd1306_SetCursor(2, MENU_HEIGHT + LINE_HEIGHT);
+					ssd1306_WriteString("Scanning...", Font_7x10, White);
+					break;
+				}
+				else if (wifiState == ST_WIFI_DEVICE_TRY_CONNECT)
+				{
+					if (wifiDrvIsConnected() == 1)
+					{
+						wifiState = ST_WIFI_CONNECT;
+					}
+					else
+					{
+						if (connect_timeout < xTaskGetTickCount())
+						{
+							wifiState = ST_WIFI_DEVICE_CONNECTED_FAILED;
+						}
+						ssd1306_SetCursor(2, MENU_HEIGHT + LINE_HEIGHT);
+						ssd1306_WriteString("Try connect to", Font_7x10, White);
+						ssd1306_SetCursor(2, MENU_HEIGHT + 2*LINE_HEIGHT);
+						ssd1306_WriteString(devName, Font_7x10, White);
+					}
+					
+				}
+				else if (wifiState == ST_WIFI_DEVICE_CONNECTED_FAILED)
+				{
+					ssd1306_SetCursor(2, MENU_HEIGHT + LINE_HEIGHT);
+					ssd1306_WriteString("Connected failed.", Font_7x10, White);
+					ssd1306_SetCursor(2, MENU_HEIGHT + 2*LINE_HEIGHT);
+					ssd1306_WriteString("Click button for", Font_7x10, White);
+					ssd1306_SetCursor(2, MENU_HEIGHT + 3*LINE_HEIGHT);
+					ssd1306_WriteString("try found device", Font_7x10, White);
+				}
+				else if (wifiState == ST_WIFI_CONNECT)
+				{
+					ssd1306_SetCursor(2, MENU_HEIGHT + LINE_HEIGHT);
+					ssd1306_WriteString("Connected", Font_7x10, White);
+					ssd1306_SetCursor(2, MENU_HEIGHT + 2*LINE_HEIGHT);
+					ssd1306_WriteString(devName, Font_7x10, White);
+					break;
+				}
+			break;
+
+			default:
+				return;
+		}
+		ssd1306_UpdateScreen();
+		//taskEXIT_CRITICAL();
+	}
+}
+
+void init_menu(void)
+{
+	entered_menu_tab[0] = &main_menu;
+	xSemaphore = xSemaphoreCreateBinary();
+	xTaskCreate(menu_task, "menu_task", 2048, NULL, 10, NULL);
+	wifiDrvGetAPName(devName);
+	if (connectToDevice(devName) == FALSE)
+	{
+		entered_menu_tab[1] = &wifi_menu;
+		menu_start_find_device_I();
+	}
+	update_screen();
+	button1.fall_callback = button_up_callback;
+	button2.fall_callback = button_down_callback;
+	button3.fall_callback = button_plus_callback;
+	button4.fall_callback = button_minus_callback;
+	button5.fall_callback = button_enter_callback;
+	button6.fall_callback = button_exit_callback;
+}
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif

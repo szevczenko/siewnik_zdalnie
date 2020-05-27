@@ -38,7 +38,7 @@
 
 #define DEFAULT_SCAN_LIST_SIZE 16
 
-#define STORAGE_NAMESPACE "ESP32_WIFI"
+#define STORAGE_NAMESPACE "Zefir"
 #define WIFI_AP_PASSWORD "12345678"
 
 static uint32_t stastus_reg_eth;
@@ -171,16 +171,24 @@ static void wifi_init(void)
   ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &got_ip_event_handler, NULL));
   if (config.dev_type == T_DEV_TYPE_SERVER)
   {
+    
     wifiStartAccessPoint();
   }
   else
   {
-     if (wifiDataRead(&wifiData) == ESP_OK)
+    if (wifiDataRead(&wifiData) == ESP_OK)
     {
       strcpy((char *)wifi_config.sta.ssid, (char *)wifiData.ssid);
       strcpy((char *)wifi_config.sta.password, (char *)wifiData.password);
-      wifiDrvConnect();
+      //wifiDrvConnect();
     }
+    else
+    {
+      ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+      ESP_ERROR_CHECK(esp_wifi_start());
+      esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config);
+    }
+    
   }
 }
 
@@ -189,19 +197,30 @@ void wifiDrvStartScan(void)
   ESP_ERROR_CHECK(esp_wifi_scan_start(NULL, true));
 }
 
+void wifiDrvGetScanResult(uint16_t *ap_count)
+{
+  uint16_t number = DEFAULT_SCAN_LIST_SIZE;
+  ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
+  ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(ap_count));
+}
+
 void wifiDrvWriteList(console_t *con)
 {
   (void) con;
   uint16_t ap_count = 0;
-  uint16_t number = DEFAULT_SCAN_LIST_SIZE;
   memset(ap_info, 0, sizeof(ap_info));
   wifiDrvStartScan();
-  ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
-  ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
+  wifiDrvGetScanResult(&ap_count);
   for (uint8_t i = 0; i < ap_count; i++)
   {
     consolePrintfTimeout(con, CONFIG_CONSOLE_TIMEOUT, "%d. %s strength %d\n\r", i, ap_info[i].ssid, ap_info[i].rssi);
   }
+}
+
+int wifiDrvGetNameFromScannedList(uint8_t number, char * name)
+{
+  strcpy(name, (char*)ap_info[number].ssid);
+  return TRUE;
 }
 
 int wifiDrvSetFromAPList(uint8_t num)
@@ -216,6 +235,12 @@ int wifiDrvSetAPName(char* name, size_t len)
   if (len > sizeof(wifi_config.sta.ssid)) return 0;
   memcpy(wifi_config.sta.ssid, name, len);
   return 1;
+}
+
+int wifiDrvGetAPName(char* name)
+{
+  strcpy(name, (char *)wifi_config.sta.ssid);
+  return TRUE;
 }
 
 int wifiDrvSetPassword(char* passwd, size_t len)
@@ -236,12 +261,27 @@ int wifiDrvConnect(void)
   return esp_wifi_connect();
 }
 
+int wifiDrvDisconnect(void)
+{
+  if (config.dev_type == T_DEV_TYPE_SERVER)
+  {
+    return -1;
+  }
+  stastus_reg_eth = 0;
+  return esp_wifi_disconnect();
+}
+
 int wifiStartAccessPoint(void)
 {
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
   ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config_ap));
   ESP_ERROR_CHECK(esp_wifi_start());
   return 1;
+}
+
+int wifiDrvIsConnected(void)
+{
+  return stastus_reg_eth;
 }
 
 static void printList(console_t *con)

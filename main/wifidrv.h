@@ -24,5 +24,11 @@ int wifiDrvSetAPName(char* name, size_t len);
 int wifiDrvSetPassword(char* passwd, size_t len);
 int wifiDrvConnect(void);
 int wifiStartAccessPoint(void);
+int wifiDrvIsConnected(void);
+
+void wifiDrvStartScan(void);
+int wifiDrvGetAPName(char* name);
+int wifiDrvGetNameFromScannedList(uint8_t number, char * name);
+void wifiDrvGetScanResult(uint16_t *ap_count);
 
 #endif

@@ -9,17 +9,17 @@
 #ifndef BUT_H_
 #define BUT_H_
 
-#define BUTTON_CNT 3 //ilo�� przycisk�w
+#define BUTTON_CNT 6 //ilo�� przycisk�w
 #define TIMER_CNT_TIMEOUT 50 
 
 void init_buttons(void);
 
-#define BUT1_GPIO 5
-#define BUT2_GPIO 4
-#define BUT3_GPIO 2
-#define BUT4_GPIO 0
-#define BUT5_GPIO 2
-#define BUT6_GPIO 4
+#define BUT1_GPIO 0
+#define BUT2_GPIO 2
+#define BUT3_GPIO 14
+#define BUT4_GPIO 12
+#define BUT5_GPIO 13
+#define BUT6_GPIO 16
 #define BUT7_GPIO 1
 #define BUT8_GPIO 4
 #define BUT9_GPIO 3
