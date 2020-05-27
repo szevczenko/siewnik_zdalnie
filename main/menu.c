@@ -173,6 +173,7 @@ void menu_start_find_device_I(void)
 {
 	if (last_tab_element() != &wifi_menu) return;
 	wifiState = ST_WIFI_FIND_DEVICE;
+	dev_count = 0;
 	uint16_t ap_count = 0;
 	char dev_name[33];
 	wifiDrvStartScan();
@@ -243,17 +244,29 @@ void button_up_callback(void * arg)
 		return;
 	}
 
-	if (menu->arg_type == T_ARG_TYPE_START)
+	switch(menu->arg_type)
 	{
-		motor_value++;
-		update_screen();
-		return;
-	}
+		case T_ARG_TYPE_START:
+			motor_value++;
+			update_screen();
+			break;
 
-	if (menu->position > 0)
-	{
-		menu->position--;
-		update_screen();
+		case T_ARG_TYPE_WIFI:
+				if (wifiState == ST_WIFI_DEVICE_CONNECTED_FAILED || (wifiState == ST_WIFI_DEVICE_LIST && dev_count == 0)) {
+					menu_start_find_device();
+				}
+				else if(menu->position > 0) {
+					menu->position--;
+					update_screen();
+				}
+			break;
+
+		default:
+			if (menu->position > 0) {
+				menu->position--;
+				update_screen();
+			}
+			break;
 	}
 	debug_msg("button_up_callback Len: %d, Pos: %d\n", len_menu(menu), menu->position);
 }
@@ -269,21 +282,32 @@ void button_down_callback(void * arg)
 		return;
 	}
 
-	if (menu->arg_type == T_ARG_TYPE_WIFI)
+	switch(menu->arg_type)
 	{
-		if (menu->position < dev_count - 1)
-		{
-			menu->position++;
+		case T_ARG_TYPE_START:
+			motor_value++;
 			update_screen();
-		}
-		return;
-	}
+			break;
 
-	if (menu->position < len_menu(menu) - 1)
-	{
-		menu->position++;
-		update_screen();
+		case T_ARG_TYPE_WIFI:
+				if (wifiState == ST_WIFI_DEVICE_CONNECTED_FAILED || (wifiState == ST_WIFI_DEVICE_LIST && dev_count == 0)) {
+					menu_start_find_device();
+				}
+				else if (menu->position < dev_count - 1) {
+					menu->position++;
+					update_screen();
+				}	
+			break;
+
+		default:
+			if (menu->position < len_menu(menu) - 1) {
+				menu->position++;
+				update_screen();
+			}
+			break;
 	}
+	
+	
 	debug_msg("button_down_callback Len: %d, Pos: %d\n", len_menu(menu), menu->position);
 }
 
@@ -318,6 +342,15 @@ void button_plus_callback(void * arg)
 		case T_ARG_TYPE_START:
 		break;
 
+		case T_ARG_TYPE_WIFI:
+			if (wifiState == ST_WIFI_DEVICE_CONNECTED_FAILED || (wifiState == ST_WIFI_DEVICE_LIST && dev_count == 0)) {
+				menu_start_find_device();
+			}
+			else if (wifiState == ST_WIFI_DEVICE_LIST) {
+				connectToDevice(wifi_device_list[menu->position]);
+			}
+			break;
+
 		default:
 			return;
 	}
@@ -345,6 +378,15 @@ void button_minus_callback(void * arg)
 		case T_ARG_TYPE_MENU:
 			remove_last_menu_tab();
 		break;
+
+		case T_ARG_TYPE_WIFI:
+			if (wifiState == ST_WIFI_DEVICE_CONNECTED_FAILED || (wifiState == ST_WIFI_DEVICE_LIST && dev_count == 0)) {
+				menu_start_find_device();
+			}
+			else if (wifiState == ST_WIFI_DEVICE_LIST) {
+				remove_last_menu_tab();
+			}
+			break;
 
 		case T_ARG_TYPE_START:
 		break;
@@ -384,9 +426,11 @@ void button_enter_callback(void * arg)
 		break;
 
 		case T_ARG_TYPE_WIFI:
-			if (wifiState == ST_WIFI_DEVICE_LIST)
-			{
+			if (wifiState == ST_WIFI_DEVICE_LIST) {
 				connectToDevice(wifi_device_list[menu->position]);
+			}
+			else if (wifiState == ST_WIFI_DEVICE_CONNECTED_FAILED || (wifiState == ST_WIFI_DEVICE_LIST && dev_count == 0)) {
+				menu_start_find_device();
 			}
 		break;
 
@@ -416,6 +460,10 @@ void button_exit_callback(void * arg)
 		break;
 
 		case T_ARG_TYPE_START:
+			remove_last_menu_tab();
+		break;
+
+		case T_ARG_TYPE_WIFI:
 			remove_last_menu_tab();
 		break;
 
