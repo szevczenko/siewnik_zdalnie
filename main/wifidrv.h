@@ -23,6 +23,7 @@ int wifiDrvSetFromAPList(uint8_t num);
 int wifiDrvSetAPName(char* name, size_t len);
 int wifiDrvSetPassword(char* passwd, size_t len);
 int wifiDrvConnect(void);
+int wifiDrvDisconnect(void);
 int wifiStartAccessPoint(void);
 int wifiDrvIsConnected(void);
 

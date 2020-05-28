@@ -8,6 +8,7 @@ typedef enum
 	T_ARG_TYPE_MENU,
 	T_ARG_TYPE_START,
 	T_ARG_TYPE_WIFI,
+	T_ARG_TYPE_INFO,
 }menu_token_type_t;
 
 typedef struct menu_token
@@ -25,5 +26,8 @@ typedef struct menu_token
 
 void init_menu(void);
 void button_minus_callback(void * arg);
+void menuDeactivateButtons(void);
+void menuActivateButtons(void);
+void menuPrintfInfo(const char *format, ...);
 
 #endif
