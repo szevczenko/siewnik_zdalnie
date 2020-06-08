@@ -7,7 +7,7 @@
 #include "semphr.h"
 #include "wifidrv.h"
 
-#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+#define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -21,6 +21,8 @@ static char devName[33];
 static char infoBuff[256];
 static uint16_t dev_count;
 static TickType_t connect_timeout;
+static TickType_t animation_timeout;
+static uint8_t animation_cnt;
 
 typedef enum
 {
@@ -33,7 +35,7 @@ typedef enum
 static stateWifiMenu_t wifiState;
 
 uint32_t test_val_ = 43;
-bool test_bool_;
+uint32_t test_bool_;
 
 uint32_t motor_value;
 uint32_t servo_value;
@@ -255,6 +257,20 @@ static scrollBar_t scrollBar = {
 	.y_start = MENU_HEIGHT
 };
 
+loadBar_t motor_bar = {
+    .x = 40,
+    .y = 10,
+    .width = 80,
+    .height = 10,
+};
+
+loadBar_t servo_bar = {
+    .x = 40,
+    .y = 40,
+    .width = 80,
+    .height = 10,
+};
+
 static int line_start, line_end, last_button;
 
 void button_up_callback(void * arg)
@@ -344,8 +360,8 @@ void button_plus_callback(void * arg)
 	{
 		case T_ARG_TYPE_BOOL:
 			if (menu->value == NULL) return;
-			if (*menu->value == 0)
-				*menu->value = *menu->value + 1;
+			if ((bool)*menu->value == (bool)0)
+				*menu->value = (bool)1;
 		break;
 
 		case T_ARG_TYPE_VALUE:
@@ -390,8 +406,8 @@ void button_minus_callback(void * arg)
 	{
 		case T_ARG_TYPE_BOOL:
 			if (menu->value == NULL) return;
-			if (*menu->value == 1)
-				*menu->value = 0;
+			if ((bool)*menu->value == 1)
+				*menu->value = (bool)0;
 		break;
 
 		case T_ARG_TYPE_VALUE:
@@ -505,7 +521,7 @@ static void menu_task(void * arg)
 	menu_token_t * menu;
 	while(1)
 	{
-		xSemaphoreTake( xSemaphore, ( TickType_t ) MS2ST(100) );
+		xSemaphoreTake( xSemaphore, ( TickType_t ) MS2ST(50) );
 		//taskENTER_CRITICAL();
 		menu = last_tab_element();
 		if (menu == NULL) 
@@ -588,8 +604,7 @@ static void menu_task(void * arg)
 			break;
 
 			case T_ARG_TYPE_START:
-				if (!wifiDrvIsConnected())
-				{
+				if (wifiDrvIsConnected()) {
 					remove_last_menu_tab();
 					if (wifiState == ST_WIFI_CONNECT) {
 						menuPrintfInfo("Lost connection with target");
@@ -598,6 +613,51 @@ static void menu_task(void * arg)
 						menuPrintfInfo("Target not connected. Go to DEVICES and connect to target");
 					}
 				}
+				else {
+					if (animation_timeout < xTaskGetTickCount()) {
+						animation_cnt++;
+						animation_timeout = xTaskGetTickCount() + MS2ST(100);
+					}
+					char str[8];
+					
+					motor_bar.fill = motor_value;
+					sprintf(str, "%d", motor_bar.fill);
+					ssd1306_Fill(Black);
+					ssdFigureDrawLoadBar(&motor_bar);
+					ssd1306_SetCursor(80, 25);
+					ssd1306_WriteString(str, Font_7x10, White);
+					if (motor_on) {
+						uint8_t cnt = animation_cnt % 8;
+					}
+					else {
+						cnt = 0;
+					}
+					if (cnt < 4) {
+						if (cnt < 2) {
+							drawMotor(2, 2 - cnt);
+						}
+						else {
+							drawMotor(2, cnt - 2);
+						}
+					}
+					else
+					{
+						if (cnt < 6) {
+							drawMotor(2, cnt - 2);
+						}
+						else {
+							drawMotor(2, 10 - cnt);
+						}
+					}
+
+					servo_bar.fill = servo_value;
+					sprintf(str, "%d", servo_bar.fill);
+					ssdFigureDrawLoadBar(&servo_bar);
+					ssd1306_SetCursor(80, 55);
+					ssd1306_WriteString(str, Font_7x10, White);
+					drawMotor(2, 40);
+				}
+				
 			break;
 
 			case T_ARG_TYPE_WIFI:
@@ -749,23 +809,24 @@ void menuActivateButtons(void)
 {
 	button1.fall_callback = button_up_callback;
 	button2.fall_callback = button_down_callback;
-	button3.fall_callback = button_plus_callback;
+	button6.fall_callback = button_plus_callback;
 	button4.fall_callback = button_minus_callback;
-	button5.fall_callback = button_enter_callback;
-	button6.fall_callback = button_exit_callback;
+	button3.fall_callback = button_enter_callback;
+	button8.fall_callback = button_exit_callback;
 }
 
 void init_menu(void)
 {
 	entered_menu_tab[0] = &main_menu;
+	entered_menu_tab[1] = &start_menu;
 	xSemaphore = xSemaphoreCreateBinary();
 	xTaskCreate(menu_task, "menu_task", 2048, NULL, 10, NULL);
 	wifiDrvGetAPName(devName);
-	if (connectToDevice(devName) == FALSE)
-	{
-		entered_menu_tab[1] = &wifi_menu;
-		menu_start_find_device_I();
-	}
+	// if (connectToDevice(devName) == FALSE)
+	// {
+	// 	entered_menu_tab[1] = &wifi_menu;
+	// 	menu_start_find_device_I();
+	// }
 	menuActivateButtons();
 	update_screen();
 }

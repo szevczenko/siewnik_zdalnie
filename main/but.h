@@ -9,8 +9,10 @@
 #ifndef BUT_H_
 #define BUT_H_
 
-#define BUTTON_CNT 6 //ilo�� przycisk�w
+#define BUTTON_CNT 10 //ilo�� przycisk�w
 #define TIMER_CNT_TIMEOUT 50 
+
+#define CONFIG_BUTTON_I2C TRUE
 
 void init_buttons(void);
 
@@ -22,8 +24,8 @@ void init_buttons(void);
 #define BUT6_GPIO 16
 #define BUT7_GPIO 1
 #define BUT8_GPIO 4
-#define BUT9_GPIO 3
-#define BUT10_GPIO 0
+#define BUT9_GPIO 0
+#define BUT10_GPIO 2
 
 
 typedef struct
@@ -32,6 +34,8 @@ typedef struct
 	uint8_t state;
 	uint8_t value;
 	uint8_t gpio;
+	uint8_t bit;
+	uint8_t is_gpio;
 	void (*rise_callback)(void *button);
 	void (*fall_callback)(void *button);
 	void (*timer_callback)(void *button);
