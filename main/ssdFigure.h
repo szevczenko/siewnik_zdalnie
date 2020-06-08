@@ -23,5 +23,6 @@ int ssdFigureDrawLoadBar(loadBar_t * figure);
 int ssdFigureDrawScrollBar(scrollBar_t * figure);
 int ssdFigureFillLine(int y_start, int height);
 void drawMotor(uint8_t x, uint8_t y);
+void drawServo(uint8_t x, uint8_t y, uint8_t open);
 
 #endif

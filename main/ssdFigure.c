@@ -1,6 +1,7 @@
 #include "ssdFigure.h"
 #include "ssd1306.h"
 #include "console.h"
+#include "math.h"
 
 #define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
@@ -31,6 +32,31 @@ bool bitmap[] =
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 
 };
+
+bool circle[] = 
+{
+	0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 
+	0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 
+	0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 
+	0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 
+	0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 
+	0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+	0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 
+	0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 
+	0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 
+	0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 
+	0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 
+	0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 };
 
 int ssdFigureDrawLoadBar(loadBar_t * figure)
 {
@@ -64,7 +90,7 @@ int ssdFigureDrawScrollBar(scrollBar_t * figure)
 	int width_px = width * (SSD1306_HEIGHT - figure->y_start);
 	int step = (SSD1306_HEIGHT - figure->y_start - width_px)/figure->all_line; 
 	int start_scroll_y = step * (figure->actual_line + 1) + figure->y_start;
-	debug_msg("width_px %d, step %d, start_scroll_y %d\n", width_px, step, start_scroll_y);
+	//debug_msg("width_px %d, step %d, start_scroll_y %d\n", width_px, step, start_scroll_y);
 	for (int x = SSD1306_WIDTH - 4; x < SSD1306_WIDTH; x++)
 	{
 		for (int y = figure->y_start; y < SSD1306_HEIGHT; y++)
@@ -103,6 +129,36 @@ void drawMotor(uint8_t x, uint8_t y)
 		{
 			if (bitmap[j*30 + i])
 				ssd1306_DrawPixel(i + x, j + y, (SSD1306_COLOR) White);
+		}
+	}
+}
+
+#define DIAMETR 22
+void drawServo(uint8_t x, uint8_t y, uint8_t open)
+{
+	uint8_t x_open = x + DIAMETR * open / 100;
+	debug_msg("x_open %d\n", x_open);
+	uint8_t start_flag;
+	for (int i = 0; i < 22; i++)
+	{
+		start_flag = 0;
+		for (int j = 0; j < 22; j++)
+		{
+			if (circle[j*22 + i])
+			{
+				if (start_flag == 0){
+					debug_msg("find_start\n", x_open);
+					start_flag = 1;
+				}
+				else {
+					debug_msg("find_end\n", x_open);
+					start_flag = 0;
+				}
+				ssd1306_DrawPixel(i + x, j + y, (SSD1306_COLOR) White);
+			}
+			if (start_flag == 1 && i + x > x_open)
+				ssd1306_DrawPixel(i + x, j + y, (SSD1306_COLOR) White);
+				
 		}
 	}
 }

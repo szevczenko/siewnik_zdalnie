@@ -626,11 +626,9 @@ static void menu_task(void * arg)
 					ssdFigureDrawLoadBar(&motor_bar);
 					ssd1306_SetCursor(80, 25);
 					ssd1306_WriteString(str, Font_7x10, White);
+					uint8_t cnt = 0;
 					if (motor_on) {
-						uint8_t cnt = animation_cnt % 8;
-					}
-					else {
-						cnt = 0;
+						cnt = animation_cnt % 8;
 					}
 					if (cnt < 4) {
 						if (cnt < 2) {
@@ -655,7 +653,7 @@ static void menu_task(void * arg)
 					ssdFigureDrawLoadBar(&servo_bar);
 					ssd1306_SetCursor(80, 55);
 					ssd1306_WriteString(str, Font_7x10, White);
-					drawMotor(2, 40);
+					drawServo(20, 40, 10);
 				}
 				
 			break;
