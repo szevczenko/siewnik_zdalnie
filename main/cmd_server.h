@@ -12,13 +12,25 @@
 #include <netinet/in.h> 
 #include <errno.h>
 
-#define NUMBER_CLIENT 5
+#ifndef CONFIG_USE_CMD_SERVER
+#define CONFIG_USE_CMD_SERVER TRUE
+#endif
+
+#define NUMBER_CLIENT 1
 #define PORT     8080 
 #define MAXLINE 1024 
 
+#ifndef MSG_OK
 #define MSG_OK 1
+#endif
+
+#ifndef MSG_ERROR
 #define MSG_ERROR 0
+#endif
+
+#ifndef MSG_TIMEOUT
 #define MSG_TIMEOUT -1
+#endif
 
 #define BUFFER_CMD 1024
 
@@ -28,29 +40,18 @@ struct client_network
     struct sockaddr_in cliaddr;
 };
 
-struct circular_buff
-{
-    uint8_t * buffer;
-    uint8_t flag;
-    uint16_t * LenToDo;
-    uint16_t pos;
-    uint16_t buff_len;
-};
-
 struct server_network
 {
     int socket_tcp;
     int count_clients;
     uint8_t * buffer;
-    struct sockaddr_in servaddr;
-    struct sockaddr_in servaddr_udp;  
+    struct sockaddr_in servaddr; 
     struct client_network * clients;  
 };
-
-extern struct server_network network;
 
 void cmdServerStartTask(void);
 void cmdServerStart(void);
 void cmdServerStop(void);
+void cmdServerSendData(void * arg, uint8_t * buff, uint8_t len);
 
 #endif
