@@ -816,15 +816,14 @@ void menuActivateButtons(void)
 void init_menu(void)
 {
 	entered_menu_tab[0] = &main_menu;
-	entered_menu_tab[1] = &start_menu;
 	xSemaphore = xSemaphoreCreateBinary();
 	xTaskCreate(menu_task, "menu_task", 2048, NULL, 10, NULL);
 	wifiDrvGetAPName(devName);
-	// if (connectToDevice(devName) == FALSE)
-	// {
-	// 	entered_menu_tab[1] = &wifi_menu;
-	// 	menu_start_find_device_I();
-	// }
+	if (connectToDevice(devName) == FALSE)
+	{
+		entered_menu_tab[1] = &wifi_menu;
+		menu_start_find_device_I();
+	}
 	menuActivateButtons();
 	update_screen();
 }

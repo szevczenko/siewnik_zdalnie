@@ -189,6 +189,7 @@ typedef enum
 #define CONFIG_thdTCPShell_CLIENTS_MAX 1
 
 #define MS2ST(ms) (ms / portTICK_RATE_MS)
+#define ST2MS(tick) (tick * portTICK_RATE_MS)
 #define TIME_IMMEDIATE 0
 #define osDelay(ms) vTaskDelay(MS2ST(ms))
 

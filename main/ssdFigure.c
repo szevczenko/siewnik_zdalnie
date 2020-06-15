@@ -147,11 +147,11 @@ void drawServo(uint8_t x, uint8_t y, uint8_t open)
 			if (circle[j*22 + i])
 			{
 				if (start_flag == 0){
-					debug_msg("find_start\n", x_open);
+					//debug_msg("find_start\n", x_open);
 					start_flag = 1;
 				}
 				else {
-					debug_msg("find_end\n", x_open);
+					//debug_msg("find_end\n", x_open);
 					start_flag = 0;
 				}
 				ssd1306_DrawPixel(i + x, j + y, (SSD1306_COLOR) White);

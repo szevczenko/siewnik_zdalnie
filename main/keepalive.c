@@ -1,72 +1,93 @@
 #include "config.h"
 #include "freertos/FreeRTOS.h"
 #include "keepalive.h"
+#include "parse_cmd.h"
+#include "console.h"
 
-static uint32_t keepAlive;
-static uint8_t keepAliveTry;
-static uint8_t keepAliveErrorFlag;
-static TaskHandle_t thread_task_handle;
+#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
-static int (*keepAliveSend)(uint8_t * data, uint32_t dataLen);
-static void (*keepAliveErrorCb)(void);
+static keepAlive_t * keepAliveTab[8];
+static uint8_t tabSize;
 
-void keepAliveInit(int (*send)(uint8_t * data, uint32_t dataLen), void (*errorCb)(void)) {
-	keepAliveSend = send;
-	keepAliveAccept();
-	keepAliveErrorFlag = 0;
+static uint8_t keep_alive_frame[2] = {CMD_REQEST, PC_KEEP_ALIVE};
+
+void keepAliveInit(keepAlive_t * keep, uint32_t timeout, int (*send)(uint8_t * data, uint32_t dataLen), void (*errorCb)(void)) {
+	keep->keepAliveSend = send;
+	keep->keepAliveErrorCb = errorCb;
+	if (timeout < KEEP_ALIVE_TIME_TO_NEXT)
+		keep->timeout = KEEP_ALIVE_TIME_TO_NEXT;
+	else
+		keep->timeout = timeout;
+	keepAliveAccept(keep);
+	keep->keepAliveErrorFlag = 0;
+	keepAliveTab[tabSize++] = keep;
 }
 
-void keepAliveAccept(void)
+void keepAliveAccept(keepAlive_t * keep)
 {
-	keepAlive = ST2MS(xTaskGetTickCount()) + KEEP_ALIVE_TIME_TO_NEXT;
-	keepAliveTry = 0;
-	keepAliveErrorFlag = 0;
+	keep->keepAlive = ST2MS(xTaskGetTickCount()) + keep->timeout;
+	keep->keepAliveTry = 0;
+	keep->keepAliveErrorFlag = 0;
+	//debug_msg("keepalive accept %d timeout %d\n", keep->keepAlive, keep->timeout);
 }
 
-int keepAliveCheckError(void) {
-	return keepAliveErrorFlag;
+int keepAliveCheckError(keepAlive_t * keep) {
+	return keep->keepAliveErrorFlag;
 }
 
-static void keepAliveProcess(void)
+static void keepAliveProcess(void * pv)
 {
+	//debug_msg("KeepAliveTask\n");
+	keepAlive_t * keep;
 	while(1) {
-		if (keepAliveErrorFlag) {
-			vTaskDelay(MS2ST(100));
-			continue;
-		}
 
-		if (keepAlive < ST2MS(xTaskGetTickCount())) {
-			if (keepAliveTry < KEEP_ALIVE_TRY)
-			{
-				if (keepAliveSend != NULL) {
-					(*keepAliveSend)(&keepAliveTry, 1);
-				}
-				keepAliveTry++;
+		for(uint8_t i = 0; i < tabSize; i++)
+		{
+			keep = keepAliveTab[i];
+
+			if (keep == NULL) {
+				continue;
 			}
-			else {
-				keepAliveErrorFlag = 1;
-				if (keepAliveErrorCb != NULL) {
-					(*keepAliveErrorCb)();
+
+			if (keep->keepAliveErrorFlag || keep->keepAliveActiveFlag == 0) {
+				continue;
+			}
+			//debug_msg("keepALive time %d < %d\n", keep->keepAlive, ST2MS(xTaskGetTickCount()));
+			if (keep->keepAlive < ST2MS(xTaskGetTickCount())) {
+				if (keep->keepAliveTry < KEEP_ALIVE_TRY)
+				{
+					if (keep->keepAliveSend != NULL) {
+						keep->keepAliveSend(keep_alive_frame, sizeof(keep_alive_frame));
+					}
+					keep->keepAliveTry++;
+					keep->keepAlive = ST2MS(xTaskGetTickCount()) + keep->timeout;
+				}
+				else {
+					keep->keepAliveErrorFlag = 1;
+					if (keep->keepAliveErrorCb != NULL) {
+						keep->keepAliveErrorCb();
+					}
 				}
 			}
 		}
-		vTaskDelay(MS2ST(10));
+		
+		vTaskDelay(MS2ST(25));
 	}
 	
 }
 
 void keepAliveStartTask(void)
 {
-	xTaskCreate(keepAliveProcess, "listen_client", 512, NULL, NORMALPRIO, &thread_task_handle);
+	xTaskCreate(keepAliveProcess, "keepAliveProcess", 1024, NULL, NORMALPRIO, NULL);
 }
 
-void keepAliveStart(void)
+void keepAliveStart(keepAlive_t * keep)
 {
-	vTaskResume(thread_task_handle);
-	keepAliveAccept();
+	keep->keepAliveActiveFlag = 1;
+	keepAliveAccept(keep);
 }
 
-void keepAliveStop(void)
+void keepAliveStop(keepAlive_t * keep)
 {
-	vTaskSuspend(thread_task_handle);
+	keep->keepAliveActiveFlag = 0;
 }

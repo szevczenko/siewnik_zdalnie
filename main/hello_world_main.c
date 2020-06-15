@@ -20,6 +20,7 @@
 #include "ssd1306.h"
 #include "ssd1306_tests.h"
 #include "menu.h"
+#include "keepalive.h"
 
 uint8_t test_value;
 uint8_t test_value_2 = 10;
@@ -75,6 +76,7 @@ void app_main()
     configInit();
     consoleStart();
     wifiDrvInit();
+    keepAliveStartTask();
     if (config.dev_type != T_DEV_TYPE_SERVER)
     {
         init_buttons();

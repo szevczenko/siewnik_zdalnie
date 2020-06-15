@@ -12,7 +12,6 @@
 #include <netinet/in.h> 
 #include <errno.h>
 
-#define NUMBER_CLIENT 5
 #define PORT     8080 
 #define MAXLINE 1024 
 
@@ -31,7 +30,7 @@ typedef struct
 void cmdClientStartTask(void);
 void cmdClientStart(void);
 void cmdClientStop(void);
-int cmdClientSend(char* buffer, int len);
+int cmdClientSend(uint8_t * buffer, uint32_t len);
 
 void cmdClientSetIp(char * ip);
 void cmdClientSetPort(uint32_t port);

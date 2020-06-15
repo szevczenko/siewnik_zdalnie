@@ -11,6 +11,7 @@
 #include <arpa/inet.h> 
 #include <netinet/in.h> 
 #include <errno.h>
+#include "keepalive.h"
 
 #ifndef CONFIG_USE_CMD_SERVER
 #define CONFIG_USE_CMD_SERVER TRUE
@@ -38,6 +39,7 @@ struct client_network
 {
     int client_socket;
     struct sockaddr_in cliaddr;
+    keepAlive_t keepAlive;
 };
 
 struct server_network

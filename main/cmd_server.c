@@ -13,6 +13,7 @@
 #include "freertos/queue.h"
 #include "config.h"
 #include "console.h"
+#include "parse_cmd.h"
 
 #define MAX_VALUE(OLD_V, NEW_VAL) NEW_VAL>OLD_V?NEW_VAL:OLD_V
 
@@ -23,7 +24,7 @@ static struct server_network network;
 static TaskHandle_t thread_task_handle;
 
 
-#define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 static int init_client(void)
 {	
@@ -121,6 +122,7 @@ static void listen_client(void * pv)
 		        }
 		        network.clients[network.count_clients].client_socket = rc;
 				max_socket = MAX_VALUE(max_socket,rc);
+				keepAliveStart(&network.clients[network.count_clients].keepAlive);
                 network.count_clients++;
 		        debug_msg( "We have a new client connection! %d\n", rc);
             }
@@ -192,7 +194,8 @@ static void listen_client(void * pv)
 				if (len>0)
 				{
 					debug_msg("Receive data len %d", len);
-
+					keepAliveAccept(&network.clients[i].keepAlive);
+					parse_server(network.buffer, len);
 				}
         	} //end for
 		}//end if
@@ -208,8 +211,21 @@ void cmdServerSendData(void * arg, uint8_t * buff, uint8_t len)
 	}
 }
 
+static int keepAliveSend(uint8_t * data, uint32_t dataLen) {
+	cmdServerSendData(NULL, data, dataLen);
+	debug_msg("cmdServerSend keepAlive");
+	return 1;
+}
+
+static void cmdServerErrorKACb(void) {
+	debug_msg("cmdServerErrorKACb keepAlive");
+}
+
 void cmdServerStartTask(void)
 {
+	for (uint8_t i = 0; i < NUMBER_CLIENT; i++) {
+		keepAliveInit(&n_clients[i].keepAlive, 1000, keepAliveSend, cmdServerErrorKACb);
+	}
 	xTaskCreate(listen_client, "listen_client", CONFIG_DO_TELNET_THD_WA_SIZE, NULL, NORMALPRIO, &thread_task_handle);
 }
 
@@ -224,6 +240,7 @@ void cmdServerStop(void)
 	close(network.socket_tcp);
 	for (uint8_t i = 0; i<network.count_clients;i++) //recieve data from clients
     {
+		keepAliveStop(&n_clients[i].keepAlive);
 		close(network.clients[i].client_socket);
 	}
 	network.count_clients = 0;

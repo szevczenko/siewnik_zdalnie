@@ -14,6 +14,7 @@
 #include "config.h"
 #include "console.h"
 #include "keepalive.h"
+#include "parse_cmd.h"
 
 #define MAX_VALUE(OLD_V, NEW_VAL) NEW_VAL>OLD_V?NEW_VAL:OLD_V
 
@@ -27,6 +28,8 @@ static uint32_t cmd_port = 8080;
 
 pthread_mutex_t mutex_client;
 pthread_mutexattr_t mutexattr;
+static keepAlive_t keepAlive;
+struct sockaddr_in tcpServerAddr;
 
 #define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
@@ -34,7 +37,6 @@ pthread_mutexattr_t mutexattr;
 int NetworkConnect(char* addr, int port)
 {
 	int retVal = -1;
-	struct sockaddr_in tcpServerAddr;
     tcpServerAddr.sin_addr.s_addr = inet_addr(addr);
     tcpServerAddr.sin_family = AF_INET;
     tcpServerAddr.sin_port = htons( port );
@@ -86,8 +88,8 @@ int cmdClientSend(uint8_t* buffer, uint32_t len)
 		return -1;
 	}
 	int ret = send(network.socket, buffer, len, 0);
-	if (ret >= 0)
-		keepAliveAccept();
+	// if (ret >= 0)
+	// 	keepAliveAccept(&keepAlive);
 	return ret;
 }
 
@@ -106,14 +108,16 @@ static void listen_client(void * pv)
 				continue;
 			}
 			debug_msg("start connect sock = %d\n", network.socket); 
-			cmdClientSend("Hello World\n",13);
+			cmdClientSend((uint8_t*)"Hello World\n",13);
+			keepAliveStart(&keepAlive);
 			status_telnet = 1;
 		}
 		data_len = read_tcp(buffer_cmd, sizeof(buffer_cmd), 100);
 		if(data_len > 0)
 		{
 			debug_msg("receive data %d\n", data_len);
-			keepAliveAccept();
+			keepAliveAccept(&keepAlive);
+			parse_client(buffer_cmd, data_len);
 			/* Data Receive */
 		}
 		else if (data_len < 0)
@@ -125,10 +129,20 @@ static void listen_client(void * pv)
     }// end while
 }
 
+static int keepAliveSend(uint8_t * data, uint32_t dataLen) {
+	cmdClientSend(data, dataLen);
+	//debug_msg("cmdClientSend keepAlive\n");
+	return 1;
+}
+
+static void cmdClientErrorKACb(void) {
+	debug_msg("cmdClientErrorKACb keepAlive\n");
+}
 
 void cmdClientStartTask(void)
 {
-	xTaskCreate(listen_client, "listen_client", CONFIG_DO_TELNET_THD_WA_SIZE, NULL, NORMALPRIO, &thread_task_handle);
+	keepAliveInit(&keepAlive, 800, keepAliveSend, cmdClientErrorKACb);
+	xTaskCreate(listen_client, "cmdClientlisten", CONFIG_DO_TELNET_THD_WA_SIZE, NULL, NORMALPRIO, &thread_task_handle);
 }
 
 void cmdClientStart(void)
@@ -150,6 +164,7 @@ void cmdClientSetPort(uint32_t port)
 void cmdClientDisconnect(void)
 {
 	status_telnet = 0;
+	keepAliveStop(&keepAlive);
 	close(network.socket);
 }
 
