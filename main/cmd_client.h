@@ -33,4 +33,10 @@ void cmdClientStart(void);
 void cmdClientStop(void);
 int cmdClientSend(char* buffer, int len);
 
+void cmdClientSetIp(char * ip);
+void cmdClientSetPort(uint32_t port);
+void cmdClientDisconnect(void);
+int cmdClientConnect(uint32_t timeout);
+int cmdClientIsConnected(void);
+
 #endif

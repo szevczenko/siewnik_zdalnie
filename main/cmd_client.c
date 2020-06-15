@@ -13,6 +13,7 @@
 #include "freertos/queue.h"
 #include "config.h"
 #include "console.h"
+#include "keepalive.h"
 
 #define MAX_VALUE(OLD_V, NEW_VAL) NEW_VAL>OLD_V?NEW_VAL:OLD_V
 
@@ -20,6 +21,9 @@ static uint8_t buffer_cmd[BUFFER_CMD];
 uint8_t status_telnet;
 static cmd_client_network_t network;
 static TaskHandle_t thread_task_handle;
+
+static char cmd_ip_addr[16] = "192.168.4.1";
+static uint32_t cmd_port = 8080;
 
 pthread_mutex_t mutex_client;
 pthread_mutexattr_t mutexattr;
@@ -76,12 +80,15 @@ static int read_tcp(unsigned char* buffer, int len, int timeout_ms)
 	return -1;
 }
 
-int cmdClientSend(char* buffer, int len)
+int cmdClientSend(uint8_t* buffer, uint32_t len)
 {
 	if (network.socket == -1) {
 		return -1;
 	}
-	return send(network.socket, buffer, len, 0);
+	int ret = send(network.socket, buffer, len, 0);
+	if (ret >= 0)
+		keepAliveAccept();
+	return ret;
 }
 
 
@@ -93,7 +100,7 @@ static void listen_client(void * pv)
     {
 		if (status_telnet == 0)
 		{
-			if (NetworkConnect("192.168.4.1", 8080) == -1)
+			if (NetworkConnect(cmd_ip_addr, cmd_port) == -1)
 			{
 				vTaskDelay(MS2ST(250));
 				continue;
@@ -106,13 +113,13 @@ static void listen_client(void * pv)
 		if(data_len > 0)
 		{
 			debug_msg("receive data %d\n", data_len);
+			keepAliveAccept();
 			/* Data Receive */
 		}
 		else if (data_len < 0)
 		{
 			debug_msg("client close socket %d\n", data_len);
-			status_telnet = 0;
-			close(network.socket);		
+			cmdClientDisconnect();		
 		}
 		vTaskDelay(10);
     }// end while
@@ -128,6 +135,50 @@ void cmdClientStart(void)
 {
 	status_telnet = 0;
 	vTaskResume(thread_task_handle);
+}
+
+void cmdClientSetIp(char * ip)
+{
+	strcpy(cmd_ip_addr, ip);
+}
+
+void cmdClientSetPort(uint32_t port)
+{
+	cmd_port = port;
+}
+
+void cmdClientDisconnect(void)
+{
+	status_telnet = 0;
+	close(network.socket);
+}
+
+int cmdClientIsConnected(void)
+{
+	if (status_telnet)
+	{
+		if (strcmp(inet_ntoa(tcpServerAddr.sin_addr), cmd_ip_addr) == 0 && tcpServerAddr.sin_port == htons(cmd_port))
+			return 1;
+	}
+	return 0;
+}
+
+int cmdClientConnect(uint32_t timeout)
+{
+	if (status_telnet)
+	{
+		if (cmdClientIsConnected())
+			return 1;
+		cmdClientDisconnect();
+	}
+	uint32_t time_now = ST2MS(xTaskGetTickCount());
+	do 
+	{
+		if (status_telnet)
+			return 1;
+		vTaskDelay(MS2ST(1));
+	} while(time_now + timeout < ST2MS(xTaskGetTickCount()));
+	return 0;
 }
 
 void cmdClientStop(void)
