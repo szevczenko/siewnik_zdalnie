@@ -84,6 +84,7 @@ void keepAliveStartTask(void)
 void keepAliveStart(keepAlive_t * keep)
 {
 	keep->keepAliveActiveFlag = 1;
+	keep->keepAliveErrorFlag = 0;
 	keepAliveAccept(keep);
 }
 

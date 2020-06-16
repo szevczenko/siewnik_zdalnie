@@ -14,17 +14,35 @@
 #include "config.h"
 #include "console.h"
 #include "parse_cmd.h"
+#include "configCmd.h"
 
 #define MAX_VALUE(OLD_V, NEW_VAL) NEW_VAL>OLD_V?NEW_VAL:OLD_V
 
-uint8_t buffer_cmd[BUFFER_CMD];
-uint8_t status_telnet;
+static uint8_t buffer_cmd[BUFFER_CMD];
+static uint8_t rx_buff[32];
+static uint32_t rx_buff_len;
+static uint8_t status_telnet;
+static uint8_t error_counter;
 static struct client_network n_clients[NUMBER_CLIENT];
 static struct server_network network;
 static TaskHandle_t thread_task_handle;
+static int max_socket = 0;
+static xSemaphoreHandle waitSemaphore, mutexSemaphore;
 
 
 #define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+
+static void cmdServerError(void) { 
+	error_counter++;
+	if (error_counter > 30) {
+		debug_msg("Error counter overflow. System reset\n");
+		configRebootToBlt();
+	}
+}
+
+static void cmdServerClearError(void) {
+	error_counter = 0;
+}
 
 static int init_client(void)
 {	
@@ -40,15 +58,25 @@ static int init_client(void)
     if(rc<0)
     {
         debug_msg("bind error %d (%s)\n", errno, strerror(errno));
+		close(network.socket_tcp);
+		cmdServerError();
         return MSG_ERROR;
     }
 
     rc = listen(network.socket_tcp, 5);
 	if (rc < 0) {
 		debug_msg( "listen: %d (%s)\n", errno, strerror(errno));
+		close(network.socket_tcp);
+		cmdServerError();
 		return MSG_ERROR;
 	}
     return TRUE;
+}
+
+static void deInitClient(void)
+{
+	status_telnet = 0;
+	close(network.socket_tcp);
 }
 
 
@@ -58,7 +86,7 @@ static void listen_client(void * pv)
 	socklen_t len = sizeof(network.servaddr);
 	fd_set set;
 	struct timeval time_select;
-	int rv, max_socket = 0;
+	int rv;
 	uint8_t i;
 	 // add our file descriptor to the set
 	cmdServerStop();
@@ -91,7 +119,7 @@ static void listen_client(void * pv)
 
 	    if (rv<0)
 	    {
-			status_telnet = 0;
+			deInitClient();
 		    debug_msg( "select: %d (%s)\n", errno, strerror(errno)); // an error accured 
 	    }
 	    else if(rv == 0)
@@ -100,14 +128,7 @@ static void listen_client(void * pv)
 			socklen_t len = sizeof (error);
 			int retval = getsockopt (network.socket_tcp, SOL_SOCKET, SO_ERROR, &error, &len);
 			if (retval != 0) {
-				status_telnet = 0;
-			}
-			for (i = 0; i<network.count_clients;i++)
-			{
-				retval = getsockopt(network.clients[i].client_socket, SOL_SOCKET, SO_ERROR, &error, &len);
-				if (retval != 0) {
-					status_telnet = 0;
-				}
+				deInitClient();
 			}
 	    }
 	    else if (FD_ISSET( network.socket_tcp , &set) && rv>0) //Add client
@@ -116,10 +137,12 @@ static void listen_client(void * pv)
             {
                 rc = accept(network.socket_tcp, (struct sockaddr *)&network.servaddr, &len);
 		        if (rc < 0) {
-			    debug_msg( "accept: %d (%s)\n", errno, strerror(errno));
-				vTaskDelay(MS2ST(100));
-                continue;
+					debug_msg( "accept: %d (%s)\n", errno, strerror(errno));
+					deInitClient();
+					vTaskDelay(MS2ST(100));
+					continue;
 		        }
+				cmdServerClearError();
 		        network.clients[network.count_clients].client_socket = rc;
 				max_socket = MAX_VALUE(max_socket,rc);
 				keepAliveStart(&network.clients[network.count_clients].keepAlive);
@@ -146,9 +169,10 @@ static void listen_client(void * pv)
 				rc = accept(network.socket_tcp, (struct sockaddr *)&network.servaddr, &len);
 		        if (rc < 0) {
 					debug_msg( "accept: %d (%s)\n", errno, strerror(errno));
-					status_telnet = 0;
+					deInitClient();
 					continue;
 		        }
+				cmdServerClearError();
 		        network.clients[0].client_socket = rc;
 				max_socket = MAX_VALUE(max_socket,rc);
 				vTaskDelay(MS2ST(100));	
@@ -193,7 +217,7 @@ static void listen_client(void * pv)
 				}
 				if (len>0)
 				{
-					debug_msg("Receive data len %d", len);
+					//debug_msg("Receive data len %d", len);
 					keepAliveAccept(&network.clients[i].keepAlive);
 					parse_server(network.buffer, len);
 				}
@@ -211,14 +235,57 @@ void cmdServerSendData(void * arg, uint8_t * buff, uint8_t len)
 	}
 }
 
+int cmdServerSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, uint32_t * rx_len, uint32_t timeout)
+{
+	if (buff[0] != CMD_REQEST)
+		return FALSE;
+	
+	if (xSemaphoreTake(mutexSemaphore, timeout) == pdTRUE)
+	{
+		for(uint8_t i = 0; i < network.count_clients; i++) {
+			send(network.clients[i].client_socket, buff, len, 0);
+		}
+	
+		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
+
+			if (buff[1] != rx_buff[1]) {
+				xSemaphoreGive(mutexSemaphore);
+				return FALSE;
+			}	
+			
+			if (buff_rx != NULL)
+				memcpy(buff_rx, rx_buff, rx_buff_len);
+			if (rx_len != NULL)
+				*rx_len = rx_buff_len;
+			xSemaphoreGive(mutexSemaphore);
+			return TRUE;
+		}
+	}
+	
+	return FALSE;
+}
+
+int cmdServerAnswerData(uint8_t * buff, uint32_t len) {
+	if (buff == NULL)
+		return FALSE;
+
+	memcpy(rx_buff, buff, rx_buff_len);
+	xSemaphoreGive(waitSemaphore);
+	return TRUE;
+}
+
 static int keepAliveSend(uint8_t * data, uint32_t dataLen) {
-	cmdServerSendData(NULL, data, dataLen);
-	debug_msg("cmdServerSend keepAlive");
-	return 1;
+	debug_msg("SERVER KEEPALIVE ANSWER\n");
+	return cmdServerSendDataWaitResp(data, dataLen, NULL, NULL, 500);
 }
 
 static void cmdServerErrorKACb(void) {
 	debug_msg("cmdServerErrorKACb keepAlive");
+	for (uint8_t j = 0; j<network.count_clients; j++)
+	{
+		close(network.clients[j].client_socket);
+	}
+	max_socket = network.socket_tcp; 
 }
 
 void cmdServerStartTask(void)
@@ -226,18 +293,23 @@ void cmdServerStartTask(void)
 	for (uint8_t i = 0; i < NUMBER_CLIENT; i++) {
 		keepAliveInit(&n_clients[i].keepAlive, 1000, keepAliveSend, cmdServerErrorKACb);
 	}
+	waitSemaphore = xSemaphoreCreateBinary();
+	mutexSemaphore = xSemaphoreCreateBinary();
+	xSemaphoreGive(mutexSemaphore); 
 	xTaskCreate(listen_client, "listen_client", CONFIG_DO_TELNET_THD_WA_SIZE, NULL, NORMALPRIO, &thread_task_handle);
 }
 
 void cmdServerStart(void)
 {
-	status_telnet = 0;
+	deInitClient();
+	cmdServerClearError();
 	vTaskResume(thread_task_handle);
 }
 
 void cmdServerStop(void)
 {
 	close(network.socket_tcp);
+	cmdServerClearError();
 	for (uint8_t i = 0; i<network.count_clients;i++) //recieve data from clients
     {
 		keepAliveStop(&n_clients[i].keepAlive);

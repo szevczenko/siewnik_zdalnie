@@ -16,12 +16,16 @@
 #include "keepalive.h"
 #include "parse_cmd.h"
 
+static xSemaphoreHandle waitSemaphore, mutexSemaphore;
+
 #define MAX_VALUE(OLD_V, NEW_VAL) NEW_VAL>OLD_V?NEW_VAL:OLD_V
 
 static uint8_t buffer_cmd[BUFFER_CMD];
 uint8_t status_telnet;
 static cmd_client_network_t network;
 static TaskHandle_t thread_task_handle;
+static uint8_t rx_buff[32];
+static uint32_t rx_buff_len;
 
 static char cmd_ip_addr[16] = "192.168.4.1";
 static uint32_t cmd_port = 8080;
@@ -88,9 +92,40 @@ int cmdClientSend(uint8_t* buffer, uint32_t len)
 		return -1;
 	}
 	int ret = send(network.socket, buffer, len, 0);
-	// if (ret >= 0)
-	// 	keepAliveAccept(&keepAlive);
 	return ret;
+}
+
+int cmdClientSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, uint32_t * rx_len, uint32_t timeout)
+{
+	if (buff[0] != CMD_REQEST)
+		return FALSE;
+	if (xSemaphoreTake(mutexSemaphore, timeout) == pdTRUE)
+	{
+		send(network.socket, buff, len, 0);
+		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
+			if (buff[1] != rx_buff[1]) {
+				xSemaphoreGive(mutexSemaphore);
+				return FALSE;
+			}	
+			debug_msg("CLIENT KEEPALIVE ANSWER\n");
+			if (buff_rx != NULL)
+				memcpy(buff_rx, rx_buff, rx_buff_len);
+			if (rx_len != NULL)
+				*rx_len = rx_buff_len;
+			xSemaphoreGive(mutexSemaphore);
+			return TRUE;
+		}
+	}
+	
+	return FALSE;
+}
+
+int cmdClientAnswerData(uint8_t * buff, uint32_t len) {
+	if (buff == NULL)
+		return FALSE;
+	memcpy(rx_buff, buff, rx_buff_len);
+	xSemaphoreGive(waitSemaphore);
+	return TRUE;
 }
 
 
@@ -130,18 +165,20 @@ static void listen_client(void * pv)
 }
 
 static int keepAliveSend(uint8_t * data, uint32_t dataLen) {
-	cmdClientSend(data, dataLen);
-	//debug_msg("cmdClientSend keepAlive\n");
-	return 1;
+	return cmdClientSendDataWaitResp(data, dataLen, NULL, NULL, 500);
 }
 
 static void cmdClientErrorKACb(void) {
 	debug_msg("cmdClientErrorKACb keepAlive\n");
+	cmdClientDisconnect();
 }
 
 void cmdClientStartTask(void)
 {
 	keepAliveInit(&keepAlive, 800, keepAliveSend, cmdClientErrorKACb);
+	waitSemaphore = xSemaphoreCreateBinary();
+	mutexSemaphore = xSemaphoreCreateBinary();
+	xSemaphoreGive(mutexSemaphore); 
 	xTaskCreate(listen_client, "cmdClientlisten", CONFIG_DO_TELNET_THD_WA_SIZE, NULL, NORMALPRIO, &thread_task_handle);
 }
 

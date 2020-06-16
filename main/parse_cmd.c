@@ -23,7 +23,7 @@ void parse_client(uint8_t * buff, uint32_t len)
 	else if (buff[0] == CMD_ANSWER) {
 		switch(buff[1]) {
 			case PC_KEEP_ALIVE:
-				debug_msg("CLIENT KEEPALIVE ANSWER\n");
+				cmdClientAnswerData(buff, len);
 				break;
 		}
 	}
@@ -43,7 +43,7 @@ void parse_server(uint8_t * buff, uint32_t len)
 	else if (buff[0] == CMD_ANSWER) {
 		switch(buff[1]) {
 			case PC_KEEP_ALIVE:
-				debug_msg("SERVER KEEPALIVE ANSWER\n");
+				cmdServerAnswerData(buff, len);
 				break;
 		}
 	}
