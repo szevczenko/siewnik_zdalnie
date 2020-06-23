@@ -101,28 +101,60 @@ int cmdClientSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, u
 		return FALSE;
 	if (xSemaphoreTake(mutexSemaphore, timeout) == pdTRUE)
 	{
+		xQueueReset((QueueHandle_t )waitSemaphore);
 		send(network.socket, buff, len, 0);
 		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
 			if (buff[1] != rx_buff[1]) {
 				xSemaphoreGive(mutexSemaphore);
 				return FALSE;
 			}	
-			debug_msg("CLIENT KEEPALIVE ANSWER\n");
 			if (buff_rx != NULL)
 				memcpy(buff_rx, rx_buff, rx_buff_len);
 			if (rx_len != NULL)
 				*rx_len = rx_buff_len;
+
+			rx_buff_len = 0;
 			xSemaphoreGive(mutexSemaphore);
 			return TRUE;
 		}
+		else {
+			xSemaphoreGive(mutexSemaphore);
+		}
 	}
-	
+	debug_msg("Timeout cmdClientSendDataWaitResp\n");
+	return FALSE;
+}
+
+int cmdClientSetValue(menuValue_t val, uint32_t value, uint32_t timeout_ms) {
+	if (menuSetValue(val, value) == FALSE){
+		return FALSE;
+	}
+	uint8_t sendBuff[8];
+	uint8_t rxBuff[8];
+	uint32_t reLen;
+	sendBuff[0] = CMD_REQEST;
+	sendBuff[1] = PC_SET;
+	sendBuff[2] = val;
+	memcpy(&sendBuff[3], (uint8_t *)&value, 4);
+
+	if (cmdClientSendDataWaitResp(sendBuff, 7, rxBuff, &reLen, MS2ST(timeout_ms)) == FALSE) {
+		return -1;
+	}
+	// debug_msg("cmdClientSetValue receive data %d\n", reLen);
+	// for (uint8_t i = 0; i < reLen; i++) {
+	// 	debug_msg("%d ", rxBuff[i]);
+	// }
+	// debug_msg("\n");
+	if (rxBuff[2] == POSITIVE_RESP)
+		return TRUE;
+
 	return FALSE;
 }
 
 int cmdClientAnswerData(uint8_t * buff, uint32_t len) {
 	if (buff == NULL)
 		return FALSE;
+	rx_buff_len = len;
 	memcpy(rx_buff, buff, rx_buff_len);
 	xSemaphoreGive(waitSemaphore);
 	return TRUE;
@@ -150,7 +182,7 @@ static void listen_client(void * pv)
 		data_len = read_tcp(buffer_cmd, sizeof(buffer_cmd), 100);
 		if(data_len > 0)
 		{
-			debug_msg("receive data %d\n", data_len);
+			//debug_msg("receive data %d\n", data_len);
 			keepAliveAccept(&keepAlive);
 			parse_client(buffer_cmd, data_len);
 			/* Data Receive */

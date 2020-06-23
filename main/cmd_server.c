@@ -217,7 +217,7 @@ static void listen_client(void * pv)
 				}
 				if (len>0)
 				{
-					//debug_msg("Receive data len %d", len);
+					debug_msg("Receive data len %d\n", len);
 					keepAliveAccept(&network.clients[i].keepAlive);
 					parse_server(network.buffer, len);
 				}
@@ -275,7 +275,6 @@ int cmdServerAnswerData(uint8_t * buff, uint32_t len) {
 }
 
 static int keepAliveSend(uint8_t * data, uint32_t dataLen) {
-	debug_msg("SERVER KEEPALIVE ANSWER\n");
 	return cmdServerSendDataWaitResp(data, dataLen, NULL, NULL, 500);
 }
 

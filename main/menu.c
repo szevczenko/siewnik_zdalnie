@@ -521,7 +521,7 @@ static void menu_task(void * arg)
 	menu_token_t * menu;
 	while(1)
 	{
-		xSemaphoreTake( xSemaphore, ( TickType_t ) MS2ST(50) );
+		xSemaphoreTake( xSemaphore, ( TickType_t ) MS2ST(100) );
 		//taskENTER_CRITICAL();
 		menu = last_tab_element();
 		if (menu == NULL) 

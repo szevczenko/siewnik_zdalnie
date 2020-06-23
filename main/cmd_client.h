@@ -11,6 +11,7 @@
 #include <arpa/inet.h> 
 #include <netinet/in.h> 
 #include <errno.h>
+#include "menu_param.h"
 
 #define PORT     8080 
 #define MAXLINE 1024 
@@ -39,5 +40,7 @@ int cmdClientConnect(uint32_t timeout);
 int cmdClientIsConnected(void);
 int cmdClientSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, uint32_t * rx_len, uint32_t timeout);
 int cmdClientAnswerData(uint8_t * buff, uint32_t len);
+
+int cmdClientSetValue(menuValue_t val, uint32_t value, uint32_t timeout_ms);
 
 #endif

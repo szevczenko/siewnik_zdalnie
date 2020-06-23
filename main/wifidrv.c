@@ -115,7 +115,7 @@ int wifiDataSave(wifiConData_t *data)
     if (err != ESP_OK) {
 		nvs_close(my_handle);
 		return err;
-	}
+  }
 
 	err = nvs_set_blob(my_handle, "wifi", data, sizeof(wifiConData_t));
 
@@ -138,25 +138,25 @@ int wifiDataSave(wifiConData_t *data)
 esp_err_t wifiDataRead(wifiConData_t *data)
 {
 	nvs_handle my_handle;
-    esp_err_t err;
-	 // Open
-    err = nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &my_handle);
-    if (err != ESP_OK) return err;
-	 // Read the size of memory space required for blob
-    size_t required_size = 0;  // value will default to 0, if not set yet in NVS
-    err = nvs_get_blob(my_handle, "wifi", NULL, &required_size);
-    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) 
+  esp_err_t err;
+	// Open
+  err = nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &my_handle);
+  if (err != ESP_OK) return err;
+	// Read the size of memory space required for blob
+  size_t required_size = 0;  // value will default to 0, if not set yet in NVS
+  err = nvs_get_blob(my_handle, "wifi", NULL, &required_size);
+  if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) 
 	{
 		nvs_close(my_handle);
 		return err;
 	}
 
-    // Read previously saved blob if available
-    if (required_size == sizeof(wifiConData_t)) {
-        err = nvs_get_blob(my_handle, "wifi", data, &required_size);
-		    nvs_close(my_handle);
-        return err;
-    }
+  // Read previously saved blob if available
+  if (required_size == sizeof(wifiConData_t)) {
+    err = nvs_get_blob(my_handle, "wifi", data, &required_size);
+	  nvs_close(my_handle);
+    return err;
+  }
 	nvs_close(my_handle);
 	return ESP_ERR_NVS_NOT_FOUND;
 }

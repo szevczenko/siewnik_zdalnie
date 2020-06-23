@@ -21,6 +21,9 @@
 #include "ssd1306_tests.h"
 #include "menu.h"
 #include "keepalive.h"
+#include "menu_param.h"
+#include "cmd_client.h"
+#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 uint8_t test_value;
 uint8_t test_value_2 = 10;
@@ -77,6 +80,7 @@ void app_main()
     consoleStart();
     wifiDrvInit();
     keepAliveStartTask();
+    menuParamInit();
     if (config.dev_type != T_DEV_TYPE_SERVER)
     {
         init_buttons();
@@ -94,6 +98,22 @@ void app_main()
     
     while(1)
     {
-        vTaskDelay(MS2ST(1000));
+        vTaskDelay(MS2ST(10));
+        if (config.dev_type != T_DEV_TYPE_SERVER)
+        {
+           if(cmdClientSetValue(MENU_MOTOR, 50, 100) == 1) {
+               debug_msg("Positive\n");
+           }
+           else {
+               debug_msg("MENU_MOTOR Negative\n");
+           }
+
+           if(cmdClientSetValue(MENU_SERVO, 150, 100)) {
+               debug_msg("MENU_SERVO Positive\n");
+           }
+           else {
+               //debug_msg("MENU_SERVO Negative\n");
+           }
+        }
     }
 }
