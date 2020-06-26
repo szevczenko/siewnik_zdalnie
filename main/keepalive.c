@@ -9,7 +9,7 @@
 static keepAlive_t * keepAliveTab[8];
 static uint8_t tabSize;
 
-static uint8_t keep_alive_frame[2] = {CMD_REQEST, PC_KEEP_ALIVE};
+static uint8_t keep_alive_frame[] = {3, CMD_REQEST, PC_KEEP_ALIVE};
 
 void keepAliveInit(keepAlive_t * keep, uint32_t timeout, int (*send)(uint8_t * data, uint32_t dataLen), void (*errorCb)(void)) {
 	keep->keepAliveSend = send;

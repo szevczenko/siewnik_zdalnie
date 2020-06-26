@@ -49,4 +49,7 @@ typedef struct
 void parse_client(uint8_t * buff, uint32_t len);
 void parse_server(uint8_t * buff, uint32_t len);
 
+void parse_client_buffer(uint8_t * buff, uint32_t len);
+void parse_server_buffer(uint8_t * buff, uint32_t len);
+
 #endif

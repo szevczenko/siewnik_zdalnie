@@ -6,6 +6,7 @@
 #include "console.h"
 #include "semphr.h"
 #include "wifidrv.h"
+#include "cmd_client.h"
 
 #define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
@@ -653,7 +654,9 @@ static void menu_task(void * arg)
 					ssdFigureDrawLoadBar(&servo_bar);
 					ssd1306_SetCursor(80, 55);
 					ssd1306_WriteString(str, Font_7x10, White);
-					drawServo(20, 40, 10);
+					drawServo(20, 40, servo_value);
+					cmdClientSetValue(MENU_MOTOR, motor_value, 50);
+					cmdClientSetValue(MENU_SERVO, servo_value, 50);
 				}
 				
 			break;

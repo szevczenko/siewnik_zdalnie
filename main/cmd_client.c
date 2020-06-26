@@ -97,25 +97,25 @@ int cmdClientSend(uint8_t* buffer, uint32_t len)
 
 int cmdClientSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, uint32_t * rx_len, uint32_t timeout)
 {
-	if (buff[0] != CMD_REQEST)
+	if (buff[1] != CMD_REQEST)
 		return FALSE;
 	if (xSemaphoreTake(mutexSemaphore, timeout) == pdTRUE)
 	{
 		xQueueReset((QueueHandle_t )waitSemaphore);
 		send(network.socket, buff, len, 0);
 		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
-			if (buff[1] != rx_buff[1]) {
+			if (buff[2] != rx_buff[2]) {
 				xSemaphoreGive(mutexSemaphore);
-				return FALSE;
+				return 0;
 			}	
-			if (buff_rx != NULL)
+			if (buff_rx != 0)
 				memcpy(buff_rx, rx_buff, rx_buff_len);
-			if (rx_len != NULL)
+			if (rx_len != 0)
 				*rx_len = rx_buff_len;
 
 			rx_buff_len = 0;
 			xSemaphoreGive(mutexSemaphore);
-			return TRUE;
+			return 1;
 		}
 		else {
 			xSemaphoreGive(mutexSemaphore);
@@ -125,19 +125,34 @@ int cmdClientSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, u
 	return FALSE;
 }
 
-int cmdClientSetValue(menuValue_t val, uint32_t value, uint32_t timeout_ms) {
+int cmdClientSetValueWithoutResp(menuValue_t val, uint32_t value) {
 	if (menuSetValue(val, value) == FALSE){
 		return FALSE;
 	}
 	uint8_t sendBuff[8];
+	sendBuff[0] = 8;
+	sendBuff[1] = CMD_DATA;
+	sendBuff[2] = PC_SET;
+	sendBuff[3] = val;
+	memcpy(&sendBuff[4], (uint8_t *)&value, 4);
+
+	return cmdClientSend(sendBuff, 8);
+}
+
+int cmdClientSetValue(menuValue_t val, uint32_t value, uint32_t timeout_ms) {
+	if (menuSetValue(val, value) == 0){
+		return 0;
+	}
+	uint8_t sendBuff[8];
 	uint8_t rxBuff[8];
 	uint32_t reLen;
-	sendBuff[0] = CMD_REQEST;
-	sendBuff[1] = PC_SET;
-	sendBuff[2] = val;
-	memcpy(&sendBuff[3], (uint8_t *)&value, 4);
+	sendBuff[0] = 8;
+	sendBuff[1] = CMD_DATA;
+	sendBuff[2] = PC_SET;
+	sendBuff[3] = val;
+	memcpy(&sendBuff[4], (uint8_t *)&value, 4);
 
-	if (cmdClientSendDataWaitResp(sendBuff, 7, rxBuff, &reLen, MS2ST(timeout_ms)) == FALSE) {
+	if (cmdClientSendDataWaitResp(sendBuff, 8, rxBuff, &reLen, MS2ST(timeout_ms)) == 0) {
 		return -1;
 	}
 	// debug_msg("cmdClientSetValue receive data %d\n", reLen);
@@ -146,9 +161,9 @@ int cmdClientSetValue(menuValue_t val, uint32_t value, uint32_t timeout_ms) {
 	// }
 	// debug_msg("\n");
 	if (rxBuff[2] == POSITIVE_RESP)
-		return TRUE;
+		return 1;
 
-	return FALSE;
+	return 0;
 }
 
 int cmdClientAnswerData(uint8_t * buff, uint32_t len) {
@@ -175,16 +190,19 @@ static void listen_client(void * pv)
 				continue;
 			}
 			debug_msg("start connect sock = %d\n", network.socket); 
-			cmdClientSend((uint8_t*)"Hello World\n",13);
 			keepAliveStart(&keepAlive);
 			status_telnet = 1;
 		}
 		data_len = read_tcp(buffer_cmd, sizeof(buffer_cmd), 100);
 		if(data_len > 0)
 		{
-			//debug_msg("receive data %d\n", data_len);
+			// debug_msg("Client data len %d\n", data_len);
+			// for (uint16_t i = 0; i < data_len; i++) {
+			// 	debug_msg("%d ", buffer_cmd[i]);
+			// }
+			// debug_msg("\n\r");
 			keepAliveAccept(&keepAlive);
-			parse_client(buffer_cmd, data_len);
+			parse_client_buffer(buffer_cmd, data_len);
 			/* Data Receive */
 		}
 		else if (data_len < 0)

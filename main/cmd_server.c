@@ -217,9 +217,13 @@ static void listen_client(void * pv)
 				}
 				if (len>0)
 				{
-					debug_msg("Receive data len %d\n", len);
+					// debug_msg("Server data len %d\n", len);
+					// for (uint16_t i = 0; i < len; i++) {
+					// 	debug_msg("%d ",network.buffer[i]);
+					// }
+					// debug_msg("\n\r");
 					keepAliveAccept(&network.clients[i].keepAlive);
-					parse_server(network.buffer, len);
+					parse_server_buffer(network.buffer, len);
 				}
         	} //end for
 		}//end if
@@ -237,7 +241,7 @@ void cmdServerSendData(void * arg, uint8_t * buff, uint8_t len)
 
 int cmdServerSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, uint32_t * rx_len, uint32_t timeout)
 {
-	if (buff[0] != CMD_REQEST)
+	if (buff[1] != CMD_REQEST)
 		return FALSE;
 	
 	if (xSemaphoreTake(mutexSemaphore, timeout) == pdTRUE)
@@ -248,7 +252,7 @@ int cmdServerSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, u
 	
 		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
 
-			if (buff[1] != rx_buff[1]) {
+			if (buff[2] != rx_buff[2]) {
 				xSemaphoreGive(mutexSemaphore);
 				return FALSE;
 			}	

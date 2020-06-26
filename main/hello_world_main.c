@@ -98,18 +98,18 @@ void app_main()
     
     while(1)
     {
-        vTaskDelay(MS2ST(10));
+        vTaskDelay(MS2ST(50));
         if (config.dev_type != T_DEV_TYPE_SERVER)
         {
-           if(cmdClientSetValue(MENU_MOTOR, 50, 100) == 1) {
-               debug_msg("Positive\n");
+           if(cmdClientSetValueWithoutResp(MENU_MOTOR, 50) == 1) {
+               //debug_msg("Positive\n");
            }
            else {
-               debug_msg("MENU_MOTOR Negative\n");
+               //debug_msg("MENU_MOTOR Negative\n");
            }
 
-           if(cmdClientSetValue(MENU_SERVO, 150, 100)) {
-               debug_msg("MENU_SERVO Positive\n");
+           if(cmdClientSetValueWithoutResp(MENU_SERVO, 80)) {
+               //debug_msg("MENU_SERVO Positive\n");
            }
            else {
                //debug_msg("MENU_SERVO Negative\n");
