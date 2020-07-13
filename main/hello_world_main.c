@@ -35,8 +35,8 @@ void test_func(uint8_t value)
 
 void bytton_rise_callback(void * arg)
 {
-    fastProcessStop(&test_value);
-    fastProcessStop(&test_value_2);
+    // fastProcessStop(&test_value);
+    // fastProcessStop(&test_value_2);
     consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, "bytton_rise_callback\n");
 }
 
@@ -48,15 +48,15 @@ void bytton_fall_callback(void * arg)
 
 void bytton_time_callback(void * arg)
 {
-    fastProcessStart(&test_value, 100, 0, FP_PLUS, test_func);
-    fastProcessStart(&test_value_2, 100, 0, FP_PLUS, test_func);
+    // fastProcessStart(&test_value, 100, 0, FP_PLUS, test_func);
+    // fastProcessStart(&test_value_2, 100, 0, FP_PLUS, test_func);
     consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, "bytton_time_callback\n");
 }
 
 void bytton2_rise_callback(void * arg)
 {
-    fastProcessStop(&test_value);
-    fastProcessStop(&test_value_2);
+    // fastProcessStop(&test_value);
+    // fastProcessStop(&test_value_2);
     consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, "bytton2_rise_callback\n");
 }
 
@@ -68,8 +68,8 @@ void bytton2_fall_callback(void * arg)
 
 void bytton2_time_callback(void * arg)
 {
-    fastProcessStart(&test_value, 100, 0, FP_MINUS, test_func);
-    fastProcessStart(&test_value_2, 100, 0, FP_MINUS, test_func);
+    // fastProcessStart(&test_value, 100, 0, FP_MINUS, test_func);
+    // fastProcessStart(&test_value_2, 100, 0, FP_MINUS, test_func);
     consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, "bytton2_time_callback\n");
 }
 

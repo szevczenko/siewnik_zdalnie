@@ -29,7 +29,7 @@ uint8_t read_button(but_t *but)
 	if (but->is_gpio){
 		return gpio_get_level(but->gpio);
 	}
-	return ~read_i2c_value & (1 << but->bit);
+	return !(~read_i2c_value & (1 << but->bit));
 }
 
 extern uint8_t test_button;

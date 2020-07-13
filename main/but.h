@@ -10,7 +10,7 @@
 #define BUT_H_
 
 #define BUTTON_CNT 10 //ilo�� przycisk�w
-#define TIMER_CNT_TIMEOUT 50 
+#define TIMER_CNT_TIMEOUT 30 
 
 #define CONFIG_BUTTON_I2C TRUE
 
@@ -24,7 +24,7 @@ void init_buttons(void);
 #define BUT6_GPIO 16
 #define BUT7_GPIO 1
 #define BUT8_GPIO 4
-#define BUT9_GPIO 0
+#define BUT9_GPIO 14
 #define BUT10_GPIO 2
 
 

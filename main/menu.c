@@ -1,4 +1,5 @@
 #include "config.h"
+#include "freertos/timers.h"
 #include "menu.h"
 #include "ssd1306.h"
 #include "ssdFigure.h"
@@ -7,8 +8,9 @@
 #include "semphr.h"
 #include "wifidrv.h"
 #include "cmd_client.h"
+#include "fast_add.h"
 
-#define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -24,6 +26,7 @@ static uint16_t dev_count;
 static TickType_t connect_timeout;
 static TickType_t animation_timeout;
 static uint8_t animation_cnt;
+static TimerHandle_t xTimers;
 
 typedef enum
 {
@@ -382,6 +385,8 @@ void button_plus_callback(void * arg)
 		break;
 
 		case T_ARG_TYPE_START:
+			if (motor_value < 100)
+				motor_value++;
 		break;
 
 		case T_ARG_TYPE_WIFI:
@@ -392,6 +397,44 @@ void button_plus_callback(void * arg)
 				connectToDevice(wifi_device_list[menu->position]);
 			}
 			break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void motor_fast_add(uint32_t value) {
+	(void) value;
+	debug_msg("Motor value %d\n", motor_value);
+}
+
+void button_plus_time_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type){
+
+		case T_ARG_TYPE_START:
+			fastProcessStart(&motor_value, 100, 0, FP_PLUS, motor_fast_add);
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void button_plus_up_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type)
+	{
+		
+		case T_ARG_TYPE_START:
+			fastProcessStop(&motor_value);
+		break;
 
 		default:
 			return;
@@ -432,6 +475,41 @@ void button_minus_callback(void * arg)
 			break;
 
 		case T_ARG_TYPE_START:
+			if (motor_value > 0)
+				motor_value--;
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void button_minus_time_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type){
+
+		case T_ARG_TYPE_START:
+			fastProcessStart(&motor_value, 100, 0, FP_MINUS, motor_fast_add);
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void button_minus_up_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type)
+	{
+		
+		case T_ARG_TYPE_START:
+			fastProcessStop(&motor_value);
 		break;
 
 		default:
@@ -614,7 +692,7 @@ static void menu_task(void * arg)
 						menuPrintfInfo("Target not connected. Go to DEVICES and connect to target");
 					}
 				}
-				else {
+				else { 
 					if (animation_timeout < xTaskGetTickCount()) {
 						animation_cnt++;
 						animation_timeout = xTaskGetTickCount() + MS2ST(100);
@@ -654,9 +732,13 @@ static void menu_task(void * arg)
 					ssdFigureDrawLoadBar(&servo_bar);
 					ssd1306_SetCursor(80, 55);
 					ssd1306_WriteString(str, Font_7x10, White);
-					drawServo(20, 40, servo_value);
-					cmdClientSetValue(MENU_MOTOR, motor_value, 50);
-					cmdClientSetValue(MENU_SERVO, servo_value, 50);
+					if (servo_on) {
+						drawServo(10, 35, servo_value);
+					}
+					else {
+						drawServo(10, 35, 0);
+					}
+					
 				}
 				
 			break;
@@ -796,14 +878,34 @@ void menuPrintfInfo(const char *format, ...)
 	add_menu_tab(&info_menu);
 }
 
+void button_plus_servo_up_callback(void * arg);
+void button_plus_servo_callback(void * arg);
+void button_plus_servo_time_callback(void * arg);
+
+void button_minus_servo_up_callback(void * arg);
+void button_minus_servo_callback(void * arg);
+void button_minus_servo_time_callback(void * arg);
+
+void button_motor_state(void * arg);
+void button_servo_state(void * arg);
+
 void menuDeactivateButtons(void)
 {
 	button1.fall_callback = NULL;
 	button2.fall_callback = NULL;
 	button3.fall_callback = NULL;
 	button4.fall_callback = NULL;
+	button4.timer_callback = NULL;
+	button4.rise_callback = NULL;
 	button5.fall_callback = NULL;
 	button6.fall_callback = NULL;
+	button6.timer_callback = NULL;
+	button6.rise_callback = NULL;
+	button7.fall_callback = NULL;
+	button7.timer_callback = NULL;
+	button7.rise_callback = NULL;
+	button9.fall_callback = NULL;
+	button10.fall_callback = NULL;
 }
 
 void menuActivateButtons(void)
@@ -811,15 +913,32 @@ void menuActivateButtons(void)
 	button1.fall_callback = button_up_callback;
 	button2.fall_callback = button_down_callback;
 	button6.fall_callback = button_plus_callback;
+	button6.timer_callback = button_plus_time_callback;
+	button6.rise_callback = button_plus_up_callback;
 	button4.fall_callback = button_minus_callback;
+	button4.timer_callback = button_minus_time_callback;
+	button4.rise_callback = button_minus_up_callback;
+	button7.fall_callback = button_plus_servo_callback;
+	button7.timer_callback = button_plus_servo_time_callback;
+	button7.rise_callback = button_plus_servo_up_callback;
+	button5.fall_callback = button_minus_servo_callback;
+	button5.timer_callback = button_minus_servo_time_callback;
+	button5.rise_callback = button_minus_servo_up_callback;
 	button3.fall_callback = button_enter_callback;
 	button8.fall_callback = button_exit_callback;
+	button9.fall_callback = button_motor_state;
+	button10.fall_callback = button_servo_state;
+}
+
+static void timerCallback(void * pv) {
+	servo_on = 1;
 }
 
 void init_menu(void)
 {
 	entered_menu_tab[0] = &main_menu;
 	xSemaphore = xSemaphoreCreateBinary();
+	xTimers = xTimerCreate("Timer", MS2ST(2000), pdTRUE, ( void * ) 0, timerCallback);
 	xTaskCreate(menu_task, "menu_task", 2048, NULL, 10, NULL);
 	wifiDrvGetAPName(devName);
 	if (connectToDevice(devName) == FALSE)
@@ -830,6 +949,162 @@ void init_menu(void)
 	menuActivateButtons();
 	update_screen();
 }
+
+void button_plus_servo_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type)
+	{
+	
+		case T_ARG_TYPE_START:
+			if (servo_value < 100)
+				servo_value++;
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+static void servo_fast_add(uint32_t value) {
+	(void) value;
+	debug_msg("servo_value %d\n", servo_value);
+}
+
+void button_plus_servo_time_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type){
+
+		case T_ARG_TYPE_START:
+			fastProcessStart(&servo_value, 100, 0, FP_PLUS, servo_fast_add);
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void button_plus_servo_up_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type)
+	{
+		
+		case T_ARG_TYPE_START:
+			fastProcessStop(&servo_value);
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void button_minus_servo_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type)
+	{
+	
+		case T_ARG_TYPE_START:
+			if (servo_value > 0)
+				servo_value--;
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void button_minus_servo_time_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type){
+
+		case T_ARG_TYPE_START:
+			fastProcessStart(&servo_value, 100, 0, FP_MINUS, servo_fast_add);
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void button_minus_servo_up_callback(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type)
+	{
+		
+		case T_ARG_TYPE_START:
+			fastProcessStop(&servo_value);
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void button_motor_state(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type)
+	{
+		
+		case T_ARG_TYPE_START:
+			if (motor_on) {
+				motor_on = 0;
+				servo_on = 0;
+				xTimerStop(xTimers, 0);
+			}
+			else {
+				xTimerStart(xTimers, 0);
+				motor_on = 1;
+			}
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
+void button_servo_state(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == NULL) return;
+	switch(menu->arg_type)
+	{
+		
+		case T_ARG_TYPE_START:
+			xTimerStop(xTimers, 0);
+			if (servo_on) {
+				servo_on = 0;
+			}
+			else {
+				servo_on = 1;
+			}
+		break;
+
+		default:
+			return;
+	}
+	update_screen();
+}
+
 
 #ifdef __GNUC__
 #pragma GCC diagnostic pop

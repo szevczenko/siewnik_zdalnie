@@ -10,7 +10,7 @@ static uint8_t list_cnt;
 
 static SemaphoreHandle_t xSemaphore;
 
-void fastProcessStart(uint8_t * value, uint8_t max, uint8_t min, fast_process_sign sign,  void (*func)(uint8_t))
+void fastProcessStart(uint32_t * value, uint32_t max, uint32_t min, fast_process_sign sign,  void (*func)(uint32_t))
 {
 	if (list_cnt >= FAST_ADD_LIST_SIZE) return;
 	if( xSemaphoreTake( xSemaphore, ( TickType_t ) 100 ) == pdTRUE )
@@ -37,7 +37,7 @@ void fastProcessStart(uint8_t * value, uint8_t max, uint8_t min, fast_process_si
 	}
 }
 
-void fastProcessStop(uint8_t * value)
+void fastProcessStop(uint32_t * value)
 {
 	if( xSemaphoreTake( xSemaphore, ( TickType_t ) 100 ) == pdTRUE )
 	{
@@ -114,7 +114,7 @@ static void fast_add(void * arg)
 				xSemaphoreGive( xSemaphore );
 			}
 		}
-		vTaskDelay(MS2ST(50));
+		vTaskDelay(MS2ST(35));
 	}
 	
 }
