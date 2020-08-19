@@ -9,6 +9,10 @@
         {
             "name": "Tets",
             "path": "../../../../../Users/Demetriusz/Documents/PlatformIO/Projects/Tets"
+        },
+        {
+            "name": "test_pwm",
+            "path": "../../../../../Users/Demetriusz/Documents/PlatformIO/Projects/test_pwm"
         }
     ],
     
