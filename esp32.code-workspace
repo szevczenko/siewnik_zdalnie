@@ -4,11 +4,10 @@
             "path": "."
         },
         {
-            "path": "..//ESP8266_RTOS_SDK"
+            "path": "/home/dmytro/esp/ESP8266_RTOS_SDK"
         },
         {
-            "name": "Tets",
-            "path": "../../../../../Users/Demetriusz/Documents/PlatformIO/Projects/Tets"
+            "path": "/home/dmytro/projects/Unity"
         }
     ],
     
@@ -26,6 +25,11 @@
             "IDF_PATH": "/home/Demetriusz/esp/ESP8266_RTOS_SDK",
             "OPENOCD_SCRIPTS": "${env:IDF_TOOLS_PATH}/tools/openocd-esp32/v0.10.0-esp32-20200309/openocd-esp32/share/openocd/scripts",
         },
+        "terminal.integrated.env.linux": {
+            "PATH": "${env:PATH}:/home/dmytro/esp/xtensa-lx106-elf/bin",
+            "IDF_PATH": "/home/dmytro/esp/ESP8266_RTOS_SDK",
+            "OPENOCD_SCRIPTS": "${env:IDF_TOOLS_PATH}/tools/openocd-esp32/v0.10.0-esp32-20200309/openocd-esp32/share/openocd/scripts",
+        },
         "terminal.integrated.shell.windows": "C:/msys32/usr/bin/bash.exe",
         "terminal.integrated.shellArgs.windows": [
             "--login",
@@ -37,7 +41,11 @@
             "cmd_server.h": "c",
             "config.h": "c",
             "*.inc": "c",
-            "ssd1306.h": "c"
+            "ssd1306.h": "c",
+            "array": "c",
+            "string_view": "c",
+            "initializer_list": "c",
+            "utility": "c"
         },
     }
 }    

@@ -23,6 +23,10 @@ typedef struct menu_token
 	uint8_t position;
 } menu_token_t;
 
+extern uint32_t motor_value;
+extern uint32_t servo_value;
+extern bool motor_on;
+extern bool servo_on;
 
 void init_menu(void);
 void button_minus_callback(void * arg);

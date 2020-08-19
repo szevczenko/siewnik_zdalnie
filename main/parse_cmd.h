@@ -1,7 +1,6 @@
 #ifndef _PARSE_CMD_H
 #define _PARSE_CMD_H
 #include "config.h"
-#include "communication.h"
 
 #define CMD_REQEST 0x11
 #define CMD_ANSWER 0x22
@@ -22,6 +21,8 @@ typedef enum
 {
 	MENU_MOTOR,
 	MENU_SERVO,
+	MENU_MOTOR_IS_ON,
+	MENU_SERVO_IS_ON,
 	MENU_CURRENT_SERVO,
 	MENU_CURRENT_MOTOTR,
 	MENU_VOLTAGE_ACCUM,

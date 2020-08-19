@@ -22,20 +22,10 @@
 
 /////////////////////  CONFIG PERIPHERALS  ////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
-// TINYPRINTF
-#define CONFIG_USE_TINYPRINTF TRUE
-#define TINYPRINTF_DEFINE_TFP_PRINTF TRUE
-#define TINYPRINTF_DEFINE_TFP_SPRINTF TRUE
-#define TINYPRINTF_OVERRIDE_LIBC TRUE
-///////////////////////////////////////////////////////////////////////////////////////////
 // LED
 #define CONFIG_USE_LED FALSE
 #define CONFIG_LED_STATUS LED1
 #define CONFIG_LED_ERROR LED4
-///////////////////////////////////////////////////////////////////////////////////////////
-// RTT
-#define CONFIG_USE_RTT FALSE
-#define CONFIG_RTT_CHANNEL 0
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // ETHERNET
@@ -55,6 +45,9 @@
 #define CONFIG_USE_CONSOLE_TELNET FALSE
 #define CONFIG_CONSOLE_ECHO TRUE
 #define CONFIG_CONSOLE_PROMPT ""
+///////////////////////////////////////////////////////////////////////////////////////////
+//// ERROR
+#define CONFIG_USE_ERROR_MOTOR TRUE
 
 //////////////////////////////////////  END  //////////////////////////////////////////////
 
@@ -129,47 +122,6 @@ extern config_t config;
 
 int configSave(config_t *config);
 int configRead(config_t *config);
-
-enum
-{
-	_IN = 1,
-	_CAN1,
-	_CAN2,
-	_OUT,
-	_DUMP,
-	_MP,
-	_CONSOLE,
-};
-
-typedef enum
-{
-	ERR_CONFIG_OK = 0,
-	ERR_CONFIG_INVALID_CMD = -1,
-	ERR_CONFIG_INVALID_ARG = -2,
-	ERR_CONFIG_INVALID_NUM = -3,
-
-} err_config_t;
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// UART
-#define UART_INIT(x) (uart##x##Init)
-#define UART_PRINTF(x) (uart##x##Printf)
-#define UART_PRINTFI(x) (uart##x##PrintfI)
-#define UART_PRINT(x) (uart##x##Print)
-#define UART_PRINTI(x) (uart##x##PrintI)
-#define UART_DRIVER(x) (UARTD##x)
-
-#define DBG_CAN1 BIT(_CAN1)
-#define DBG_CAN2 BIT(_CAN2)
-
-#define DBG_IN BIT(_IN)
-#define DBG_OUT BIT(_OUT)
-#define DBG_CAN BIT(_CAN)
-#define DBG_CAN1 BIT(_CAN1)
-#define DBG_CAN2 BIT(_CAN2)
-#define DBG_DUMP BIT(_DUMP)
-#define DBG_MP BIT(_MP)
-#define DBG_CONSOLE BIT(_CONSOLE)
 
 #define debug_printf(format, ...) print(format, ##__VA_ARGS__)
 #define CONFIG_BUFF_SIZE 512

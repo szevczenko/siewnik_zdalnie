@@ -131,7 +131,6 @@ void parse_server(uint8_t * buff, uint32_t len)
 				if (buff[1] != CMD_DATA)
 					cmdServerSendData(NULL, sendBuff, 4);
 				//menuPrintParameters();
-				debug_msg("Sever_positive_set\n\r");
 				break;
 		}
 	}

@@ -87,7 +87,7 @@ static uint8_t count_pwm(int pwm)
 
 int dcmotor_set_pwm(int pwm)
 {
-	if (pwm >= 0 || pwm < 100)
+	if (pwm >= 0 && pwm < 100)
 	{
 		//debug_msg("dcmotor_set_pwm %d\n", pwm);
 		motorD.pwm_value = pwm;

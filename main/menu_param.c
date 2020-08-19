@@ -13,6 +13,8 @@ static menuPStruct_t menuParameters[] =
 {
 	[MENU_MOTOR] = {.max_value = 100, .default_value = 0},
 	[MENU_SERVO] = {.max_value = 100, .default_value = 0},
+	[MENU_MOTOR_IS_ON] = {.max_value = 1, .default_value = 0},
+	[MENU_SERVO_IS_ON] = {.max_value = 1, .default_value = 0},
 	[MENU_CURRENT_SERVO] = {.max_value = 0xFFFF, .default_value = 0},
 	[MENU_CURRENT_MOTOTR] = {.max_value = 0xFFFF, .default_value = 0},
 	[MENU_VOLTAGE_ACCUM] = {.max_value = 0xFFFF, .default_value = 0},

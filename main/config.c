@@ -220,7 +220,7 @@ void iterate(console_t *con, config_t *aStruct)
 int configCmd(console_t *con, t_tokenline_parsed *p)
 {
 	(void) con;
-	int err = ERR_CONFIG_OK;
+	int err = 1;
 
 	switch (p->tokens[1])
 	{
@@ -241,7 +241,7 @@ int configCmd(console_t *con, t_tokenline_parsed *p)
 		break;
 
 	default:
-		err = ERR_CONFIG_INVALID_CMD;
+		err = -1;
 		break;
 	}
 

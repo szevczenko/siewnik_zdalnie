@@ -5,6 +5,7 @@
 #include "token.h"
 #include "cmd_utils.h"
 #include "config.h"
+#include "atmega_communication.h"
 
 #include "driver/gpio.h"
 
@@ -153,7 +154,19 @@ void consoleThd(void * arg)
 		error = con->read_method((console_t *)con, (uint8_t *)&input);
 		if (error > 0)
 		{
-				tl_input(con->tl, input);
+			switch(con->console_mode) {
+				case CON_MODE_CONSOLE:
+					tl_input(con->tl, input);
+				break;
+
+				case CON_MODE_AT_COM:
+					at_read_byte((uint8_t) input);
+				break;
+
+				default:
+					tl_input(con->tl, input);
+				break;
+			}
 		}
 		else
 		{

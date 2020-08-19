@@ -59,6 +59,11 @@ typedef enum{
 	CON_TYPE_CAN
 }_console_type;
 
+typedef enum {
+	CON_MODE_CONSOLE,
+	CON_MODE_AT_COM,
+}_console_mode;
+
 typedef struct console_t
 {
 	char *thread_name;
@@ -83,6 +88,7 @@ typedef struct console_t
 	};
 	t_tokenline *tl;
 	int console_type;
+	int console_mode;
 	uint8_t (*read_method)(struct console_t *, uint8_t *symbol);
 	uint8_t timeout;
 	xSemaphoreHandle  bsem;
