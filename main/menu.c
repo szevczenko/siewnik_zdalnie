@@ -383,7 +383,7 @@ void button_plus_callback(void * arg)
 		case T_ARG_TYPE_START:
 			if (motor_value < 100) {
 				motor_value++;
-				cmdClientSetValueWithoutResp(MENU_MOTOR, motor_value);
+				cmdClientSetValueWithoutRespI(MENU_MOTOR, motor_value);
 			}
 				
 		break;
@@ -477,7 +477,7 @@ void button_minus_callback(void * arg)
 		case T_ARG_TYPE_START:
 			if (motor_value > 0) {
 				motor_value--;
-				cmdClientSetValueWithoutResp(MENU_MOTOR, motor_value);
+				cmdClientSetValueWithoutRespI(MENU_MOTOR, motor_value);
 			}
 		break;
 
@@ -685,7 +685,7 @@ static void menu_task(void * arg)
 			break;
 
 			case T_ARG_TYPE_START:
-				if (wifiDrvIsConnected()) {
+				if (!wifiDrvIsConnected()) {
 					remove_last_menu_tab();
 					if (wifiState == ST_WIFI_CONNECT) {
 						menuPrintfInfo("Lost connection with target");
@@ -959,7 +959,7 @@ void button_plus_servo_callback(void * arg)
 		case T_ARG_TYPE_START:
 			if (servo_value < 100) {
 				servo_value++;
-				cmdClientSetValueWithoutResp(MENU_SERVO, servo_value);
+				cmdClientSetValueWithoutRespI(MENU_SERVO, servo_value);
 			}
 		break;
 
@@ -1018,7 +1018,7 @@ void button_minus_servo_callback(void * arg)
 		case T_ARG_TYPE_START:
 			if (servo_value > 0) {
 				servo_value--;
-				cmdClientSetValueWithoutResp(MENU_SERVO, servo_value);
+				cmdClientSetValueWithoutRespI(MENU_SERVO, servo_value);
 			}
 		break;
 
@@ -1072,14 +1072,14 @@ void button_motor_state(void * arg)
 			if (motor_on) {
 				motor_on = 0;
 				servo_on = 0;
-				cmdClientSetValueWithoutResp(MENU_MOTOR_IS_ON, motor_on);
-				cmdClientSetValueWithoutResp(MENU_SERVO_IS_ON, servo_on);
+				cmdClientSetValueWithoutRespI(MENU_MOTOR_IS_ON, motor_on);
+				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_on);
 				xTimerStop(xTimers, 0);
 			}
 			else {
 				xTimerStart(xTimers, 0);
 				motor_on = 1;
-				cmdClientSetValueWithoutResp(MENU_MOTOR_IS_ON, motor_on);
+				cmdClientSetValueWithoutRespI(MENU_MOTOR_IS_ON, motor_on);
 			}
 		break;
 
@@ -1100,11 +1100,11 @@ void button_servo_state(void * arg)
 			xTimerStop(xTimers, 0);
 			if (servo_on) {
 				servo_on = 0;
-				cmdClientSetValueWithoutResp(MENU_SERVO_IS_ON, servo_on);
+				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_on);
 			}
 			else {
 				servo_on = 1;
-				cmdClientSetValueWithoutResp(MENU_SERVO_IS_ON, servo_on);
+				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_on);
 			}
 		break;
 

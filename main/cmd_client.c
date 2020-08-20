@@ -139,6 +139,25 @@ int cmdClientSetValueWithoutResp(menuValue_t val, uint32_t value) {
 	return cmdClientSend(sendBuff, 8);
 }
 
+int cmdClientSetValueWithoutRespI(menuValue_t val, uint32_t value) {
+	int ret_val = TRUE;
+	if (menuSetValue(val, value) == FALSE){
+		return FALSE;
+	}
+	uint8_t sendBuff[8];
+	sendBuff[0] = 8;
+	sendBuff[1] = CMD_DATA;
+	sendBuff[2] = PC_SET;
+	sendBuff[3] = val;
+	memcpy(&sendBuff[4], (uint8_t *)&value, 4);
+
+	taskEXIT_CRITICAL();
+	//ret_val = cmdClientSend(sendBuff, 8);
+	taskENTER_CRITICAL();
+
+	return ret_val;
+}
+
 int cmdClientSetValue(menuValue_t val, uint32_t value, uint32_t timeout_ms) {
 	if (menuSetValue(val, value) == 0){
 		return 0;

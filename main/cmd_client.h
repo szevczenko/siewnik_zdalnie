@@ -43,5 +43,6 @@ int cmdClientAnswerData(uint8_t * buff, uint32_t len);
 
 int cmdClientSetValue(menuValue_t val, uint32_t value, uint32_t timeout_ms);
 int cmdClientSetValueWithoutResp(menuValue_t val, uint32_t value);
+int cmdClientSetValueWithoutRespI(menuValue_t val, uint32_t value);
 
 #endif
