@@ -24,6 +24,9 @@
 #include "menu_param.h"
 #include "cmd_client.h"
 #include "atmega_communication.h"
+#include "error_siewnik.h"
+#include "measure.h"
+
 #define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 uint16_t test_value;
@@ -45,6 +48,8 @@ void app_main()
     }
     else {
         at_communication_init();
+        errorSiewnikStart();
+        measure_start();
     }
     
     while(1)

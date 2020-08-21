@@ -191,5 +191,5 @@ void init_buttons(void)
     //enable pull-up mode
     io_conf.pull_up_en = 1;
     gpio_config(&io_conf);
-	xTaskCreate(process_button, "gpio_task", 1024, NULL, 10, NULL);
+	xTaskCreate(process_button, "gpio_task", 1024, NULL, 5, NULL);
 }

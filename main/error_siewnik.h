@@ -46,6 +46,8 @@ void error_led_blink(void);
 
 void error_servo_timer(void);
 
+void errorSiewnikStart(void);
+
 #endif //#if CONFIG_DEVICE_SIEWNIK
 
 #endif

@@ -130,7 +130,7 @@ void parse_server(uint8_t * buff, uint32_t len)
 				}
 				if (buff[1] != CMD_DATA)
 					cmdServerSendData(NULL, sendBuff, 4);
-				//menuPrintParameters();
+				menuPrintParameters();
 				break;
 		}
 	}

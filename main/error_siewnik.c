@@ -6,8 +6,9 @@
 #include "servo.h"
 #include "math.h"
 #include "menu_param.h"
+#include "console.h"
 
-#define debug_msg(...)
+#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 #if CONFIG_DEVICE_SIEWNIK
 ///////////////////////////////////////
@@ -72,7 +73,7 @@ float errorGetMotorVal(void)
 static uint32_t error_servo_tim;
 void error_servo_timer(void)
 {
-	//debug_msg("ERROR: reset timer");
+	debug_msg("ERROR: reset timer");
 	error_servo_tim = xTaskGetTickCount() + MS2ST(2000);
 }
 
@@ -89,7 +90,7 @@ void error_event(void)
 		motor_error_value = count_motor_error_value(dcmotor_get_pwm(), volt);
 		uint16_t motor_adc_filterd = measure_get_filtered_value(MEAS_MOTOR);
 		float current = measure_get_current(MEAS_MOTOR, MOTOR_RESISTOR);
-		//debug_msg("MOTOR ADC: %d, current_max: %f, current: %f\n", motor_adc_filterd, motor_error_value, current);
+		debug_msg("MOTOR ADC: %d, current_max: %f, current: %f\n", motor_adc_filterd, motor_error_value, current);
 		if (current > motor_error_value && dcmotor_is_on()) //servo_vibro_value*5
 		{
 			error_motor_status = 1;
@@ -109,7 +110,7 @@ void error_event(void)
 				{
 					case ERR_M_OK:
 						error_motor_state = ERR_M_WAIT;
-						//debug_msg("ERROR STATUS: ERR_M_WAIT\n\r");
+						debug_msg("ERROR STATUS: ERR_M_WAIT\n\r");
 						motor_timer = xTaskGetTickCount() + MS2ST(count_motor_timeout_wait(dcmotor_get_pwm()));
 					break;
 					case ERR_M_WAIT:
@@ -118,7 +119,7 @@ void error_event(void)
 						dcmotor_set_try();
 						motor_timer = xTaskGetTickCount() + MS2ST(count_motor_timeout_axelerate(dcmotor_get_pwm()));
 						error_motor_state = ERR_M_AXELERATE;
-						//debug_msg("ERROR STATUS: ERR_M_AXELERATE\n\r");
+						debug_msg("ERROR STATUS: ERR_M_AXELERATE\n\r");
 					}
 					break;
 					case ERR_M_AXELERATE:
@@ -126,7 +127,7 @@ void error_event(void)
 						{
 							error_motor_state = ERR_M_ERROR;
 							motor_timer = 0;
-							//debug_msg("ERROR STATUS: ERR_M_ERROR\n\r");
+							debug_msg("ERROR STATUS: ERR_M_ERROR\n\r");
 						}
 					break;
 					case ERR_M_ERROR:
@@ -137,7 +138,7 @@ void error_event(void)
 						{
 							motor_timer = xTaskGetTickCount() + MS2ST(ERROR_M_TIME_EXIT);
 							error_motor_state = error_motor_last_state;
-							//debug_msg("ERROR STATUS: go to last before wait\n\r");
+							debug_msg("ERROR STATUS: go to last before wait\n\r");
 						}
 					break;
 				}
@@ -156,7 +157,7 @@ void error_event(void)
 						motor_timer = MS2ST(ERROR_M_TIME_EXIT) + xTaskGetTickCount();
 						error_motor_state = ERR_M_EXIT;
 						error_motor_last_state = ERR_M_WAIT;
-						//debug_msg("ERROR STATUS: ERR_M_EXIT\n\r");
+						debug_msg("ERROR STATUS: ERR_M_EXIT\n\r");
 					}
 					break;
 					case ERR_M_AXELERATE:
@@ -166,7 +167,7 @@ void error_event(void)
 						dcmotor_set_normal_state();
 						error_motor_state = ERR_M_EXIT;
 						error_motor_last_state = ERR_M_AXELERATE;
-						//debug_msg("ERROR STATUS: ERR_M_EXIT\n\r");
+						debug_msg("ERROR STATUS: ERR_M_EXIT\n\r");
 					}
 					break;
 					case ERR_M_ERROR:
@@ -176,7 +177,7 @@ void error_event(void)
 					case ERR_M_EXIT:
 					if (motor_timer != 0 && motor_timer < xTaskGetTickCount())
 					{
-						//debug_msg("ERROR STATUS: ERR_M_OK\n\r");
+						debug_msg("ERROR STATUS: ERR_M_OK\n\r");
 						error_motor_state = ERR_M_OK;
 						motor_timer = 0;
 					}
@@ -359,5 +360,10 @@ static uint16_t count_servo_error_value(void)
 	#else
 	return 20;
 	#endif
+}
+
+void errorSiewnikStart(void)
+{
+	xTaskCreate(error_event, "error_event", 748*2, NULL, NORMALPRIO, NULL);
 }
 #endif

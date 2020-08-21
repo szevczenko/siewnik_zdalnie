@@ -152,7 +152,7 @@ int cmdClientSetValueWithoutRespI(menuValue_t val, uint32_t value) {
 	memcpy(&sendBuff[4], (uint8_t *)&value, 4);
 
 	taskEXIT_CRITICAL();
-	//ret_val = cmdClientSend(sendBuff, 8);
+	ret_val = cmdClientSend(sendBuff, 8);
 	taskENTER_CRITICAL();
 
 	return ret_val;

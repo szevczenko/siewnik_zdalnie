@@ -10,7 +10,7 @@
 #include "cmd_client.h"
 #include "fast_add.h"
 
-#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+#define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push

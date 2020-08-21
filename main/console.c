@@ -80,19 +80,8 @@ void execute(void *user, t_tokenline_parsed *p)
 
 void consolePrintTimeout(console_t *con, const char *string, uint32_t timeout)
 {
-	if (con == NULL)
-	{
-		cprint(con, string);
-		return;
-	}
-	if (con->active == true)
-	{
-		//if (xSemaphoreTake((con->bsem), timeout) == pdTRUE)
-		{
-			cprint(con, string);
-			xSemaphoreGive((con->bsem));
-		}
-	}
+	(void) timeout;
+	cprint(con, string);
 }
 
 void consolePrint_len(console_t *con, const char *string, uint32_t len)
