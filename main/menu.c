@@ -694,6 +694,14 @@ static void menu_task(void * arg)
 						menuPrintfInfo("Target not connected. Go to DEVICES and connect to target");
 					}
 				}
+				else if (menuGetValue(MENU_MOTOR_ERROR_IS_ON) == 1) {
+					ssd1306_SetCursor(2, MENU_HEIGHT + LINE_HEIGHT*2);
+					ssd1306_WriteString("MOTOR Error", Font_7x10, White);
+				}
+				else if (menuGetValue(MENU_SERVO_ERROR_IS_ON) == 1) {
+					ssd1306_SetCursor(2, MENU_HEIGHT + LINE_HEIGHT*2);
+					ssd1306_WriteString("SERVO Error", Font_7x10, White);
+				}
 				else { 
 					if (animation_timeout < xTaskGetTickCount()) {
 						animation_cnt++;

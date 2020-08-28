@@ -12,6 +12,7 @@
 #include <netinet/in.h> 
 #include <errno.h>
 #include "keepalive.h"
+#include "parse_cmd.h"
 
 #ifndef CONFIG_USE_CMD_SERVER
 #define CONFIG_USE_CMD_SERVER TRUE
@@ -57,5 +58,7 @@ void cmdServerStop(void);
 void cmdServerSendData(void * arg, uint8_t * buff, uint8_t len);
 int cmdServerAnswerData(uint8_t * buff, uint32_t len);
 int cmdServerSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, uint32_t * rx_len, uint32_t timeout);
+int cmdServerSetValueWithoutResp(menuValue_t val, uint32_t value);
+int cmdServerSetValueWithoutRespI(menuValue_t val, uint32_t value);
 
 #endif

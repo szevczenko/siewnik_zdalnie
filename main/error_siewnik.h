@@ -35,10 +35,10 @@ typedef enum
 	ERR_S_WAIT,
 	ERR_S_TRY,
 	ERR_S_ERROR,
-	ERR_S_EXIT
+	/*ERR_S_EXIT */
 }err_servo_t;
 
-void error_event(void);
+void error_event(void * arg);
 float errorGetMotorVal(void);
 void error_init(void);
 void error_deinit(void);

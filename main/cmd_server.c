@@ -15,6 +15,7 @@
 #include "console.h"
 #include "parse_cmd.h"
 #include "configCmd.h"
+#include "menu_param.h"
 
 #define MAX_VALUE(OLD_V, NEW_VAL) NEW_VAL>OLD_V?NEW_VAL:OLD_V
 
@@ -275,6 +276,39 @@ int cmdServerAnswerData(uint8_t * buff, uint32_t len) {
 
 	memcpy(rx_buff, buff, rx_buff_len);
 	xSemaphoreGive(waitSemaphore);
+	return TRUE;
+}
+
+int cmdServerSetValueWithoutResp(menuValue_t val, uint32_t value) {
+	if (menuSetValue(val, value) == FALSE){
+		return FALSE;
+	}
+	uint8_t sendBuff[8];
+	sendBuff[0] = 8;
+	sendBuff[1] = CMD_DATA;
+	sendBuff[2] = PC_SET;
+	sendBuff[3] = val;
+	memcpy(&sendBuff[4], (uint8_t *)&value, 4);
+
+	cmdServerSendData(NULL, sendBuff, 8);
+	return TRUE;
+}
+
+int cmdServerSetValueWithoutRespI(menuValue_t val, uint32_t value) {
+	if (menuSetValue(val, value) == FALSE){
+		return FALSE;
+	}
+	uint8_t sendBuff[8];
+	sendBuff[0] = 8;
+	sendBuff[1] = CMD_DATA;
+	sendBuff[2] = PC_SET;
+	sendBuff[3] = val;
+	memcpy(&sendBuff[4], (uint8_t *)&value, 4);
+
+	taskEXIT_CRITICAL();
+	cmdServerSendData(NULL, sendBuff, 8);
+	taskENTER_CRITICAL();
+
 	return TRUE;
 }
 

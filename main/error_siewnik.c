@@ -7,6 +7,7 @@
 #include "math.h"
 #include "menu_param.h"
 #include "console.h"
+#include "cmd_server.h"
 
 #define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
@@ -24,6 +25,7 @@ static uint16_t count_servo_error_value(void);
 error_reason_ led_blink;
 
 extern uint32_t servo_vibro_value;
+static uint8_t error_events;
 //////////////////////////////////
 //MOTOTR
 extern uint32_t motor_value;
@@ -50,6 +52,7 @@ void error_init(void)
 	motor_timer = 0;
 	servo_timer = 0;
 	led_blink = ERR_REASON_NO;
+	error_events = 0;
 }
 
 void error_deinit(void)
@@ -62,6 +65,7 @@ void error_deinit(void)
 	motor_timer = 0;
 	servo_timer = 0;
 	led_blink = ERR_REASON_NO;
+	error_events = 0;
 }
 
 #define RESISTOR 1
@@ -77,21 +81,21 @@ void error_servo_timer(void)
 	error_servo_tim = xTaskGetTickCount() + MS2ST(2000);
 }
 
-void error_event(void)
+void error_event(void * arg)
 {
 	static uint32_t error_event_timer;
 	while(1)
 	{
-		vTaskDelay(250 / portTICK_RATE_MS);
-		//if (system_events&(1<<EV_SYSTEM_ERROR_MOTOR)) continue;
+		vTaskDelay(350 / portTICK_RATE_MS);
+		if (error_events == 1) continue;
 		///////////////////////////////////////////////////////////////////////////////////////////
 		//MOTOR
 		float volt = accum_get_voltage();
-		motor_error_value = count_motor_error_value(dcmotor_get_pwm(), volt);
+		motor_error_value = 10;//count_motor_error_value(dcmotor_get_pwm(), volt);
 		uint16_t motor_adc_filterd = measure_get_filtered_value(MEAS_MOTOR);
-		float current = measure_get_current(MEAS_MOTOR, MOTOR_RESISTOR);
+		float current = 11;//measure_get_current(MEAS_MOTOR, MOTOR_RESISTOR);
 		debug_msg("MOTOR ADC: %d, current_max: %f, current: %f\n", motor_adc_filterd, motor_error_value, current);
-		if (current > motor_error_value && dcmotor_is_on()) //servo_vibro_value*5
+		if (current > motor_error_value /* && dcmotor_is_on() */) //servo_vibro_value*5
 		{
 			error_motor_status = 1;
 		}
@@ -99,9 +103,7 @@ void error_event(void)
 		{
 			error_motor_status = 0;
 		}
-		#if DARK_MENU
-		if (dark_menu_get_value(MENU_ERROR_MOTOR))
-		#endif
+		if (menuGetValue(MENU_ERROR_MOTOR))
 		{
 			#if CONFIG_USE_ERROR_MOTOR
 			if (error_motor_status == 1)
@@ -188,15 +190,13 @@ void error_event(void)
 		} /* Disable error */
 		//////////////////////////////////////////////////////////////////////////////////////
 		// SERVO
-		#if DARK_MENU
-		if (dark_menu_get_value(MENU_ERROR_SERVO))
-		#endif 
+		if (menuGetValue(MENU_ERROR_SERVO))
 		{
 			#if CONFIG_USE_ERROR_SERVO
 			servo_error_value = count_servo_error_value();
 			uint16_t servo_filt_val = measure_get_filtered_value(MEAS_SERVO);
 			//debug_msg("servo_error_value: %d, filtered value: %d\n", servo_error_value, servo_filt_val);
-			if (servo_filt_val > servo_error_value && error_servo_tim < mktime.ms) //servo_filt_val*5
+			if (servo_filt_val > servo_error_value && error_servo_tim < xTaskGetTickCount()) //servo_filt_val*5
 			{
 				//debug_msg("servo_error_value: %d\n", servo_error_value);
 				error_servo_status = 1;
@@ -213,30 +213,32 @@ void error_event(void)
 					case ERR_S_OK:
 						error_servo_state = ERR_S_WAIT;
 						debug_msg("ERROR STATUS: ERR_S_WAIT\n\r");
-						evTime_start(&servo_timer, SERVO_WAIT_TO_TRY);
+						servo_timer = MS2ST(SERVO_WAIT_TO_TRY) + xTaskGetTickCount();
 					break;
 					case ERR_S_WAIT:
-						if (evTime_check(&servo_timer))
+						if (servo_timer < xTaskGetTickCount() && servo_timer != 0)
 						{
 							if (servo_get_try_cnt() > SERVO_TRY_CNT)
 							{
 								error_servo_state = ERR_S_ERROR;
 								break;
 							}
-							evTime_start(&servo_timer, SERVO_WAIT_AFTER_TRY);
+							servo_timer = MS2ST(SERVO_WAIT_AFTER_TRY) + xTaskGetTickCount();
 							error_servo_state = ERR_S_TRY;
 							servo_enable_try();
 							debug_msg("ERROR STATUS: ERR_S_TRY\n\r");
 						}
 					break;
 					case ERR_S_TRY:
-						if (evTime_check(&servo_timer))
+						if (servo_timer < xTaskGetTickCount() && servo_timer != 0)
 						{
 							error_servo_state = ERR_S_OK;
+							servo_timer = 0;
 						}
 					break;
 					case ERR_S_ERROR:
 						set_error_state(ERR_REASON_SERVO);
+						servo_timer = 0;
 					break;
 				} //switch
 			}// if (error_servo_status == 1)
@@ -248,17 +250,18 @@ void error_event(void)
 					case ERR_S_OK:
 					break;
 					case ERR_S_WAIT:
-					if (evTime_check(&servo_timer))
+					if (servo_timer < xTaskGetTickCount() && servo_timer != 0)
 					{
-						evTime_start(&servo_timer, ERROR_M_TIME_EXIT);
+						servo_timer = MS2ST(ERROR_M_TIME_EXIT) + xTaskGetTickCount();
 						error_servo_state = ERR_M_OK;
 						debug_msg("ERROR STATUS: ERR_S_OK\n\r");
 					}
 					break;
 					case ERR_S_TRY:
-					if (evTime_check(&servo_timer))
+					if (servo_timer < xTaskGetTickCount() && servo_timer != 0)
 					{
 						error_servo_state = ERR_S_OK;
+						servo_timer = 0;
 						debug_msg("ERROR STATUS: ERR_S_OK\n\r");
 						servo_try_reset_timeout(3500);
 					}
@@ -266,6 +269,7 @@ void error_event(void)
 					break;
 					case ERR_S_ERROR:
 						set_error_state(ERR_REASON_SERVO);
+						servo_timer = 0;
 					break;
 				} //switch
 			} //else (error_servo_status == 1)
@@ -295,6 +299,13 @@ void error_led_blink(void)
 
 static void set_error_state(error_reason_ reason)
 {
+	if (reason == ERR_REASON_SERVO)
+		cmdServerSetValueWithoutResp(MENU_SERVO_ERROR_IS_ON, 1);
+	else {
+		cmdServerSetValueWithoutResp(MENU_MOTOR_ERROR_IS_ON, 1);
+		servo_error(1);
+	}
+	error_events = 1;
 	// SET_PIN(system_events, EV_SYSTEM_ERROR_MOTOR);
 	// display_set_error(reason);
 	// dcmotor_set_error();
