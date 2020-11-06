@@ -4,6 +4,7 @@
 #include "keepalive.h"
 #include "console.h"
 #include "menu_param.h"
+#include "error_siewnik.h"
 
 #define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
@@ -74,6 +75,14 @@ void parse_client(uint8_t * buff, uint32_t len)
 				break;
 		}
 	}
+	else if (buff[1] == CMD_COMMAND) {
+		switch(buff[2]) {
+			case PC_CMD_RESET_ERROR:
+
+			break;
+		}
+		
+	}
 }
 
 static uint32_t frameLenServer;
@@ -83,7 +92,7 @@ void parse_server_buffer(uint8_t * buff, uint32_t len) {
 	do {
 		frameLenServer = buff[parsed_len];
 
-		if (frameLenClient > len)
+		if (frameLenServer > len)
 			break;
 
 		parse_server(&buff[parsed_len], frameLenServer);
@@ -143,5 +152,14 @@ void parse_server(uint8_t * buff, uint32_t len)
 				cmdServerAnswerData(buff, len);
 				break;
 		}
+	}
+	else if (buff[1] == CMD_COMMAND) {
+		switch(buff[2]) {
+			case PC_CMD_RESET_ERROR:
+				errorReset();
+				debug_msg("error reset\n\r");
+			break;
+		}
+		
 	}
 }

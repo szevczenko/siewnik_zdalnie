@@ -5,6 +5,8 @@
 #include "console.h"
 #include "freertos/timers.h"
 #include "console.h"
+#include "motor.h"
+#include "servo.h"
 
 #define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
@@ -103,7 +105,7 @@ void at_read_byte(uint8_t byte) {
 			break;
 
 		default:
-			debug_msg("FRAME BAD START\n\r");
+			//debug_msg("FRAME BAD START\n\r");
 			clear_msg();
 	}
 }
@@ -112,8 +114,8 @@ static void atm_com(void * arg) {
 	
 	while(1) {
 		taskENTER_CRITICAL();
-		data_write[AT_W_MOTOR_VALUE] = (uint16_t)menuGetValue(MENU_MOTOR);
-		data_write[AT_W_SERVO_VALUE] = (uint16_t)menuGetValue(MENU_SERVO);
+		data_write[AT_W_MOTOR_VALUE] = (uint16_t)dcmotor_process((uint8_t)menuGetValue(MENU_MOTOR));
+		data_write[AT_W_SERVO_VALUE] = (uint16_t)servo_process((uint8_t)menuGetValue(MENU_SERVO));
 		data_write[AT_W_MOTOR_IS_ON] = (uint16_t)menuGetValue(MENU_MOTOR_IS_ON);
 		data_write[AT_W_SERVO_IS_ON] = (uint16_t)menuGetValue(MENU_SERVO_IS_ON);
 		at_write_data();

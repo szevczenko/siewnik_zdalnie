@@ -67,6 +67,13 @@ void error_deinit(void)
 	led_blink = ERR_REASON_NO;
 	error_events = 0;
 }
+ 
+void errorReset(void) {
+	error_deinit();
+	error_init();
+	menuSetValue(MENU_MOTOR_ERROR_IS_ON, 0);
+	menuSetValue(MENU_SERVO_ERROR_IS_ON, 0);
+}
 
 #define RESISTOR 1
 
@@ -81,6 +88,8 @@ void error_servo_timer(void)
 	error_servo_tim = xTaskGetTickCount() + MS2ST(2000);
 }
 
+uint8_t test_current = 11;
+
 void error_event(void * arg)
 {
 	static uint32_t error_event_timer;
@@ -93,8 +102,8 @@ void error_event(void * arg)
 		float volt = accum_get_voltage();
 		motor_error_value = 10;//count_motor_error_value(dcmotor_get_pwm(), volt);
 		uint16_t motor_adc_filterd = measure_get_filtered_value(MEAS_MOTOR);
-		float current = 11;//measure_get_current(MEAS_MOTOR, MOTOR_RESISTOR);
-		debug_msg("MOTOR ADC: %d, current_max: %f, current: %f\n", motor_adc_filterd, motor_error_value, current);
+		float current = test_current;//measure_get_current(MEAS_MOTOR, MOTOR_RESISTOR);
+		//debug_msg("MOTOR ADC: %d, current_max: %f, current: %f\n", motor_adc_filterd, motor_error_value, current);
 		if (current > motor_error_value /* && dcmotor_is_on() */) //servo_vibro_value*5
 		{
 			error_motor_status = 1;
@@ -122,6 +131,7 @@ void error_event(void * arg)
 						motor_timer = xTaskGetTickCount() + MS2ST(count_motor_timeout_axelerate(dcmotor_get_pwm()));
 						error_motor_state = ERR_M_AXELERATE;
 						debug_msg("ERROR STATUS: ERR_M_AXELERATE\n\r");
+						//test_current = 1;
 					}
 					break;
 					case ERR_M_AXELERATE:

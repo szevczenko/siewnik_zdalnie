@@ -158,6 +158,38 @@ int cmdClientSetValueWithoutRespI(menuValue_t val, uint32_t value) {
 	return ret_val;
 }
 
+int cmdClientSendCmd(parseCmd_t cmd) {
+	int ret_val = TRUE;
+	if (cmd > PC_CMD_LAST) { 
+		return FALSE;
+	}
+	uint8_t sendBuff[3];
+	sendBuff[0] = 3;
+	sendBuff[1] = CMD_COMMAND;
+	sendBuff[2] = cmd;
+
+	ret_val = cmdClientSend(sendBuff, 3);
+
+	return ret_val;
+}
+
+int cmdClientSendCmdI(parseCmd_t cmd) {
+	int ret_val = TRUE;
+	if (cmd > PC_CMD_LAST) { 
+		return FALSE;
+	}
+	uint8_t sendBuff[3];
+	sendBuff[0] = 3;
+	sendBuff[1] = CMD_COMMAND;
+	sendBuff[2] = cmd;
+
+	taskEXIT_CRITICAL();
+	ret_val = cmdClientSend(sendBuff, 3);
+	taskENTER_CRITICAL();
+
+	return ret_val;
+}
+
 int cmdClientSetValue(menuValue_t val, uint32_t value, uint32_t timeout_ms) {
 	if (menuSetValue(val, value) == 0){
 		return 0;

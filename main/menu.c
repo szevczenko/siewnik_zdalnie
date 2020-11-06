@@ -144,6 +144,17 @@ static int len_menu(menu_token_t * menu)
 	return 0;
 }
 
+static void error_reset(void) {
+
+	if (cmdClientSendCmdI(PC_CMD_RESET_ERROR) == FALSE) {
+		return;
+	}
+	menuSetValue(MENU_MOTOR_ERROR_IS_ON, 0);
+	menuSetValue(MENU_SERVO_ERROR_IS_ON, 0);
+	motor_on = 0;
+	servo_on = 0;
+}
+
 static menu_token_t * last_tab_element(void)
 {
 	for (uint8_t i = 0; i < 8; i++)
@@ -546,6 +557,9 @@ void button_enter_callback(void * arg)
 		break;
 
 		case T_ARG_TYPE_START:
+			if (menuGetValue(MENU_MOTOR_ERROR_IS_ON) || menuGetValue(MENU_SERVO_ERROR_IS_ON)) {
+				error_reset();
+			}
 		break;
 
 		case T_ARG_TYPE_WIFI:

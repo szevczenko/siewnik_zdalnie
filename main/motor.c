@@ -137,44 +137,40 @@ void motor_regulation(uint8_t pwm) {
 	motorD.pwm_value = pwm;
 }
 
-void dcmotor_process(uint8_t value)
+uint8_t dcmotor_process(uint8_t value)
 {
-	// static evTime dcmotor_timer;
-	// if (evTime_process_period(&dcmotor_timer, 150))
-	// {
-		//debug_msg("Process %d\n", motorD.state);
-		switch(motorD.state)
-		{
-			case MOTOR_ON:
-			dcmotor_set_pwm(value);
-			break;
+	switch(motorD.state)
+	{
+		case MOTOR_ON:
+		dcmotor_set_pwm(value);
+		break;
 
-			case MOTOR_OFF:
-			motorD.pwm_value = 0;
-			break;
+		case MOTOR_OFF:
+		motorD.pwm_value = 0;
+		break;
 
-			case MOTOR_TRY:
-				if (value <= 50)
-				{
-					dcmotor_set_pwm(value + 20);
-				}
-				else if ((value > 50) && (value <= 70))
-				{
-					dcmotor_set_pwm(value + 15);
-				}
-				else
-				{
-					dcmotor_set_pwm(value);
-				}
-			break;
+		case MOTOR_TRY:
+			if (value <= 50)
+			{
+				dcmotor_set_pwm(value + 20);
+			}
+			else if ((value > 50) && (value <= 70))
+			{
+				dcmotor_set_pwm(value + 15);
+			}
+			else
+			{
+				dcmotor_set_pwm(value);
+			}
+		break;
 
-			case MOTOR_ERROR:
+		case MOTOR_ERROR:
 			CMD_MOTOR_OFF;
-			break;
+		break;
 
-			case MOTOR_AXELERATE:
+		case MOTOR_AXELERATE:
 			motorD.state = MOTOR_ON; //!!
-			return;					 //!
+			break;					 //!
 			dcmotor_set_pwm(50);
 			
 			//debug_msg("MOTOR_AXELERATE %d\n", motorD.pwm_value);
@@ -182,13 +178,14 @@ void dcmotor_process(uint8_t value)
 				motorD.state = MOTOR_ON;
 			}
 
-			break;
+		break;
 			
-			case MOTOR_REGULATION:
-				dcmotor_set_pwm(value);
-			break;
+		case MOTOR_REGULATION:
+			dcmotor_set_pwm(value);
+		break;
 
-		}
+	}
 		
-	// }
+	return motorD.pwm_value;
 }
+

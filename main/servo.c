@@ -209,7 +209,7 @@ static void servo_try_process(void)
 		{
 			timeout = xTaskGetTickCount() + MS2ST(250);
 			try_count++;
-			servo_set_pwm_val(servoD.value + try_count /*dark_menu_get_value(MENU_TRY_OPEN_CALIBRATION) */);
+			servo_set_pwm_val(servoD.value + try_count * 8 /*dark_menu_get_value(MENU_TRY_OPEN_CALIBRATION) */);
 		}
 	}
 	else
@@ -241,37 +241,48 @@ static void servo_exit_try(void)
 	servoD.try_cnt++;
 }
 
-void servo_process(uint8_t value)
+uint8_t servo_process(uint8_t value)
 {
-	// static TickType_t servo_timer;
-	// if (evTime_process_period(&servo_timer, 75))
-	// {
-		switch(servoD.state)
-		{
-			case SERVO_OPEN:
-			servoD.value = value;
-			servo_set_pwm_val((uint16_t)value);
-			break;
-			case SERVO_TRY:
+	if (value == 0 && servoD.value != 0) {
+		servo_close();
+		return 0;
+	}
+
+	if (servoD.value != value) {
+		servo_open(value);
+	}
+
+	switch(servoD.state)
+	{
+		case SERVO_OPEN:
+		servoD.value = value;
+		servo_set_pwm_val((uint16_t)value);
+		break;
+
+		case SERVO_TRY:
 			servo_try_process();
-			break;
-			case SERVO_DELAYED_OPEN:
-			servo_delayed_open_process();
-			break;
-			case SERVO_ERROR_PROCESS:
-			servo_error_process();
-			break;
-			case SERVO_ERROR:
-			OFF_SERVO;
-			break;
-		}
-		if (servoD.timeout < xTaskGetTickCount() && servoD.timeout != 0) 
-		{
-			servoD.try_cnt = 0;
-			servoD.timeout = 0;
-			debug_msg("SERVO: Zero try cnt\n");
-		}
-	// }
+			return servoD.value + try_count * 8;
+		break;
+
+		case SERVO_DELAYED_OPEN:
+		servo_delayed_open_process();
+		break;
+
+		case SERVO_ERROR_PROCESS:
+		servo_error_process();
+		break;
+
+		case SERVO_ERROR:
+		OFF_SERVO;
+		break;
+	}
+	if (servoD.timeout < xTaskGetTickCount() && servoD.timeout != 0) 
+	{
+		servoD.try_cnt = 0;
+		servoD.timeout = 0;
+		debug_msg("SERVO: Zero try cnt\n");
+	}
+	return servoD.value;
 }
 
 #endif //CONFIG_DEVICE_SIEWNIK

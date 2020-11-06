@@ -42,7 +42,7 @@ void dcmotorpwm_deinit(void);
 extern int dcmotorpwm_stop(void);
 extern int dcmotorpwm_start(void);
 extern int dcmotor_is_on(void);
-void dcmotor_process(uint8_t value);
+uint8_t dcmotor_process(uint8_t value);
 void dcmotor_set_error(void);
 int dcmotor_set_try(void);
 int dcmotor_set_normal_state(void);

@@ -5,6 +5,7 @@
 #define CMD_REQEST 0x11
 #define CMD_ANSWER 0x22
 #define CMD_DATA 0x33
+#define CMD_COMMAND 0x44
 
 #define POSITIVE_RESP 0xFF
 #define NEGATIVE_RESP 0xFE
@@ -15,6 +16,13 @@ typedef enum
 	PC_SET,
 	PC_GET,
 	PC_LAST
+}parseType_t;
+
+typedef enum
+{
+	PC_CMD_NONE,
+	PC_CMD_RESET_ERROR,
+	PC_CMD_LAST
 }parseCmd_t;
 
 typedef enum
