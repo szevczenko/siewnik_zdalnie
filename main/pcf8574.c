@@ -150,8 +150,8 @@ uint8_t pcf8574_setoutputpinlow(uint8_t deviceid, uint8_t pin) {
 /*
  * get input data
  */
-uint8_t pcf8574_getinput(uint8_t deviceid) {
-	uint8_t data = 0;
+int pcf8574_getinput(uint8_t deviceid) {
+	int data = 0;
 	if((deviceid < PCF8574_MAXDEVICES)) {
 		int ret;
 		i2c_cmd_handle_t cmd = i2c_cmd_link_create();
@@ -163,6 +163,7 @@ uint8_t pcf8574_getinput(uint8_t deviceid) {
 		i2c_cmd_link_delete(cmd);
 		if (ret != ESP_OK) {
 			debug_msg("i2c status %d\n", ret);
+			return ret;
 		}
 	}
 	return data;

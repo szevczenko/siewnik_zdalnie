@@ -4,19 +4,7 @@
             "path": "."
         },
         {
-            "path": "/home/dmytro/esp/ESP8266_RTOS_SDK"
-        },
-        {
-<<<<<<< HEAD
-            "path": "/home/dmytro/projects/Unity"
-=======
-            "name": "Tets",
-            "path": "../../../../../Users/Demetriusz/Documents/PlatformIO/Projects/Tets"
-        },
-        {
-            "name": "test_pwm",
-            "path": "../../../../../Users/Demetriusz/Documents/PlatformIO/Projects/test_pwm"
->>>>>>> e4f9bc5676acaa5f72bb5c748df973dc49956680
+            "path": "..\\ESP8266_RTOS_SDK"
         }
     ],
     

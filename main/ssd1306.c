@@ -61,20 +61,7 @@ void ssd1306_Reset(void) {
 
 }
 
-static int i2cInit(void)
-{
-    int i2c_master_port = SSD1306_I2C_PORT;
-    i2c_config_t conf;
-    conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = I2C_EXAMPLE_MASTER_SDA_IO;
-    conf.sda_pullup_en = 1;
-    conf.scl_io_num = I2C_EXAMPLE_MASTER_SCL_IO;
-    conf.scl_pullup_en = 1;
-    conf.clk_stretch_tick = 1000; // 300 ticks, Clock stretch is about 210us, you can make changes according to the actual situation.
-    ESP_ERROR_CHECK(i2c_driver_install(i2c_master_port, conf.mode));
-    ESP_ERROR_CHECK(i2c_param_config(i2c_master_port, &conf));
-    return ESP_OK;
-}
+
 
 // Send a byte to the command register
 int ssd1306_WriteCommand(uint8_t byte) {
@@ -117,7 +104,6 @@ static SSD1306_t SSD1306;
 
 // Initialize the oled screen
 void ssd1306_Init(void) {
-    i2cInit();
 	// Reset OLED
 	ssd1306_Reset();
 

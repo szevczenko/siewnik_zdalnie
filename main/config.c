@@ -58,6 +58,7 @@ void configInit(void)
         ESP_ERROR_CHECK(nvs_flash_erase());
         err = nvs_flash_init();
     }
+
 	config_t read_config;
 	#if CONFIG_USE_CONSOLE
 	cosole_echo_flag = CONFIG_CONSOLE_ECHO;

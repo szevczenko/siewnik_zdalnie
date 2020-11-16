@@ -26,14 +26,47 @@
 #include "atmega_communication.h"
 #include "error_siewnik.h"
 #include "measure.h"
+#include "driver/gpio.h"
+#include "driver/i2c.h"
+#include "pcf8574.h"
 
 #define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 uint16_t test_value;
+static gpio_config_t io_conf;
+
+static int i2cInit(void)
+{
+    int i2c_master_port = SSD1306_I2C_PORT;
+    i2c_config_t conf;
+    conf.mode = I2C_MODE_MASTER;
+    conf.sda_io_num = I2C_EXAMPLE_MASTER_SDA_IO;
+    conf.sda_pullup_en = 1;
+    conf.scl_io_num = I2C_EXAMPLE_MASTER_SCL_IO;
+    conf.scl_pullup_en = 1;
+    conf.clk_stretch_tick = 1000; // 300 ticks, Clock stretch is about 210us, you can make changes according to the actual situation.
+    ESP_ERROR_CHECK(i2c_driver_install(i2c_master_port, conf.mode));
+    ESP_ERROR_CHECK(i2c_param_config(i2c_master_port, &conf));
+    return ESP_OK;
+}
+
+static void checkDevType(void) {
+    i2cInit();
+    int read_i2c_value;
+    read_i2c_value = pcf8574_getinput(0);
+    if (read_i2c_value >= 0) {
+        config.dev_type = T_DEV_TYPE_CLIENT;
+    }
+    else {
+        config.dev_type = T_DEV_TYPE_SERVER;
+    }
+}
 
 void app_main()
 {
     configInit();
+    checkDevType();
+
     consoleStart();
     wifiDrvInit();
     keepAliveStartTask();
@@ -50,11 +83,29 @@ void app_main()
         at_communication_init();
         errorSiewnikStart();
         measure_start();
+        //LED on
+        io_conf.intr_type = GPIO_INTR_DISABLE;
+        io_conf.mode = GPIO_MODE_OUTPUT;
+        io_conf.pin_bit_mask = (1 << GPIO_NUM_2);
+        io_conf.pull_down_en = 0;
+        io_conf.pull_up_en = 0;
+        gpio_config(&io_conf);
     }
-    
+
     while(1)
     {
-        vTaskDelay(MS2ST(1000));
+        vTaskDelay(MS2ST(975));
+        if (config.dev_type == T_DEV_TYPE_SERVER)
+        {
+           gpio_set_level(GPIO_NUM_2, 0);
+        }
+        
+        vTaskDelay(MS2ST(25));
+
+        if (config.dev_type == T_DEV_TYPE_SERVER)
+        {
+           gpio_set_level(GPIO_NUM_2, 1);
+        }
         if (config.dev_type != T_DEV_TYPE_SERVER)
         {
            

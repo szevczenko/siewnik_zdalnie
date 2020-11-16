@@ -36,7 +36,7 @@ void uart_process(void)
 	static timer_t uart_send_timer;
 	static uint8_t *pnt;
 	static uint16_t send_value;
-	//if (uart_send_timer < mktime.ms)
+	if (uart_send_timer < mktime.ms)
 	{
 		pnt = &send_value;
 		send_value = measure_get_filtered_value(MEAS_MOTOR);
