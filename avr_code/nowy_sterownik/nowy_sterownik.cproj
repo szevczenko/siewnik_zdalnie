@@ -131,6 +131,9 @@
     <Compile Include="include\adc.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="include\at_communication.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="include\config.h">
       <SubType>compile</SubType>
     </Compile>
@@ -165,6 +168,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\adc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\at_communication.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\dcmotorpwm.c">

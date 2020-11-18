@@ -72,6 +72,8 @@ void init_driver(void)
 	CLEAR_PIN(SFIOR, PUD);
 }
 
+
+uint32_t tets_cnt;
 int main(void)
 {
 	#if CONFIG_DEVICE_SIEWNIK
@@ -94,6 +96,11 @@ int main(void)
 		#if SERIAL_PLOT && USE_USART
 		uart_process();
 		#endif
+		if (tets_cnt < mktime.ms) {
+			debug_msg("TEST\n");
+			tets_cnt = mktime.ms + 1000;
+		}
+		
     }
 }
 

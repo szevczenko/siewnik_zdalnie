@@ -13,6 +13,8 @@
 #include <avr/io.h>
 #include "tim.h"
 
+#define MOTOR_RESISTOR 0.033
+
 #define TRUE 1
 #define FALSE 0 
 //////////////////////////////////////////////////
@@ -122,8 +124,8 @@ typedef enum
 
 
 #define TEST_APP 0
-#define L_DEBUG 0
-#define SERIAL_PLOT 1
+#define L_DEBUG 1
+#define SERIAL_PLOT 0
 #define DARK_MENU 1
 ////////////////// ZMNIEJSZANIE JASNOSCI////////////////////
 #define DISP_LIGHT 1 // im wieksza wartosz, tym mniejsza jasnosc
