@@ -3,6 +3,7 @@
 #include "config.h"
 #include "tim.h"
 #include "accumulator.h"
+#include "usart.h"
 
 void at_send_data(char *data, int len)  {
 	for (int i = 0; i < len; i++) {
@@ -14,7 +15,7 @@ static uint32_t byte_received;
 static uint8_t cmd, data_len;
 static uint16_t data_write[AT_W_LAST_POSITION];
 static uint16_t data_read[AT_R_LAST_POSITION];
-static uint16_t data_cmd[AT_C_LAST_POSITION];
+//static uint16_t data_cmd[AT_C_LAST_POSITION];
 
 static evTime xTimers;
 
@@ -22,10 +23,10 @@ static void clear_msg(void) {
 	byte_received = 0;
 	cmd = 0;
 	data_len = 0;
-	evTime_off(&xTimers, 0);
+	evTime_off(&xTimers);
 }
 
-static void vTimerCallback( evTime xTimer )
+static void vTimerCallback( evTime *xTimer )
 {
 	(void)xTimer;
 	clear_msg();
@@ -43,7 +44,7 @@ void at_write_data(void) {
 	for (uint16_t i = 0; i < sizeof(data_write); i++) {
 		send_buff[2 + i] = pnt[i];
 	}
-	at_send_data(send_buff, sizeof(data_write) + 2);
+	at_send_data((char *)send_buff, sizeof(data_write) + 2);
 }
 
 uint16_t atmega_get_data(atmega_data_read_t data_type) {
@@ -55,6 +56,30 @@ uint16_t atmega_get_data(atmega_data_read_t data_type) {
 
 static void atmega_set_read_data(void) {
 	
+}
+
+void at_read_data_process(void) {
+	static uint32_t atm_timer;
+	if (atm_timer < mktime.ms) {
+		
+		uint8_t byte, error_val;
+		uint16_t data = uart_getc();
+		
+		error_val = data & 0xFF00;
+		byte = data & 0x00FF;
+		if (error_val == UART_NO_DATA) {
+			atm_timer = mktime.ms + 50;
+			return;
+		}
+		
+		at_read_byte(byte);
+		
+		if (evTime_check(&xTimers)) {
+			vTimerCallback(&xTimers);
+		}
+		atm_timer = mktime.ms + 5;
+		
+	}
 }
 
 void at_read_byte(uint8_t byte) {
@@ -86,8 +111,9 @@ void at_read_byte(uint8_t byte) {
 			evTime_start(&xTimers, 200);
 		}
 		else {
+			/* End receive data or unknown error */
 			clear_msg();
-			debug_msg("ATMEGA RECEIVE UNKNOW ERROR\n\r");
+			//debug_msg("ATMEGA RECEIVE UNKNOW ERROR\n\r");
 		}
 		break;
 
@@ -108,13 +134,14 @@ void at_read_byte(uint8_t byte) {
 	}
 }
 
-void atm_com_process(void * arg) {
+void atm_com_process(void) {
 	static uint32_t atm_timer;
 	if (atm_timer < mktime.ms)
 	{
-		data_write[AT_W_MEAS_ACCUM] = (uint16_t)accum_get_voltage();
-		data_write[AT_W_MEAS_MOTOR] = (uint16_t)measure_get_current(MEAS_MOTOR, MOTOR_RESISTOR);
-		data_write[AT_W_MEAS_SERVO] = (uint16_t)measure_get_filtered_value(MEAS_SERVO);
+		/* Do poprawy */
+		data_write[AT_W_MEAS_ACCUM] = 123;//(uint16_t)accum_get_voltage();
+		data_write[AT_W_MEAS_MOTOR] = 321;//(uint16_t)measure_get_current(MEAS_MOTOR, MOTOR_RESISTOR);
+		data_write[AT_W_MEAS_SERVO] = 4095;//(uint16_t)measure_get_filtered_value(MEAS_SERVO);
 		at_write_data();
 		atm_timer = mktime.ms + 200;
 	}
@@ -122,5 +149,5 @@ void atm_com_process(void * arg) {
 
 
 void at_communication_init(void) {
-	xTimers = xTimerCreate("at_com_tim", 100 / portTICK_RATE_MS, pdFALSE, ( void * ) 0, vTimerCallback);
+	evTime_init(&xTimers);
 }

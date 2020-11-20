@@ -9,7 +9,7 @@
 #include "console.h"
 #include "cmd_server.h"
 
-#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+
 
 #if CONFIG_DEVICE_SIEWNIK
 ///////////////////////////////////////
@@ -92,16 +92,16 @@ uint8_t test_current = 11;
 
 void error_event(void * arg)
 {
-	static uint32_t error_event_timer;
+	//static uint32_t error_event_timer;
 	while(1)
 	{
 		vTaskDelay(350 / portTICK_RATE_MS);
 		if (error_events == 1) continue;
 		///////////////////////////////////////////////////////////////////////////////////////////
 		//MOTOR
-		float volt = accum_get_voltage();
+		//float volt = accum_get_voltage();
 		motor_error_value = 10;//count_motor_error_value(dcmotor_get_pwm(), volt);
-		uint16_t motor_adc_filterd = measure_get_filtered_value(MEAS_MOTOR);
+		//uint16_t motor_adc_filterd = measure_get_filtered_value(MEAS_MOTOR);
 		float current = test_current;//measure_get_current(MEAS_MOTOR, MOTOR_RESISTOR);
 		//debug_msg("MOTOR ADC: %d, current_max: %f, current: %f\n", motor_adc_filterd, motor_error_value, current);
 		if (current > motor_error_value /* && dcmotor_is_on() */) //servo_vibro_value*5

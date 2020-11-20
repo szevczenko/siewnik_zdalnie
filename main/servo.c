@@ -11,8 +11,10 @@
 //#include "error_siewnik.h"
 
 #define LED_SERVO_OFF
-#define LED_SERVO_ON
+#define LED_SERVO_ON 
 #define OFF_SERVO
+
+#undef debug_msg
 #define debug_msg(...)
 
 #if CONFIG_DEVICE_SIEWNIK

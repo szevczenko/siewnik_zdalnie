@@ -38,5 +38,7 @@ typedef enum
 void at_communication_init(void);
 void at_read_byte(uint8_t byte);
 uint16_t atmega_get_data(atmega_data_read_t data_type);
+void at_read_data_process(void);
+void atm_com_process(void);
 
 #endif

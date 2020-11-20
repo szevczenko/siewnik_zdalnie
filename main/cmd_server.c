@@ -31,7 +31,7 @@ static int max_socket = 0;
 static xSemaphoreHandle waitSemaphore, mutexSemaphore;
 
 
-#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+
 
 static void cmdServerError(void) { 
 	error_counter++;

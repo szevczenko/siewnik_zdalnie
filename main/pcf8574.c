@@ -14,6 +14,7 @@ Please refer to LICENSE file for licensing information.
 #include "pcf8574.h"
 
 #include "console.h"
+#undef debug_msg
 #define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 #ifndef PCF8574_I2C_PORT
@@ -157,7 +158,7 @@ int pcf8574_getinput(uint8_t deviceid) {
 		i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 		i2c_master_start(cmd);
 		i2c_master_write_byte(cmd, PCF8574_ADDRBASE | I2C_MASTER_READ, ACK_CHECK_EN);
-		i2c_master_read(cmd, &data, 1, LAST_NACK_VAL);
+		i2c_master_read(cmd, (uint8_t*)data, 1, LAST_NACK_VAL);
 		i2c_master_stop(cmd);
 		ret = i2c_master_cmd_begin(PCF8574_I2C_PORT, cmd, 1000 / portTICK_RATE_MS);
 		i2c_cmd_link_delete(cmd);

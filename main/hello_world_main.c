@@ -29,8 +29,8 @@
 #include "driver/gpio.h"
 #include "driver/i2c.h"
 #include "pcf8574.h"
+#include "battery.h"
 
-#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 uint16_t test_value;
 static gpio_config_t io_conf;
@@ -78,6 +78,7 @@ void app_main()
         fastProcessStartTask();
         ssd1306_Init();
         init_menu();
+        battery_init();
     }
     else {
         at_communication_init();

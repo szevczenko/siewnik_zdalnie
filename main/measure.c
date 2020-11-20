@@ -4,6 +4,7 @@
 #include "atmega_communication.h"
 #include "freertos/timers.h"
 
+#undef debug_msg
 #define debug_msg(...)
 
 #ifndef ADC_REFRES
@@ -71,7 +72,7 @@ void init_measure(void)
 		s_o_t_f_table[i] = 0;
 	}
 }
-static timer_t measure_timer;
+//static timer_t measure_timer;
 static uint32_t debug_msg_counter;
 static void measure_process(void * arg)
 {

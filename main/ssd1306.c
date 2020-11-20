@@ -15,6 +15,8 @@
 #include "config.h"
 
 #include "console.h"
+
+#undef debug_msg
 #define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 #define OLED_I2C_ADDRESS   0x3C

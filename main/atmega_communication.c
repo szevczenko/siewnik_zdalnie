@@ -8,7 +8,7 @@
 #include "motor.h"
 #include "servo.h"
 
-#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+
 
 #define at_send_data(data, len) uart_write_bytes(UART_NUM_0, (char *)data, len)
 
@@ -16,7 +16,7 @@ static uint32_t byte_received;
 static uint8_t cmd, data_len;
 static uint16_t data_write[AT_W_LAST_POSITION];
 static uint16_t data_read[AT_R_LAST_POSITION];
-static uint16_t data_cmd[AT_C_LAST_POSITION];
+//static uint16_t data_cmd[AT_C_LAST_POSITION];
 
 static TimerHandle_t xTimers;
 
@@ -61,10 +61,16 @@ static void atmega_set_read_data(void) {
 
 void at_read_byte(uint8_t byte) {
 	if (byte_received == 0) {
-		cmd = byte;
-		byte_received++;
-		xTimerStart( xTimers, 0 );
-		return;
+		if (byte == START_FRAME_WRITE || byte == START_FRAME_READ || byte == START_FRAME_CMD) {
+			cmd = byte;
+			byte_received++;
+			xTimerStart( xTimers, 0 );
+			return;
+		}
+		else {
+			/* Debug logs */
+			debug_data(&byte, 1);
+		}
 	}
 
 	switch(cmd) {
@@ -105,7 +111,6 @@ void at_read_byte(uint8_t byte) {
 			break;
 
 		default:
-			//debug_msg("FRAME BAD START\n\r");
 			clear_msg();
 	}
 }

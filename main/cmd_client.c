@@ -35,7 +35,7 @@ pthread_mutexattr_t mutexattr;
 static keepAlive_t keepAlive;
 struct sockaddr_in tcpServerAddr;
 
-#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+
 
 
 int NetworkConnect(char* addr, int port)

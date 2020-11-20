@@ -15,7 +15,7 @@
 #include "libtelnet.h"
 #include "telnet.h"
 
-extern console_t con0telnet[3];
+extern console_t con0telnet[TELNET_MAX_CLIENT];
 
 void consoleEthInit(void);
 void consoleTelentStart(void);

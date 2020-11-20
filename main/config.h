@@ -42,7 +42,7 @@
 #define CONFIG_USE_CONSOLE_CMDSHORT FALSE
 
 #define CONFIG_USE_CONSOLE_SERIAL TRUE
-#define CONFIG_USE_CONSOLE_TELNET FALSE
+#define CONFIG_USE_CONSOLE_TELNET TRUE
 #define CONFIG_CONSOLE_ECHO TRUE
 #define CONFIG_CONSOLE_PROMPT ""
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -123,6 +123,73 @@ extern config_t config;
 
 int configSave(config_t *config);
 int configRead(config_t *config);
+
+void telnetPrintfToAll(const char *format, ...);
+void telnetSendToAll(const char * data, size_t size);
+
+enum
+{
+	T_HELP = 1,
+	T_CLEAR,
+#if CONFIG_USE_CONSOLE_TOKEN_DEBUG
+	T_DEBUG,
+#endif //CONFIG_USE_CONSOLE_TOKEN_DEBUG
+	T_CONFIG,
+#if CONFIG_USE_SERIAL_PLOT
+	T_MONITOR,
+#endif
+	T_ECHO,
+	T_MQTT,
+	T_ADDRESS,
+	T_PORT,
+	
+	T_ON,
+	T_OFF,
+	T_LIST,
+	T_SET,
+	T_ADD,
+	T_RESET,
+	T_SAVE,
+	T_BOOT,
+	T_PERIOD,
+	
+	T_CAN_ID,
+	T_DEV_TYPE,
+
+	T_DEV_TYPE_SERVER,
+	T_DEV_TYPE_CLIENT,
+
+	#if CONFIG_USE_SERIAL_PLOT
+	T_TEST_CH_1,
+	T_TEST_CH_2,
+	T_TEST_CH_3,
+	T_MONITOR_START_SEQ,
+	#endif
+
+	T_WIFI,
+	T_SSID,
+	T_SSID_NUMBER,
+	T_PASSWORD,
+	T_CONNECT,
+	T_SHOW,
+
+	T_TOKENLINE,
+};
+
+#if 1
+#define debug_msg(...) { 							\
+		if (config.dev_type == T_DEV_TYPE_SERVER) 	\
+		{											\
+			telnetPrintfToAll(__VA_ARGS__);			\
+		} 											\
+		else { 										\
+			consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__);	\
+		} 											\
+	}
+#define debug_data(data, size) telnetSendToAll((char *)data, size)
+#else
+#define debug_msg(...)
+#endif
 
 #define debug_printf(format, ...) print(format, ##__VA_ARGS__)
 #define CONFIG_BUFF_SIZE 512

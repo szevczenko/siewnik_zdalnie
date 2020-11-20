@@ -42,6 +42,7 @@ C_SRCS +=  \
 ../main.c \
 ../src/accumulator.c \
 ../src/adc.c \
+../src/at_communication.c \
 ../src/dcmotorpwm.c \
 ../src/eeprom.c \
 ../src/measure.c \
@@ -62,6 +63,7 @@ OBJS +=  \
 main.o \
 src/accumulator.o \
 src/adc.o \
+src/at_communication.o \
 src/dcmotorpwm.o \
 src/eeprom.o \
 src/measure.o \
@@ -75,6 +77,7 @@ OBJS_AS_ARGS +=  \
 main.o \
 src/accumulator.o \
 src/adc.o \
+src/at_communication.o \
 src/dcmotorpwm.o \
 src/eeprom.o \
 src/measure.o \
@@ -88,6 +91,7 @@ C_DEPS +=  \
 main.d \
 src/accumulator.d \
 src/adc.d \
+src/at_communication.d \
 src/dcmotorpwm.d \
 src/eeprom.d \
 src/measure.d \
@@ -101,6 +105,7 @@ C_DEPS_AS_ARGS +=  \
 main.d \
 src/accumulator.d \
 src/adc.d \
+src/at_communication.d \
 src/dcmotorpwm.d \
 src/eeprom.d \
 src/measure.d \
@@ -139,6 +144,13 @@ src/accumulator.o: ../src/accumulator.c
 	
 
 src/adc.o: ../src/adc.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"../include" -I"../src" -I".." -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega32 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega32" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+src/at_communication.o: ../src/at_communication.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"../include" -I"../src" -I".." -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega32 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega32" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

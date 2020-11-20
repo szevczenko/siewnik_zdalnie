@@ -7,6 +7,8 @@
 
 #define STORAGE_NAMESPACE "MENU"
 
+#undef debug_msg
+#undef debug_msg
 #define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 static menuPStruct_t menuParameters[] = 

@@ -4,7 +4,7 @@
 #include "parse_cmd.h"
 #include "console.h"
 
-#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+
 
 static keepAlive_t * keepAliveTab[8];
 static uint8_t tabSize;

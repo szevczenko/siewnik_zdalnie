@@ -359,4 +359,20 @@ void telnetSendToAll(const char * data, size_t size)
 	}
 }
 
+void telnetPrintfToAll(const char *format, ...)
+{
+	static char buff[CONFIG_CONSOLE_VSNPRINTF_BUFF_SIZE];
+	va_list ap;
+	va_start(ap, format);
+	vsnprintf(buff, CONFIG_CONSOLE_VSNPRINTF_BUFF_SIZE, format, ap);
+
+	for (uint8_t i = 0; i < TELNET_MAX_CLIENT; i++)
+	{
+		if (tnHandle[i] != 0)
+		{
+			telnet_send(*(con0telnet[i].telnet), buff, strlen(buff));
+		}
+	}
+}
+
 #endif //#if (CONFIG_USE_TCPIP)

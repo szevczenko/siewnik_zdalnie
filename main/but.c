@@ -15,13 +15,12 @@
 #include "pcf8574.h"
 #include "console.h"
 
-#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+
 
 extern uint8_t test_number;
 
 but_t button1, button2, button3, button4, button5, button6, button7, button8, button9, button10;
 but_t *but_tab[BUTTON_CNT] = {&button1, &button2, &button3, &button4, &button5, &button6, &button7, &button8, &button9, &button10};
-extern time_t mktime;
 static uint8_t read_i2c_value;
 
 uint8_t read_button(but_t *but)

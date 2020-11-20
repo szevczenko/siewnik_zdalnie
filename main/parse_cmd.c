@@ -6,7 +6,7 @@
 #include "menu_param.h"
 #include "error_siewnik.h"
 
-#define debug_msg(...) consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+
 
 static uint8_t sendBuff[32];
 static uint32_t frameLenClient;

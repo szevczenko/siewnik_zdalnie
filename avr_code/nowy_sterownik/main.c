@@ -14,6 +14,7 @@
 #include "accumulator.h"
 #include "servo.h"
 #include "dcmotorpwm.h"
+#include "at_communication.h"
 
 #if L_DEBUG
 #include <stdio.h>
@@ -69,6 +70,7 @@ void init_driver(void)
 	timer0_init(TIM0_PRESCALER, TIM0_ARR);
 	init_system();
 	init_measure();
+	at_communication_init();
 	CLEAR_PIN(SFIOR, PUD);
 }
 
@@ -93,11 +95,13 @@ int main(void)
 		#endif
 		measure_process();
 		accumulator_process();
+		atm_com_process();
+		at_read_data_process();
 		#if SERIAL_PLOT && USE_USART
 		uart_process();
 		#endif
 		if (tets_cnt < mktime.ms) {
-			debug_msg("TEST\n");
+			debug_msg("ATMEGA\n\r");
 			tets_cnt = mktime.ms + 1000;
 		}
 		

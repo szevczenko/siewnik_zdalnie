@@ -4,7 +4,9 @@
 
 #include "motor.h"
 
+#undef debug_msg
 #define debug_msg(...)
+
 #define LED_MOTOR_OFF
 #define LED_MOTOR_ON
 #define CMD_MOTOR_OFF
@@ -80,10 +82,10 @@ int motor_start(void)
 	}
 }
 
-static uint8_t count_pwm(int pwm)
-{
-	return /* DCMOTORPWM_MINVEL + (156 +  dark_menu_get_value(MENU_MOTOR_MAXIMUM_REGULATION)  - DCMOTORPWM_MINVEL)* */ pwm/99;
-}
+// static uint8_t count_pwm(int pwm)
+// {
+// 	return /* DCMOTORPWM_MINVEL + (156 +  dark_menu_get_value(MENU_MOTOR_MAXIMUM_REGULATION)  - DCMOTORPWM_MINVEL)* */ pwm/99;
+// }
 
 int dcmotor_set_pwm(int pwm)
 {

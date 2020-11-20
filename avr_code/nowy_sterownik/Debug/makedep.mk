@@ -8,6 +8,8 @@ src\accumulator.c
 
 src\adc.c
 
+src\at_communication.c
+
 src\dcmotorpwm.c
 
 src\eeprom.c
