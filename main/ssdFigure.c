@@ -59,6 +59,17 @@ bool circle[] =
 	0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 };
 
+bool battery[] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+	0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 
+	0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0,
+	0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+	0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+	0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0,
+	0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
 int ssdFigureDrawLoadBar(loadBar_t * figure)
 {
 	if (figure->width + figure->x > SSD1306_WIDTH) return FALSE;
@@ -160,6 +171,33 @@ void drawServo(uint8_t x, uint8_t y, uint8_t open)
 			if (start_flag == 1 && i + x > x_open)
 				ssd1306_DrawPixel(i + x, j + y, (SSD1306_COLOR) White);
 				
+		}
+	}
+}
+
+void drawBattery(uint8_t x, uint8_t y, float accum_voltage)
+{
+
+	uint8_t x_charge = (uint8_t)((accum_voltage - 3.2) * 7);
+
+	if (x_charge > 7) {
+		x_charge = 0;
+	}
+
+	debug_msg("x_charge %d\n", x_charge);
+
+	for (int j = 0; j < 8; j++)
+	{
+		for (int i = 0; i < 11; i++)
+		{
+			if (battery[j*11 + i])
+			{
+				ssd1306_DrawPixel(i + x, j + y, (SSD1306_COLOR) White);
+			}
+
+			if (j > 1 && j < 6 && i > 1 && i < 1 + x_charge) {
+				ssd1306_DrawPixel(i + x, j + y, (SSD1306_COLOR) White);
+			}	
 		}
 	}
 }

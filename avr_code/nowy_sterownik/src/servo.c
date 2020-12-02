@@ -61,6 +61,41 @@ void servo_init(uint8_t prescaler)
 	debug_msg("SERVO: init\n");
 }
 
+int servo_is_open(void)
+{
+	return servoD.state == SERVO_OPEN;
+}
+
+int servo_open(uint16_t value) // value - 0-100%
+{
+	if (servoD.state == SERVO_CLOSE || servoD.state == SERVO_OPEN)
+	{
+		servoD.state = SERVO_OPEN;
+		servoD.value = value;
+		servo_set_pwm_val((uint16_t)value);
+		debug_msg("SERVO_OPPENED %d\n", value);
+		LED_SERVO_ON;
+		return 1;
+	}
+	
+	return 0;
+}
+
+int servo_close(void)
+{
+	if (servo_is_open())
+	{
+		servo_set_pwm_val((uint16_t)0);
+		servoD.state = SERVO_CLOSE;
+		servoD.value = 0;
+		debug_msg("SERVO_CLOSED %d\n", servoD.value);
+		LED_SERVO_OFF;
+		return 1;
+	}
+
+	return 0;
+}
+
 void servo_process(uint16_t value)
 {
 	static evTime servo_timer;

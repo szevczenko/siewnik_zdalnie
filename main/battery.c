@@ -7,17 +7,25 @@
 #include "config.h"
 #include "console.h"
 
+//max ADC: 375 - 4.2 V
+
+#define MIN_ADC 290
+#define MAX_ADC_FOR_MAX_VOL 375
+#define MIN_VOL 3.2
+#define MAX_VOL 4.2
+
 #define ADC_BUFFOR_SIZE 32
 static uint16_t adc_filtered_value;
+static float voltage;
+static uint16_t adc_data[ADC_BUFFOR_SIZE];
 
 static void adc_task()
 {
     int x;
-    uint16_t adc_data[ADC_BUFFOR_SIZE];
 	int ret;
     while (1) {
 		ret = adc_read_fast(adc_data, ADC_BUFFOR_SIZE);
-        //if (ESP_OK == ret) 
+        if (ESP_OK == ret) 
 		{
 			adc_filtered_value = 0;
             for (x = 0; x < ADC_BUFFOR_SIZE; x++) {
@@ -25,14 +33,19 @@ static void adc_task()
                 adc_filtered_value = adc_filtered_value + adc_data[x];
             }
 			adc_filtered_value = adc_filtered_value/ADC_BUFFOR_SIZE;
+            voltage = MAX_VOL * adc_filtered_value / MAX_ADC_FOR_MAX_VOL;
         }
-		//else 
+		else 
 		{
 			debug_msg("ADC error: %d\n\r", ret);
 		}
-		debug_msg("ADC meas: %d\n\r", adc_filtered_value);
+		debug_msg("ADC meas: %d\n\r", adc_filtered_value /*(int) (voltage * 1000) */);
         vTaskDelay(1000 / portTICK_RATE_MS);
     }
+}
+
+float battery_get_voltage(void){
+    return voltage;
 }
 
 void battery_init(void)

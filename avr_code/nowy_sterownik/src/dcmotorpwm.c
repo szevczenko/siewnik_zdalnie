@@ -63,7 +63,7 @@ int dcmotorpwm_stop(void) {
 	#else
 	SET_PIN(DCMOTORPWM_PORT, DCMOTORPWM_PIN1);
 	#endif
-	//OCR2 = 0;
+	OCR2 = 0;
 	motorD.last_state = motorD.state;
 	motorD.state = MOTOR_OFF;
 	return 1;
@@ -73,7 +73,7 @@ int dcmotorpwm_start(void)
 {
 	if (motorD.state == MOTOR_OFF)
 	{
-		//debug_msg("Motor Start\n")
+		debug_msg("Motor Start\n")
 		
 		#if CONFIG_DEVICE_SOLARKA
 		TCCR2 |= (1<<COM21); 
@@ -84,7 +84,7 @@ int dcmotorpwm_start(void)
 		TCCR2 |= (1<<WGM20);
 		TCCR2 |= DCMOTORPWM_PRESCALER; //set prescaler
 		motorD.last_state = motorD.state;
-		motorD.state = MOTOR_AXELERATE;
+		motorD.state = MOTOR_ON;
 		evTime_start(&motorD.timeout, 1000);
 		return 1;
 	}
@@ -92,6 +92,13 @@ int dcmotorpwm_start(void)
 	{
 		//debug_msg("dcmotor canot start\n");
 		return 0;
+	}
+}
+
+void dcmotor_set_pwm(uint8_t value) {
+	if (motorD.state == MOTOR_ON) {
+		OCR2 = value;
+		motorD.pwm_value = value;
 	}
 }
 
@@ -108,10 +115,6 @@ void dcmotor_process(uint16_t value)
 			break;
 
 			case MOTOR_OFF:
-			break;
-
-			case MOTOR_AXELERATE:
-			motorD.state = MOTOR_ON; //!!
 			break;
 		}
 		

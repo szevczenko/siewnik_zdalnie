@@ -28,11 +28,6 @@ typedef enum
 	SERVO_NO_INIT = 0,
 	SERVO_CLOSE,
 	SERVO_OPEN,
-	SERVO_DELAYED_OPEN,
-	SERVO_REGULATION,
-	SERVO_TRY,
-	SERVO_ERROR_PROCESS,
-	SERVO_ERROR
 }SERVOState;
 
 typedef struct  
@@ -48,6 +43,9 @@ typedef struct
 void servo_init(uint8_t prescaler);
 void servo_process(uint16_t value);
 void servo_set_pwm_val(uint16_t value);
+int servo_is_open(void);
+int servo_open(uint16_t value);
+int servo_close(void);
 
 #endif
 

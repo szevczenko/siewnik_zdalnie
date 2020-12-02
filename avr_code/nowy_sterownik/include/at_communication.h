@@ -22,9 +22,9 @@ typedef enum
 typedef enum
 {
 	AT_R_MOTOR_VALUE,
-	AT_R_SERVO_VALUE,
+	AT_R_SERVO_VIBRO_VALUE,
 	AT_R_MOTOR_IS_ON,
-	AT_R_SERVO_IS_ON,
+	AT_R_SERVO_VIBRO_IS_ON,
 	AT_R_LAST_POSITION,
 }atmega_data_read_t;
 

@@ -9,6 +9,7 @@
 #include "wifidrv.h"
 #include "cmd_client.h"
 #include "fast_add.h"
+#include "battery.h"
 
 #undef debug_msg
 #undef debug_msg
@@ -631,6 +632,8 @@ static void menu_task(void * arg)
 		ssd1306_Fill(Black);
 		ssd1306_SetCursor(2, 0);
 		ssd1306_WriteString(menu->name, Font_11x18, White);
+		drawBattery(115, 1, battery_get_voltage());
+
 		switch(menu->arg_type)
 		{
 			case T_ARG_TYPE_BOOL:

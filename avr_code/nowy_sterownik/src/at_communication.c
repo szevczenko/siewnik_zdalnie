@@ -4,6 +4,8 @@
 #include "tim.h"
 #include "accumulator.h"
 #include "usart.h"
+#include "dcmotorpwm.h"
+#include "servo.h"
 
 void at_send_data(char *data, int len)  {
 	for (int i = 0; i < len; i++) {
@@ -30,7 +32,7 @@ static void vTimerCallback( evTime *xTimer )
 {
 	(void)xTimer;
 	clear_msg();
-	debug_msg("vTimerCallback/n/r");
+	debug_msg("vTimerCallback\n\r");
 }
 
 uint8_t send_buff[256];
@@ -82,6 +84,51 @@ void at_read_data_process(void) {
 	}
 }
 
+uint16_t motor_read_value;
+uint16_t servo_read_value;
+uint16_t servo_vibro_is_on;
+uint16_t motor_is_on;
+
+#define VIBRO_PORT PORTD
+#define VIBRO_DDR DDRD
+#define VIBRO_PIN 5
+
+#define VIBRO_INIT_PIN	SET_PIN(VIBRO_DDR, VIBRO_PIN)
+#define ON_VIBRO_PIN	SET_PIN(VIBRO_PORT, VIBRO_PIN)
+#define OFF_VIBRO_PIN	CLEAR_PIN(VIBRO_PORT, VIBRO_PIN)
+
+void data_process(void) {
+	motor_read_value = atmega_get_data(AT_R_MOTOR_VALUE) & 0xFF;
+	servo_read_value = atmega_get_data(AT_R_SERVO_VIBRO_VALUE);
+	servo_vibro_is_on = atmega_get_data(AT_R_SERVO_VIBRO_IS_ON);
+	motor_is_on = atmega_get_data(AT_R_MOTOR_IS_ON);
+	
+	/* MOTOR SECTION */
+	if (motor_is_on) {
+		dcmotorpwm_start();
+		dcmotor_set_pwm((uint8_t) motor_read_value);
+	}
+	else {
+		dcmotorpwm_stop();
+	}
+	
+	/* SERVO SECTION */
+	if (servo_vibro_is_on) {
+		servo_open(servo_read_value);
+	}
+	else {
+		servo_close();
+	}
+	
+	/* VIBRO SECTION */
+	if (servo_vibro_is_on) {
+		ON_VIBRO_PIN;
+	}
+	else {
+		OFF_VIBRO_PIN;
+	}
+}
+
 void at_read_byte(uint8_t byte) {
 	if (byte_received == 0) {
 		cmd = byte;
@@ -106,14 +153,17 @@ void at_read_byte(uint8_t byte) {
 			pnt[byte_received - 2] = byte;
 			byte_received++;
 			if (byte_received - 2 == data_len) {
+				clear_msg();
 				/* Verify data */
+				data_process();
+				
 			}
 			evTime_start(&xTimers, 200);
 		}
 		else {
 			/* End receive data or unknown error */
 			clear_msg();
-			//debug_msg("ATMEGA RECEIVE UNKNOW ERROR\n\r");
+			debug_msg("ATMEGA RECEIVE UNKNOW ERROR\n\r");
 		}
 		break;
 
@@ -149,5 +199,6 @@ void atm_com_process(void) {
 
 
 void at_communication_init(void) {
+	VIBRO_INIT_PIN;
 	evTime_init(&xTimers);
 }

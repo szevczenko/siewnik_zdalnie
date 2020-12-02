@@ -47,10 +47,6 @@ typedef enum
 	MOTOR_NO_INIT = 0,
 	MOTOR_OFF,
 	MOTOR_ON,
-	MOTOR_TRY,
-	MOTOR_AXELERATE,
-	MOTOR_ERROR ,
-	MOTOR_REGULATION,
 }motorState;
 
 typedef struct  
@@ -69,14 +65,7 @@ extern void dcmotorpwm_init(void);
 void dcmotorpwm_deinit(void);
 extern int dcmotorpwm_stop(void);
 extern int dcmotorpwm_start(void);
-extern int dcmotor_is_on(void);
+void dcmotor_set_pwm(uint8_t value);
 void dcmotor_process(uint16_t value);
-void dcmotor_set_error(void);
-int dcmotor_set_try(void);
-int dcmotor_set_normal_state(void);
-int dcmotor_get_pwm(void);
-void dcmotorpwm_goforward(uint8_t vel);
-void dcmotorpwm_gobackward(uint8_t vel);
-void motor_regulation(uint8_t pwm);
 
 #endif

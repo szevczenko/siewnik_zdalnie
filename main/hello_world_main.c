@@ -74,11 +74,11 @@ void app_main()
 
     if (config.dev_type != T_DEV_TYPE_SERVER)
     {
+        battery_init();
         init_buttons();
         fastProcessStartTask();
         ssd1306_Init();
         init_menu();
-        battery_init();
     }
     else {
         at_communication_init();

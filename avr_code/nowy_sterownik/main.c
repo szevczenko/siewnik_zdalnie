@@ -25,6 +25,12 @@ void debug_msg( const char* format, ... )
 	va_start( arglist, format );
 	vsprintf(debug_buff, format, arglist );
 	va_end( arglist );
+	for (int i = 0; i < strlen(debug_buff); i++) {
+		if (debug_buff[i] == '\n') {
+			uart_puts("AT: ");
+			break;
+		}
+	}
 	#if USE_USART
 	uart_puts(debug_buff);
 	#endif
@@ -101,7 +107,7 @@ int main(void)
 		uart_process();
 		#endif
 		if (tets_cnt < mktime.ms) {
-			debug_msg("ATMEGA\n\r");
+			debug_msg("ATMEGA \n");
 			tets_cnt = mktime.ms + 1000;
 		}
 		

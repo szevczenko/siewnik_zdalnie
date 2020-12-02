@@ -95,7 +95,7 @@ void at_read_byte(uint8_t byte) {
 			}
 			else {
 				clear_msg();
-				debug_msg("ATMEGA RECEIVE UNKNOW ERROR\n\r");
+				//debug_msg("ATMEGA RECEIVE UNKNOW ERROR\n\r");
 			}
 			break;
 
