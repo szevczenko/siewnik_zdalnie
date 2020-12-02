@@ -73,7 +73,7 @@ int dcmotorpwm_start(void)
 {
 	if (motorD.state == MOTOR_OFF)
 	{
-		debug_msg("Motor Start\n")
+		debug_msg("Motor Start\n");
 		
 		#if CONFIG_DEVICE_SOLARKA
 		TCCR2 |= (1<<COM21); 

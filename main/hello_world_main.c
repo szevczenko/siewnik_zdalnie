@@ -74,11 +74,17 @@ void app_main()
 
     if (config.dev_type != T_DEV_TYPE_SERVER)
     {
-        battery_init();
+        //battery_init();
         init_buttons();
         fastProcessStartTask();
         ssd1306_Init();
         init_menu();
+        io_conf.intr_type = GPIO_INTR_DISABLE;
+        io_conf.mode = GPIO_MODE_OUTPUT;
+        io_conf.pin_bit_mask = (1 << GPIO_NUM_2);
+        io_conf.pull_down_en = 0;
+        io_conf.pull_up_en = 0;
+        gpio_config(&io_conf);
     }
     else {
         at_communication_init();
@@ -96,20 +102,20 @@ void app_main()
     while(1)
     {
         vTaskDelay(MS2ST(975));
-        if (config.dev_type == T_DEV_TYPE_SERVER)
+        //if (config.dev_type == T_DEV_TYPE_SERVER)
         {
            gpio_set_level(GPIO_NUM_2, 0);
         }
         
         vTaskDelay(MS2ST(25));
 
-        if (config.dev_type == T_DEV_TYPE_SERVER)
+        //if (config.dev_type == T_DEV_TYPE_SERVER)
         {
            gpio_set_level(GPIO_NUM_2, 1);
         }
         if (config.dev_type != T_DEV_TYPE_SERVER)
         {
-           
+            //debug_msg("CLIENT INIT\n\r");
         }
     }
 }

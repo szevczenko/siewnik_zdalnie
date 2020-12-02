@@ -128,7 +128,8 @@ static void process_button(void * arg)
 	{
 		//process
 		read_i2c_value = pcf8574_getinput(0);
-		taskENTER_CRITICAL();
+		debug_msg("but: %d\n\r", read_i2c_value);
+		//taskENTER_CRITICAL();
 		for (uint8_t i=0; i<BUTTON_CNT; i++)
 		{
 			red_val = read_button(but_tab[i]);
@@ -136,9 +137,13 @@ static void process_button(void * arg)
 			{
 				but_tab[i]->value = red_val;
 				if (red_val == 1 && but_tab[i]->rise_callback != 0)
-				but_tab[i]->rise_callback(but_tab[i]);
-				else if(red_val == 0 && but_tab[i]->fall_callback != 0)
-				but_tab[i]->fall_callback(but_tab[i]);
+				{
+					but_tab[i]->rise_callback(but_tab[i]);
+				}
+				else if(red_val == 0 && but_tab[i]->fall_callback != 0) {
+					but_tab[i]->fall_callback(but_tab[i]);
+				}
+				
 			}
 			//timer
 			if (red_val == 0)
@@ -158,8 +163,8 @@ static void process_button(void * arg)
 				but_tab[i]->state = 0;
 			}
 		} // end for
-		taskEXIT_CRITICAL();
-		vTaskDelay(20 / portTICK_RATE_MS);
+		//taskEXIT_CRITICAL();
+		vTaskDelay(200 / portTICK_RATE_MS);
 	}// end while
 }
 

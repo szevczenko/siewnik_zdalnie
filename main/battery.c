@@ -39,7 +39,7 @@ static void adc_task()
 		{
 			debug_msg("ADC error: %d\n\r", ret);
 		}
-		debug_msg("ADC meas: %d\n\r", adc_filtered_value /*(int) (voltage * 1000) */);
+		//debug_msg("ADC meas: %d\n\r", adc_filtered_value /*(int) (voltage * 1000) */);
         vTaskDelay(1000 / portTICK_RATE_MS);
     }
 }

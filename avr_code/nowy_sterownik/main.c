@@ -27,7 +27,7 @@ void debug_msg( const char* format, ... )
 	va_end( arglist );
 	for (int i = 0; i < strlen(debug_buff); i++) {
 		if (debug_buff[i] == '\n') {
-			uart_puts("AT: ");
+			uart_puts("\n\rAT: ");
 			break;
 		}
 	}

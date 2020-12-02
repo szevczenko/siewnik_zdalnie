@@ -176,10 +176,20 @@ enum
 	T_TOKENLINE,
 };
 
+/*
+for (int i = 0; i < strlen(debug_buff); i++) { 
+				if (debug_buff[i] == '\n') {		
+					telnetPrintfToAll("\n\rESP: ");	
+					break;							
+				}									
+			}
+			*/
+
 #if 1
 #define debug_msg(...) { 							\
 		if (config.dev_type == T_DEV_TYPE_SERVER) 	\
 		{											\
+			telnetPrintfToAll("\n\rESP: ");			\
 			telnetPrintfToAll(__VA_ARGS__);			\
 		} 											\
 		else { 										\

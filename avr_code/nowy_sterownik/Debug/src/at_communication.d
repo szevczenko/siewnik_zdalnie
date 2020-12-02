@@ -12,7 +12,8 @@ src/at_communication.d src/at_communication.o: ../src/at_communication.c \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\fuse.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\lock.h \
  ../include/tim.h ../include/measure.h ../include/config.h \
- ../include/tim.h ../include/accumulator.h ../include/usart.h
+ ../include/tim.h ../include/accumulator.h ../include/usart.h \
+ ../include/dcmotorpwm.h ../include/servo.h
 
 ../include/at_communication.h:
 
@@ -51,3 +52,7 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../include/accumulator.h:
 
 ../include/usart.h:
+
+../include/dcmotorpwm.h:
+
+../include/servo.h:

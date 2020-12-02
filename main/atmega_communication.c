@@ -31,7 +31,7 @@ static void vTimerCallback( TimerHandle_t xTimer )
 {
 	(void)xTimer;
 	clear_msg();
-	debug_msg("vTimerCallback/n/r");
+	//debug_msg("vTimerCallback\n\r");
 }
 
 uint8_t send_buff[256];
@@ -90,6 +90,7 @@ void at_read_byte(uint8_t byte) {
 				byte_received++;
 				if (byte_received - 2 == data_len) {
 					/* Verify data */
+					clear_msg();
 				}
 				xTimerStart( xTimers, 0 );
 			}
