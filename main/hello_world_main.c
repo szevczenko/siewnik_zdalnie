@@ -50,8 +50,11 @@ static int i2cInit(void)
     return ESP_OK;
 }
 
+
+
 static void checkDevType(void) {
     i2cInit();
+    pcf8574_init();
     int read_i2c_value;
     read_i2c_value = pcf8574_getinput(0);
     if (read_i2c_value >= 0) {
@@ -74,7 +77,7 @@ void app_main()
 
     if (config.dev_type != T_DEV_TYPE_SERVER)
     {
-        //battery_init();
+        battery_init();
         init_buttons();
         fastProcessStartTask();
         ssd1306_Init();

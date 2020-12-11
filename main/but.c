@@ -21,7 +21,7 @@ extern uint8_t test_number;
 
 but_t button1, button2, button3, button4, button5, button6, button7, button8, button9, button10;
 but_t *but_tab[BUTTON_CNT] = {&button1, &button2, &button3, &button4, &button5, &button6, &button7, &button8, &button9, &button10};
-static uint8_t read_i2c_value;
+static int read_i2c_value;
 
 uint8_t read_button(but_t *but)
 {
@@ -128,8 +128,7 @@ static void process_button(void * arg)
 	{
 		//process
 		read_i2c_value = pcf8574_getinput(0);
-		debug_msg("but: %d\n\r", read_i2c_value);
-		//taskENTER_CRITICAL();
+		taskENTER_CRITICAL();
 		for (uint8_t i=0; i<BUTTON_CNT; i++)
 		{
 			red_val = read_button(but_tab[i]);
@@ -163,8 +162,8 @@ static void process_button(void * arg)
 				but_tab[i]->state = 0;
 			}
 		} // end for
-		//taskEXIT_CRITICAL();
-		vTaskDelay(200 / portTICK_RATE_MS);
+		taskEXIT_CRITICAL();
+		vTaskDelay(30 / portTICK_RATE_MS);
 	}// end while
 }
 

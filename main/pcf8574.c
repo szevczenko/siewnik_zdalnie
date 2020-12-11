@@ -158,11 +158,11 @@ int pcf8574_getinput(uint8_t deviceid) {
 		i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 		i2c_master_start(cmd);
 		i2c_master_write_byte(cmd, PCF8574_ADDRBASE | I2C_MASTER_READ, ACK_CHECK_EN);
-		i2c_master_read(cmd, (uint8_t*)data, 1, LAST_NACK_VAL);
+		i2c_master_read(cmd, (uint8_t*)&data, 1, LAST_NACK_VAL);
 		i2c_master_stop(cmd);
 		ret = i2c_master_cmd_begin(PCF8574_I2C_PORT, cmd, 1000 / portTICK_RATE_MS);
 		i2c_cmd_link_delete(cmd);
-		//if (ret != ESP_OK) 
+		if (ret != ESP_OK) 
 		{
 			debug_msg("i2c status %d\n", ret);
 			return ret;
