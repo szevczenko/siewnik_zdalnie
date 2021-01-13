@@ -115,6 +115,7 @@ void dcmotor_process(uint16_t value)
 			break;
 
 			case MOTOR_OFF:
+			OCR2 = 0;
 			break;
 		}
 		

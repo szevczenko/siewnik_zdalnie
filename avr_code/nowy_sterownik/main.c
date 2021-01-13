@@ -106,10 +106,10 @@ int main(void)
 		#if SERIAL_PLOT && USE_USART
 		uart_process();
 		#endif
-		if (tets_cnt < mktime.ms) {
+		/*if (tets_cnt < mktime.ms) {
 			debug_msg("ATMEGA \n");
 			tets_cnt = mktime.ms + 1000;
-		}
+		}*/
 		
     }
 }

@@ -18,7 +18,7 @@ void init_system(void)
 void on_system(void)
 {
 	dcmotorpwm_init();	
-	servo_init(0);
+	//servo_init(0);
 	init_measure();
 	system_events = 0;
 	SET_PIN(system_events, EV_SYSTEM_STATE);

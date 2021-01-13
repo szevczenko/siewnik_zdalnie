@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "console.h"
 #include "config.h"
 
 #include "motor.h"
@@ -144,14 +145,17 @@ uint8_t dcmotor_process(uint8_t value)
 	switch(motorD.state)
 	{
 		case MOTOR_ON:
+		debug_msg("MOTOR_ON %d\n\r", value);
 		dcmotor_set_pwm(value);
 		break;
 
 		case MOTOR_OFF:
+		debug_msg("MOTOR_OFF %d\n\r", value);
 		motorD.pwm_value = 0;
 		break;
 
 		case MOTOR_TRY:
+		debug_msg("MOTOR_TRY %d\n\r", value);
 			if (value <= 50)
 			{
 				dcmotor_set_pwm(value + 20);
@@ -167,10 +171,12 @@ uint8_t dcmotor_process(uint8_t value)
 		break;
 
 		case MOTOR_ERROR:
+			debug_msg("MOTOR_ERROR %d\n\r", value);
 			CMD_MOTOR_OFF;
 		break;
 
 		case MOTOR_AXELERATE:
+			debug_msg("MOTOR_AXELERATE %d\n\r", value);
 			motorD.state = MOTOR_ON; //!!
 			break;					 //!
 			dcmotor_set_pwm(50);
@@ -183,9 +189,13 @@ uint8_t dcmotor_process(uint8_t value)
 		break;
 			
 		case MOTOR_REGULATION:
+			debug_msg("MOTOR_AXELERATE %d\n\r", value);
 			dcmotor_set_pwm(value);
 		break;
 
+		default:
+			debug_msg("MOTOR_ERROR_STATE %d\n\r", motorD.state);
+		break;
 	}
 		
 	return motorD.pwm_value;

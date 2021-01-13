@@ -30,6 +30,7 @@
 #include "driver/i2c.h"
 #include "pcf8574.h"
 #include "battery.h"
+#include "motor.h"
 
 
 uint16_t test_value;
@@ -91,7 +92,8 @@ void app_main()
     }
     else {
         at_communication_init();
-        errorSiewnikStart();
+        motor_init();
+        //errorSiewnikStart();
         measure_start();
         //LED on
         io_conf.intr_type = GPIO_INTR_DISABLE;

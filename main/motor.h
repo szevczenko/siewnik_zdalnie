@@ -1,16 +1,16 @@
-#ifndef DCMOTORPWM_H
-#define DCMOTORPWM_H
+#ifndef motor_H
+#define motor_H
 #include "stdint.h"
 #include "config.h"
 #include "freertos/timers.h"
 
 //set minimum velocity
 #if CONFIG_DEVICE_SOLARKA
-#define DCMOTORPWM_MINVEL 200
+#define motor_MINVEL 200
 #endif
 
 #if CONFIG_DEVICE_SIEWNIK
-#define DCMOTORPWM_MINVEL dark_menu_get_value(MENU_MOTOR_MINIMUM_REGULATION)
+#define motor_MINVEL dark_menu_get_value(MENU_MOTOR_MINIMUM_REGULATION)
 #endif
 
 
@@ -37,18 +37,19 @@ typedef struct
 }mDriver;
 
 //functions
-extern void dcmotorpwm_init(void);
-void dcmotorpwm_deinit(void);
-extern int dcmotorpwm_stop(void);
-extern int dcmotorpwm_start(void);
+extern void motor_init(void);
+void motor_deinit(void);
+extern int motor_stop(void);
+extern int motor_start(void);
+int motor_start(void);
 extern int dcmotor_is_on(void);
 uint8_t dcmotor_process(uint8_t value);
 void dcmotor_set_error(void);
 int dcmotor_set_try(void);
 int dcmotor_set_normal_state(void);
 int dcmotor_get_pwm(void);
-void dcmotorpwm_goforward(uint8_t vel);
-void dcmotorpwm_gobackward(uint8_t vel);
+void motor_goforward(uint8_t vel);
+void motor_gobackward(uint8_t vel);
 void motor_regulation(uint8_t pwm);
 
 #endif

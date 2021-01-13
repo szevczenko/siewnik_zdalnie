@@ -103,6 +103,8 @@ void data_process(void) {
 	servo_vibro_is_on = atmega_get_data(AT_R_SERVO_VIBRO_IS_ON);
 	motor_is_on = atmega_get_data(AT_R_MOTOR_IS_ON);
 	
+	debug_msg("mot: %d %d, servo: %d %d \n\r",motor_is_on, motor_read_value, servo_vibro_is_on, servo_read_value);
+
 	/* MOTOR SECTION */
 	if (motor_is_on) {
 		dcmotorpwm_start();
@@ -113,13 +115,13 @@ void data_process(void) {
 	}
 	
 	/* SERVO SECTION */
-	if (servo_vibro_is_on) {
+	/*if (servo_vibro_is_on) {
 		servo_open(servo_read_value);
 	}
 	else {
 		servo_close();
-	}
-	
+	}*/
+
 	/* VIBRO SECTION */
 	if (servo_vibro_is_on) {
 		ON_VIBRO_PIN;

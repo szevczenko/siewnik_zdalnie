@@ -73,7 +73,7 @@ int servo_open(uint16_t value) // value - 0-100%
 		servoD.state = SERVO_OPEN;
 		servoD.value = value;
 		servo_set_pwm_val((uint16_t)value);
-		debug_msg("SERVO_OPPENED %d\n", value);
+		//debug_msg("SERVO_OPPENED %d\n", value);
 		LED_SERVO_ON;
 		return 1;
 	}

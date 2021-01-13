@@ -164,7 +164,7 @@ int pcf8574_getinput(uint8_t deviceid) {
 		i2c_cmd_link_delete(cmd);
 		if (ret != ESP_OK) 
 		{
-			debug_msg("i2c status %d\n", ret);
+			//debug_msg("i2c status %d\n", ret);
 			return ret;
 		}
 	}

@@ -117,16 +117,26 @@ void at_read_byte(uint8_t byte) {
 }
 
 static void atm_com(void * arg) {
-	
+	uint16_t motor_pmw, servo_pwm;
 	while(1) {
+		vTaskDelay(350 / portTICK_RATE_MS);
 		taskENTER_CRITICAL();
-		data_write[AT_W_MOTOR_VALUE] = (uint16_t)dcmotor_process((uint8_t)menuGetValue(MENU_MOTOR));
+		motor_pmw = dcmotor_process((uint8_t)menuGetValue(MENU_MOTOR));
+		data_write[AT_W_MOTOR_VALUE] = motor_pmw;
 		data_write[AT_W_SERVO_VALUE] = (uint16_t)servo_process((uint8_t)menuGetValue(MENU_SERVO));
 		data_write[AT_W_MOTOR_IS_ON] = (uint16_t)menuGetValue(MENU_MOTOR_IS_ON);
 		data_write[AT_W_SERVO_IS_ON] = (uint16_t)menuGetValue(MENU_SERVO_IS_ON);
+
+		if (data_write[AT_W_MOTOR_IS_ON]) {
+			motor_start();
+		}
+		else {
+			motor_stop();
+		}
+
 		at_write_data();
 		taskEXIT_CRITICAL();
-		vTaskDelay(200 / portTICK_RATE_MS);
+		debug_msg("mot: %d %d, servo: %d %d \n\r", data_write[AT_W_MOTOR_IS_ON], data_write[AT_W_MOTOR_VALUE], data_write[AT_W_SERVO_IS_ON], data_write[AT_W_SERVO_VALUE]);
 	}
 }
 
