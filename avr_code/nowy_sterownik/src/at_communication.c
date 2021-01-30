@@ -89,14 +89,6 @@ uint16_t servo_read_value;
 uint16_t servo_vibro_is_on;
 uint16_t motor_is_on;
 
-#define VIBRO_PORT PORTD
-#define VIBRO_DDR DDRD
-#define VIBRO_PIN 5
-
-#define VIBRO_INIT_PIN	SET_PIN(VIBRO_DDR, VIBRO_PIN)
-#define ON_VIBRO_PIN	SET_PIN(VIBRO_PORT, VIBRO_PIN)
-#define OFF_VIBRO_PIN	CLEAR_PIN(VIBRO_PORT, VIBRO_PIN)
-
 void data_process(void) {
 	motor_read_value = atmega_get_data(AT_R_MOTOR_VALUE) & 0xFF;
 	servo_read_value = atmega_get_data(AT_R_SERVO_VIBRO_VALUE);

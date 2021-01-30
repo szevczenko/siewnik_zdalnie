@@ -23,7 +23,7 @@ mDriver motorD;
  * init a motor
  */
 void dcmotorpwm_init(void) {
-	debug_msg("dcmotor init\n");
+	//debug_msg("--------dcmotor init----------\n");
 	evTime_init(&motorD.timeout);
 	motorD.state = MOTOR_OFF;
 	LED_MOTOR_OFF;
@@ -38,7 +38,7 @@ void dcmotorpwm_init(void) {
 
 void dcmotorpwm_deinit(void)
 {
-	//debug_msg("dcmotor deinit\n");
+	//debug_msg("!!!!!!!!!!!!!!!dcmotor deinit\n");
 	motorD.state = MOTOR_NO_INIT;
 	#if !TEST_APP
 	TCCR2 = 0;
@@ -56,7 +56,7 @@ void dcmotorpwm_deinit(void)
  */
 int dcmotorpwm_stop(void) {
 	
-	debug_msg("dcmotor stop\n");
+	//debug_msg("!!!!!!!!!!!!!!!!dcmotor stop\n");
 	TCCR2 = 0;
 	#if CONFIG_DEVICE_SOLARKA
 	CLEAR_PIN(DCMOTORPWM_PORT, DCMOTORPWM_PIN1);
@@ -73,7 +73,7 @@ int dcmotorpwm_start(void)
 {
 	if (motorD.state == MOTOR_OFF)
 	{
-		debug_msg("Motor Start\n");
+		//debug_msg("---------Motor Start----------\n");
 		
 		#if CONFIG_DEVICE_SOLARKA
 		TCCR2 |= (1<<COM21); 
@@ -104,17 +104,20 @@ void dcmotor_set_pwm(uint8_t value) {
 
 void dcmotor_process(uint16_t value)
 {
+	(void) value;
 	static evTime dcmotor_timer;
-	if (evTime_process_period(&dcmotor_timer, 150))
+	if (evTime_process_period(&dcmotor_timer, 250))
 	{
 		//debug_msg("Process %d\n", motorD.state);
 		switch(motorD.state)
 		{
 			case MOTOR_ON:
-			OCR2 = value;
+			//debug_msg("MOTOR ON %d\n", motorD.pwm_value);
+			OCR2 = motorD.pwm_value;
 			break;
 
 			case MOTOR_OFF:
+			//debug_msg("MOTOR OFF %d\n", 0);
 			OCR2 = 0;
 			break;
 		}

@@ -7,6 +7,7 @@
 #include "console.h"
 #include "motor.h"
 #include "servo.h"
+#include "vibro.h"
 
 
 
@@ -119,13 +120,21 @@ void at_read_byte(uint8_t byte) {
 static void atm_com(void * arg) {
 	uint16_t motor_pmw, servo_pwm;
 	while(1) {
-		vTaskDelay(350 / portTICK_RATE_MS);
+		vTaskDelay(150 / portTICK_RATE_MS);
 		taskENTER_CRITICAL();
 		motor_pmw = dcmotor_process((uint8_t)menuGetValue(MENU_MOTOR));
 		data_write[AT_W_MOTOR_VALUE] = motor_pmw;
+		#if !CONFIG_DEVICE_SIEWNIK
 		data_write[AT_W_SERVO_VALUE] = (uint16_t)servo_process((uint8_t)menuGetValue(MENU_SERVO));
+		#endif
+		if (menuGetValue(MENU_SERVO_IS_ON)) {
+			vibro_start();
+		}
+		else {
+			vibro_stop();
+		}
 		data_write[AT_W_MOTOR_IS_ON] = (uint16_t)menuGetValue(MENU_MOTOR_IS_ON);
-		data_write[AT_W_SERVO_IS_ON] = (uint16_t)menuGetValue(MENU_SERVO_IS_ON);
+		data_write[AT_W_SERVO_IS_ON] = (uint16_t)vibro_is_on();
 
 		if (data_write[AT_W_MOTOR_IS_ON]) {
 			motor_start();

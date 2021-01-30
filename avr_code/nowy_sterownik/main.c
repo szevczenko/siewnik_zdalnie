@@ -85,6 +85,7 @@ uint32_t tets_cnt;
 int main(void)
 {
 	#if CONFIG_DEVICE_SIEWNIK
+	#error "asdasdasdas"
 	servo_init(0);
 	#endif
 	init_pin();
@@ -107,7 +108,15 @@ int main(void)
 		uart_process();
 		#endif
 		/*if (tets_cnt < mktime.ms) {
-			debug_msg("ATMEGA \n");
+			VIBRO_INIT_PIN;
+			if (motor_value) {
+				motor_value = 0;
+				ON_VIBRO_PIN;
+			}
+			else {
+				motor_value = 1;
+				OFF_VIBRO_PIN;
+			}
 			tets_cnt = mktime.ms + 1000;
 		}*/
 		

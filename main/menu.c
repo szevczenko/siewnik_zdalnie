@@ -10,10 +10,11 @@
 #include "cmd_client.h"
 #include "fast_add.h"
 #include "battery.h"
+#include "vibro.h"
+#include "driver/gpio.h"
 
-#undef debug_msg
-#undef debug_msg
-#define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+//#undef debug_msg
+//#define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -31,14 +32,6 @@ static TickType_t animation_timeout;
 static uint8_t animation_cnt;
 static TimerHandle_t xTimers;
 
-typedef enum
-{
-	ST_WIFI_FIND_DEVICE,
-	ST_WIFI_DEVICE_LIST,
-	ST_WIFI_DEVICE_TRY_CONNECT,
-	ST_WIFI_DEVICE_CONNECTED_FAILED,
-	ST_WIFI_CONNECT,
-}stateWifiMenu_t;
 static stateWifiMenu_t wifiState;
 
 uint32_t test_val_ = 43;
@@ -47,7 +40,14 @@ uint32_t test_bool_;
 uint32_t motor_value;
 uint32_t servo_value;
 bool motor_on;
-bool servo_on;
+static int line_start, line_end, last_button;
+
+#if CONFIG_DEVICE_SIEWNIK
+static int menu_start_line;
+uint32_t menu_start_period_value, menu_start_wt_value;
+#endif
+
+bool servo_vibro_on;
 
 menu_token_t test_val = 
 {
@@ -155,7 +155,7 @@ static void error_reset(void) {
 	menuSetValue(MENU_MOTOR_ERROR_IS_ON, 0);
 	menuSetValue(MENU_SERVO_ERROR_IS_ON, 0);
 	motor_on = 0;
-	servo_on = 0;
+	servo_vibro_on = 0;
 }
 
 static menu_token_t * last_tab_element(void)
@@ -208,7 +208,7 @@ void menu_start_find_device_I(void)
 	for (uint16_t i = 0; i < ap_count; i++)
 	{
 		wifiDrvGetNameFromScannedList(i, dev_name);
-		debug_msg("%s\n", dev_name);
+		//debug_msg("%s\n", dev_name);
 		if (memcmp(dev_name, "Zefir", strlen("Zefir")) == 0)
 		{
 			strcpy(wifi_device_list[dev_count++], dev_name);
@@ -231,12 +231,12 @@ static int connectToDevice(char *dev)
 	{
 		if (wifiDrvIsConnected()){
 			if (wifiDrvDisconnect() != ESP_OK){
-				debug_msg("MENU: Disconnect wifi failed");
+				//debug_msg("MENU: Disconnect wifi failed");
 				menuPrintfInfo("Disconnect wifi failed");
 			}
 		}
 		strcpy(devName, dev);
-		debug_msg("MENU: Try connect %s", devName);
+		//debug_msg("MENU: Try connect %s", devName);
 		entered_menu_tab[1] = &wifi_menu;
 		for (uint8_t i = 2; i < 8; i++)
 		{
@@ -245,7 +245,7 @@ static int connectToDevice(char *dev)
 		wifiDrvSetAPName(dev, strlen(dev));
 		wifiDrvSetPassword("12345678", strlen("12345678"));
 		if (wifiDrvConnect() != ESP_OK) {
-			debug_msg("MENU: wifiDrvConnect failed");
+			//debug_msg("MENU: wifiDrvConnect failed");
 			menuPrintfInfo("wifiDrvConnect failed");
 			return FALSE;
 		}
@@ -289,8 +289,6 @@ loadBar_t servo_bar = {
     .height = 10,
 };
 
-static int line_start, line_end, last_button;
-
 void button_up_callback(void * arg)
 {
 	last_button = 1;
@@ -305,6 +303,7 @@ void button_up_callback(void * arg)
 	switch(menu->arg_type)
 	{
 		case T_ARG_TYPE_START:
+			menu_start_line = 0;
 			update_screen();
 			break;
 
@@ -325,7 +324,7 @@ void button_up_callback(void * arg)
 			}
 			break;
 	}
-	debug_msg("button_up_callback Len: %d, Pos: %d\n", len_menu(menu), menu->position);
+	//debug_msg("button_up_callback Len: %d, Pos: %d\n", len_menu(menu), menu->position);
 }
 
 void button_down_callback(void * arg)
@@ -341,6 +340,7 @@ void button_down_callback(void * arg)
 	switch(menu->arg_type)
 	{
 		case T_ARG_TYPE_START:
+			menu_start_line = 1;
 			update_screen();
 			break;
 
@@ -363,7 +363,7 @@ void button_down_callback(void * arg)
 	}
 	
 	
-	debug_msg("button_down_callback Len: %d, Pos: %d\n", len_menu(menu), menu->position);
+	//debug_msg("button_down_callback Len: %d, Pos: %d\n", len_menu(menu), menu->position);
 }
 
 void button_plus_callback(void * arg)
@@ -389,7 +389,7 @@ void button_plus_callback(void * arg)
 			add_menu_tab(menu->menu_list[menu->position]);
 			if (last_tab_element() == &wifi_menu)
 			{
-				debug_msg("Enter wifi_menu\n");
+				//debug_msg("Enter wifi_menu\n");
 				menu_start_find_device();
 			}
 		break;
@@ -538,7 +538,7 @@ void button_enter_callback(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
-	debug_msg("Enter cur (%s)\n", menu->name);
+	//debug_msg("Enter cur (%s)\n", menu->name);
 	switch(menu->arg_type)
 	{
 		case T_ARG_TYPE_BOOL:
@@ -554,7 +554,7 @@ void button_enter_callback(void * arg)
 			add_menu_tab(menu->menu_list[menu->position]);
 			if (last_tab_element() == &wifi_menu)
 			{
-				debug_msg("Enter wifi_menu\n");
+				//debug_msg("Enter wifi_menu\n");
 				menu_start_find_device();
 			}
 		break;
@@ -562,6 +562,9 @@ void button_enter_callback(void * arg)
 		case T_ARG_TYPE_START:
 			if (menuGetValue(MENU_MOTOR_ERROR_IS_ON) || menuGetValue(MENU_SERVO_ERROR_IS_ON)) {
 				error_reset();
+			}
+			else {
+				remove_last_menu_tab();
 			}
 		break;
 
@@ -583,7 +586,7 @@ void button_enter_callback(void * arg)
 void button_exit_callback(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
-	debug_msg("Exit\n", len_menu(menu), menu->position);
+	//debug_msg("Exit\n", len_menu(menu), menu->position);
 	if (menu == NULL) return;
 	switch(menu->arg_type)
 	{
@@ -600,7 +603,15 @@ void button_exit_callback(void * arg)
 		break;
 
 		case T_ARG_TYPE_START:
-			remove_last_menu_tab();
+			xTimerStop(xTimers, 0);
+			if (servo_vibro_on) {
+				servo_vibro_on = 0;
+				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_vibro_on);
+			}
+			else {
+				servo_vibro_on = 1;
+				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_vibro_on);
+			}
 		break;
 
 		case T_ARG_TYPE_WIFI:
@@ -755,19 +766,49 @@ static void menu_task(void * arg)
 							drawMotor(2, 10 - cnt);
 						}
 					}
+					#if CONFIG_DEVICE_SIEWNIK
 
+					/* PERIOD CURSOR */
+					#define MENU_START_OFFSET 42
+					char menu_buff[32];
+
+					ssd1306_SetCursor(2, MENU_START_OFFSET);
+					sprintf(menu_buff, "Period: %d [s]", menu_start_period_value);
+					if (menu_start_line == 0)
+					{
+						ssdFigureFillLine(MENU_START_OFFSET, LINE_HEIGHT);
+						ssd1306_WriteString(menu_buff, Font_7x10, Black);
+					}
+					else
+					{
+						ssd1306_WriteString(menu_buff, Font_7x10, White);
+					}
+
+					/* WORKING TIME CURSOR */
+					sprintf(menu_buff, "Working time: %d [s]", menu_start_wt_value);
+					ssd1306_SetCursor(2, MENU_START_OFFSET + LINE_HEIGHT);
+					if (menu_start_line == 1)
+					{
+						ssdFigureFillLine(MENU_START_OFFSET + LINE_HEIGHT, LINE_HEIGHT);
+						ssd1306_WriteString(menu_buff, Font_7x10, Black);
+					}
+					else
+					{
+						ssd1306_WriteString(menu_buff, Font_7x10, White);
+					}
+					#else
 					servo_bar.fill = servo_value;
 					sprintf(str, "%d", servo_bar.fill);
 					ssdFigureDrawLoadBar(&servo_bar);
 					ssd1306_SetCursor(80, 55);
 					ssd1306_WriteString(str, Font_7x10, White);
-					if (servo_on) {
+					if (servo_vibro_on) {
 						drawServo(10, 35, servo_value);
 					}
 					else {
 						drawServo(10, 35, 0);
 					}
-					
+					#endif
 				}
 				
 			break;
@@ -890,6 +931,9 @@ static void menu_task(void * arg)
 				return;
 		}
 		ssd1306_UpdateScreen();
+		/* Update status led */
+		MOTOR_LED_SET(motor_on);
+		SERVO_VIBRO_LED_SET(servo_vibro_on);
 		//taskEXIT_CRITICAL();
 	}
 }
@@ -952,20 +996,20 @@ void menuActivateButtons(void)
 	button3.fall_callback = button_enter_callback;
 	button8.fall_callback = button_exit_callback;
 	button9.fall_callback = button_motor_state;
-	button10.fall_callback = button_servo_state;
+	//button10.fall_callback = button_servo_state;
 }
 
 static void timerCallback(void * pv) {
-	servo_on = 1;
-	cmdClientSetValueWithoutResp(MENU_SERVO_IS_ON, servo_on);
+	servo_vibro_on = 1;
+	cmdClientSetValueWithoutResp(MENU_SERVO_IS_ON, servo_vibro_on);
 }
 
 void init_menu(void)
 {
 	entered_menu_tab[0] = &main_menu;
 	xSemaphore = xSemaphoreCreateBinary();
-	xTimers = xTimerCreate("Timer", MS2ST(2000), pdTRUE, ( void * ) 0, timerCallback);
-	xTaskCreate(menu_task, "menu_task", 2048, NULL, 10, NULL);
+	xTimers = xTimerCreate("Timer", MS2ST(2000), pdFALSE, ( void * ) 0, timerCallback);
+	xTaskCreate(menu_task, "menu_task", 2048, NULL, 12, NULL);
 	wifiDrvGetAPName(devName);
 	if (connectToDevice(devName) == FALSE)
 	{
@@ -984,10 +1028,27 @@ void button_plus_servo_callback(void * arg)
 	{
 	
 		case T_ARG_TYPE_START:
+		#if CONFIG_DEVICE_SIEWNIK
+			if (menu_start_line) {
+				if (menu_start_wt_value < 100) {
+					menu_start_wt_value++;
+					/* vibro value change */
+					cmdClientSetValueWithoutRespI(MENU_VIBRO_WORKING_TIME, menu_start_wt_value);
+				}
+			}
+			else {
+				if (menu_start_period_value < 100) {
+					menu_start_period_value++;
+					/* vibro value change */
+					cmdClientSetValueWithoutRespI(MENU_VIBRO_PERIOD, menu_start_period_value);
+				}
+			}
+		#else
 			if (servo_value < 100) {
 				servo_value++;
 				cmdClientSetValueWithoutRespI(MENU_SERVO, servo_value);
 			}
+		#endif
 		break;
 
 		default:
@@ -998,7 +1059,16 @@ void button_plus_servo_callback(void * arg)
 
 static void servo_fast_add(uint32_t value) {
 	(void) value;
+	#if CONFIG_DEVICE_SIEWNIK
+	if (menu_start_line) {
+		cmdClientSetValueWithoutRespI(MENU_VIBRO_WORKING_TIME, menu_start_wt_value);
+	}
+	else {
+		cmdClientSetValueWithoutRespI(MENU_VIBRO_PERIOD, menu_start_period_value);
+	}
+	#else
 	cmdClientSetValueWithoutResp(MENU_SERVO, servo_value);
+	#endif
 	//debug_msg("servo_value %d\n", servo_value);
 }
 
@@ -1009,7 +1079,16 @@ void button_plus_servo_time_callback(void * arg)
 	switch(menu->arg_type){
 
 		case T_ARG_TYPE_START:
+			#if CONFIG_DEVICE_SIEWNIK
+			if (menu_start_line) {
+				fastProcessStart(&menu_start_wt_value, 100, 0, FP_PLUS, servo_fast_add);
+			}
+			else {
+				fastProcessStart(&menu_start_period_value, 100, 0, FP_PLUS, servo_fast_add);
+			}
+			#else
 			fastProcessStart(&servo_value, 100, 0, FP_PLUS, servo_fast_add);
+			#endif
 		break;
 
 		default:
@@ -1026,7 +1105,12 @@ void button_plus_servo_up_callback(void * arg)
 	{
 		
 		case T_ARG_TYPE_START:
+		#if CONFIG_DEVICE_SIEWNIK
+			fastProcessStop(&menu_start_wt_value);
+			fastProcessStop(&menu_start_period_value);
+		#else
 			fastProcessStop(&servo_value);
+		#endif
 		break;
 
 		default:
@@ -1043,10 +1127,27 @@ void button_minus_servo_callback(void * arg)
 	{
 	
 		case T_ARG_TYPE_START:
+		#if CONFIG_DEVICE_SIEWNIK
+			if (menu_start_line) {
+				if (menu_start_wt_value > 0) {
+					menu_start_wt_value--;
+					/* vibro value change */
+					cmdClientSetValueWithoutRespI(MENU_VIBRO_WORKING_TIME, menu_start_wt_value);
+				}
+			}
+			else {
+				if (menu_start_period_value > 0) {
+					menu_start_period_value--;
+					/* vibro value change */
+					cmdClientSetValueWithoutRespI(MENU_VIBRO_PERIOD, menu_start_period_value);
+				}
+			}
+		#else
 			if (servo_value > 0) {
 				servo_value--;
 				cmdClientSetValueWithoutRespI(MENU_SERVO, servo_value);
 			}
+		#endif
 		break;
 
 		default:
@@ -1062,7 +1163,16 @@ void button_minus_servo_time_callback(void * arg)
 	switch(menu->arg_type){
 
 		case T_ARG_TYPE_START:
+			#if CONFIG_DEVICE_SIEWNIK
+			if (menu_start_line) {
+				fastProcessStart(&menu_start_wt_value, 100, 0, FP_MINUS, servo_fast_add);
+			}
+			else {
+				fastProcessStart(&menu_start_period_value, 100, 0, FP_MINUS, servo_fast_add);
+			}
+			#else
 			fastProcessStart(&servo_value, 100, 0, FP_MINUS, servo_fast_add);
+			#endif
 		break;
 
 		default:
@@ -1079,7 +1189,12 @@ void button_minus_servo_up_callback(void * arg)
 	{
 		
 		case T_ARG_TYPE_START:
+			#if CONFIG_DEVICE_SIEWNIK
+			fastProcessStop(&menu_start_wt_value);
+			fastProcessStop(&menu_start_period_value);
+			#else
 			fastProcessStop(&servo_value);
+			#endif
 		break;
 
 		default:
@@ -1098,9 +1213,9 @@ void button_motor_state(void * arg)
 		case T_ARG_TYPE_START:
 			if (motor_on) {
 				motor_on = 0;
-				servo_on = 0;
-				cmdClientSetValueWithoutRespI(MENU_MOTOR_IS_ON, motor_on);
-				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_on);
+				servo_vibro_on = 0;
+				cmdClientSetValueWithoutRespI(MENU_MOTOR_IS_ON, motor_on); 
+				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_vibro_on);
 				xTimerStop(xTimers, 0);
 			}
 			else {
@@ -1125,13 +1240,13 @@ void button_servo_state(void * arg)
 		
 		case T_ARG_TYPE_START:
 			xTimerStop(xTimers, 0);
-			if (servo_on) {
-				servo_on = 0;
-				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_on);
+			if (servo_vibro_on) {
+				servo_vibro_on = 0;
+				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_vibro_on);
 			}
 			else {
-				servo_on = 1;
-				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_on);
+				servo_vibro_on = 1;
+				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_vibro_on);
 			}
 		break;
 

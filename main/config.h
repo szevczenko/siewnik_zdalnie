@@ -50,6 +50,13 @@
 #define CONFIG_USE_ERROR_MOTOR TRUE
 #define CONFIG_USE_ERROR_SERVO TRUE
 
+///////////////////////////////////////////////////////////////////////////////////////////
+//// LED
+#define MOTOR_LED GPIO_NUM_2
+#define SERVO_VIBRO_LED GPIO_NUM_15
+#define MOTOR_LED_SET(x) gpio_set_level(MOTOR_LED, x);
+#define SERVO_VIBRO_LED_SET(x) gpio_set_level(SERVO_VIBRO_LED, x);
+
 //////////////////////////////////////  END  //////////////////////////////////////////////
 
 #if (CONFIG_TEST_WDG == TRUE && CONFIG_USE_WDG == FALSE)
@@ -104,7 +111,7 @@
 #error "Dla testowania UNIO aktywuj CONFIG_USE_UNIO"
 #endif
 
-#define NORMALPRIO 12
+#define NORMALPRIO 5
 
 #define FW_NAME "can-usb"
 #define FW_VERSION "v0.1"

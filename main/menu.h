@@ -23,6 +23,15 @@ typedef struct menu_token
 	uint8_t position;
 } menu_token_t;
 
+typedef enum
+{
+	ST_WIFI_FIND_DEVICE,
+	ST_WIFI_DEVICE_LIST,
+	ST_WIFI_DEVICE_TRY_CONNECT,
+	ST_WIFI_DEVICE_CONNECTED_FAILED,
+	ST_WIFI_CONNECT,
+}stateWifiMenu_t;
+
 extern uint32_t motor_value;
 extern uint32_t servo_value;
 extern bool motor_on;

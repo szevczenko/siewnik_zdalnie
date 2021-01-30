@@ -120,12 +120,14 @@ void init_but_struct(void)
 	button10.is_gpio = 1;
 }
 
+static uint32_t start_time;
 static void process_button(void * arg)
 {
 	uint8_t red_val = 0;
 	
 	while(1)
 	{
+		start_time = xTaskGetTickCount();
 		//process
 		read_i2c_value = pcf8574_getinput(0);
 		taskENTER_CRITICAL();
@@ -194,5 +196,5 @@ void init_buttons(void)
     //enable pull-up mode
     io_conf.pull_up_en = 1;
     gpio_config(&io_conf);
-	xTaskCreate(process_button, "gpio_task", 1024, NULL, 5, NULL);
+	xTaskCreate(process_button, "gpio_task", 1024, NULL, 12, NULL);
 }

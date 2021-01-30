@@ -129,7 +129,7 @@ int cmdClientSetValueWithoutResp(menuValue_t val, uint32_t value) {
 	if (menuSetValue(val, value) == FALSE){
 		return FALSE;
 	}
-	uint8_t sendBuff[8];
+	static uint8_t sendBuff[8];
 	sendBuff[0] = 8;
 	sendBuff[1] = CMD_DATA;
 	sendBuff[2] = PC_SET;
@@ -144,7 +144,7 @@ int cmdClientSetValueWithoutRespI(menuValue_t val, uint32_t value) {
 	if (menuSetValue(val, value) == FALSE){
 		return FALSE;
 	}
-	uint8_t sendBuff[8];
+	static uint8_t sendBuff[8];
 	sendBuff[0] = 8;
 	sendBuff[1] = CMD_DATA;
 	sendBuff[2] = PC_SET;
@@ -163,7 +163,7 @@ int cmdClientSendCmd(parseCmd_t cmd) {
 	if (cmd > PC_CMD_LAST) { 
 		return FALSE;
 	}
-	uint8_t sendBuff[3];
+	static uint8_t sendBuff[3];
 	sendBuff[0] = 3;
 	sendBuff[1] = CMD_COMMAND;
 	sendBuff[2] = cmd;
@@ -178,7 +178,7 @@ int cmdClientSendCmdI(parseCmd_t cmd) {
 	if (cmd > PC_CMD_LAST) { 
 		return FALSE;
 	}
-	uint8_t sendBuff[3];
+	static uint8_t sendBuff[3];
 	sendBuff[0] = 3;
 	sendBuff[1] = CMD_COMMAND;
 	sendBuff[2] = cmd;
@@ -194,8 +194,8 @@ int cmdClientSetValue(menuValue_t val, uint32_t value, uint32_t timeout_ms) {
 	if (menuSetValue(val, value) == 0){
 		return 0;
 	}
-	uint8_t sendBuff[8];
-	uint8_t rxBuff[8];
+	static uint8_t sendBuff[8];
+	static uint8_t rxBuff[8];
 	uint32_t reLen;
 	sendBuff[0] = 8;
 	sendBuff[1] = CMD_DATA;

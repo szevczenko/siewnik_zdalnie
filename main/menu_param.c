@@ -7,9 +7,8 @@
 
 #define STORAGE_NAMESPACE "MENU"
 
-#undef debug_msg
-#undef debug_msg
-#define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+// #undef debug_msg
+// #define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
 
 static menuPStruct_t menuParameters[] = 
 {
@@ -41,7 +40,7 @@ static uint32_t menuSaveParameters_data[sizeof(menuParameters)/sizeof(menuPStruc
 void menuPrintParameters(void)
 {
 	for (uint8_t i = 0; i < PARAMETERS_TAB_SIZE; i++) {
-		debug_msg("%d : %d\n", i,  menuSaveParameters_data[i]);
+		//debug_msg("%d : %d\n", i,  menuSaveParameters_data[i]);
 	}
 }
 
@@ -118,6 +117,9 @@ uint32_t menuGetMaxValue(menuValue_t val) {
 }
 
 uint8_t menuSetValue(menuValue_t val, uint32_t value) {
+	if (val == MENU_SERVO_IS_ON) {
+		debug_msg("MENU_SERVO_IS_ON %d %s\n\r", value, pcTaskGetTaskName(NULL));
+	}
 	if (val >= MENU_LAST_VALUE)
 		return FALSE;
 

@@ -283,7 +283,7 @@ int cmdServerSetValueWithoutResp(menuValue_t val, uint32_t value) {
 	if (menuSetValue(val, value) == FALSE){
 		return FALSE;
 	}
-	uint8_t sendBuff[8];
+	static uint8_t sendBuff[8];
 	sendBuff[0] = 8;
 	sendBuff[1] = CMD_DATA;
 	sendBuff[2] = PC_SET;
@@ -298,7 +298,7 @@ int cmdServerSetValueWithoutRespI(menuValue_t val, uint32_t value) {
 	if (menuSetValue(val, value) == FALSE){
 		return FALSE;
 	}
-	uint8_t sendBuff[8];
+	static uint8_t sendBuff[8];
 	sendBuff[0] = 8;
 	sendBuff[1] = CMD_DATA;
 	sendBuff[2] = PC_SET;
