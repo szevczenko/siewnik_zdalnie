@@ -20,7 +20,6 @@
 
 #include "lwip/apps/httpd.h"
 #include "lwip/apps/lwiperf.h"
-#include "console_telnet.h"
 
 
 #include "driver/gpio.h"
@@ -34,7 +33,7 @@
 #include "nvs_flash.h"
 #include "cmd_server.h"
 #include "cmd_client.h"
-#include "token.h"
+
 
 #define DEFAULT_SCAN_LIST_SIZE 16
 
@@ -204,19 +203,6 @@ void wifiDrvGetScanResult(uint16_t *ap_count)
   ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(ap_count));
 }
 
-void wifiDrvWriteList(console_t *con)
-{
-  (void) con;
-  uint16_t ap_count = 0;
-  memset(ap_info, 0, sizeof(ap_info));
-  wifiDrvStartScan();
-  wifiDrvGetScanResult(&ap_count);
-  for (uint8_t i = 0; i < ap_count; i++)
-  {
-    consolePrintfTimeout(con, CONFIG_CONSOLE_TIMEOUT, "%d. %s strength %d\n\r", i, ap_info[i].ssid, ap_info[i].rssi);
-  }
-}
-
 int wifiDrvGetNameFromScannedList(uint8_t number, char * name)
 {
   strcpy(name, (char*)ap_info[number].ssid);
@@ -284,55 +270,6 @@ int wifiDrvIsConnected(void)
   return stastus_reg_eth;
 }
 
-static void printList(console_t *con)
-{
-  tcpip_adapter_ip_info_t ip;
-  memset(&ip, 0, sizeof(tcpip_adapter_ip_info_t));
-  consolePrintfTimeout(con, CONFIG_CONSOLE_TIMEOUT, "AP Name: %s\n\r", (char *)wifi_config.sta.ssid);
-  consolePrintfTimeout(con, CONFIG_CONSOLE_TIMEOUT, "password: %s\n\r", (char *)wifi_config.sta.password);
-  if (tcpip_adapter_get_ip_info(ESP_IF_WIFI_STA, &ip) == 0) {
-    consolePrintfTimeout(con, CONFIG_CONSOLE_TIMEOUT, "IP: %d.%d.%d.%d\n\r", IP2STR(&ip.ip));
-    consolePrintfTimeout(con, CONFIG_CONSOLE_TIMEOUT, "MASK: %d.%d.%d.%d\n\r", IP2STR(&ip.netmask));
-    consolePrintfTimeout(con, CONFIG_CONSOLE_TIMEOUT, "GW: %d.%d.%d.%d\n\r", IP2STR(&ip.gw));
-  }
-}
-
-int configWiFi(console_t *con, t_tokenline_parsed *p)
-{
-  switch (p->tokens[1])
-	{
-    case T_SSID:
-			wifiDrvSetAPName(p->buf, strlen(p->buf));
-      return TRUE;
-		break;
-		case T_SSID_NUMBER:
-      wifiDrvSetFromAPList((uint8_t)*p->buf);
-      return TRUE;
-		break;
-		case T_PASSWORD:
-      wifiDrvSetPassword(p->buf, strlen(p->buf));
-      return TRUE;
-		break;
-    case T_CONNECT:
-      wifiDrvConnect();
-      return TRUE;
-    break;
-    case T_SHOW:
-      wifiDrvWriteList(con);
-      return TRUE;
-    break;
-    case T_LIST:
-      printList(con);
-      return TRUE;
-    break;
-		default:
-			return FALSE;
-		break;
-  }
-  return 1;
-
-}
-
 static void wifi_event_task(void * pv)
 { 
   wifi_init();
@@ -347,14 +284,14 @@ static void wifi_event_task(void * pv)
 		{
 			if (stastus_reg_eth)
 			{
-        #if CONFIG_USE_CONSOLE_TELNET
-        telnetStart();
-        #endif
         #if CONFIG_USE_MQTT
         MQTTStart();
         #endif
         if (config.dev_type == T_DEV_TYPE_SERVER)
         {
+          #if CONFIG_USE_CONSOLE_TELNET
+          telnetStart();
+          #endif
           cmdServerStart();
         }
         else
@@ -365,14 +302,14 @@ static void wifi_event_task(void * pv)
 			}
 			else
 			{
-        #if CONFIG_USE_CONSOLE_TELNET
-        telnetStop();
-        #endif
         #if CONFIG_USE_MQTT
         MQTTStop();
         #endif
         if (config.dev_type == T_DEV_TYPE_SERVER)
         {
+          #if CONFIG_USE_CONSOLE_TELNET
+          telnetStop();
+          #endif
           cmdServerStop();
         }
         else
@@ -389,17 +326,12 @@ static void wifi_event_task(void * pv)
 
 void wifiDrvInit(void)
 {
-  #if CONFIG_USE_CONSOLE_TELNET
-  telnetInit();
-  telnetStartTask();
-  consoleEthInit();
-  consoleTelentStart();
-  #endif
-  #if CONFIG_USE_MQTT
-	MQTT_create_task();
-	#endif
   if (config.dev_type == T_DEV_TYPE_SERVER)
   {
+    #if CONFIG_USE_CONSOLE_TELNET
+    telnetInit();
+    telnetStartTask();
+    #endif
     cmdServerStartTask();
   }
   else

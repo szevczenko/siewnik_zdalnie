@@ -28,11 +28,10 @@
 
 #include "freertos/queue.h"
 #include "config.h"
-#include "console.h"
-#include "wifidrv.h"
-#include "console_telnet.h"
 
-#if (CONFIG_USE_TCPIP && CONFIG_USE_CONSOLE_TELNET)
+#include "wifidrv.h"
+
+#if (CONFIG_USE_TCPIP)
 // The global tnHandle ... since we are only processing ONE telnet
 // client at a time, this can be a global static.
 telnet_t *tnHandle[TELNET_MAX_CLIENT];
@@ -123,13 +122,12 @@ static void delete_client(uint8_t number)
 	telnetServer.client_count--;
   	telnet_free(tnHandle[number]);
  	tnHandle[number] = NULL;
-	setStatusEthConsole(number, 0);
 	portEXIT_CRITICAL();
 	close(pTelnetUserData[number].sockfd);
 }
 
 static void doTelnet(void * pv) {
-	consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,   "--> doTelnet\n");
+	debug_msg(   "--> doTelnet\n");
 	int rv, max_socket;
 	struct timeval timeout_time;
 	fd_set set;
@@ -161,7 +159,7 @@ static void doTelnet(void * pv) {
 
 		if (rv<0)
 	    {
-		    consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,   "doTelnet select: %d (%s)\n", errno, strerror(errno)); // an error accured 
+		    debug_msg(   "doTelnet select: %d (%s)\n", errno, strerror(errno)); // an error accured 
 	    }
 	    else if(rv == 0)
 	    {
@@ -175,13 +173,13 @@ static void doTelnet(void * pv) {
 			int len = read(pTelnetUserData[i].sockfd, (char *)buffer, sizeof(buffer));
 	 		if (len < 0)
 			{		
-				consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,   "doTelnet read %d: %d (%s)\n", pTelnetUserData[i].sockfd, errno, strerror(errno)); // an error accured
+				debug_msg(   "doTelnet read %d: %d (%s)\n", pTelnetUserData[i].sockfd, errno, strerror(errno)); // an error accured
 				delete_client(i);
   			}
 			if (len == 0)
 			{
 				delete_client(i);
-				consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,   "Telnet partner %d finished. Has %d clients\n",i, telnetServer.client_count);
+				debug_msg(   "Telnet partner %d finished. Has %d clients\n",i, telnetServer.client_count);
 			}
 			if (len>0)
 			{
@@ -203,7 +201,7 @@ static void telnet_initListenClients(void)
 			telnetServer.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (telnetServer.socket < 0)
 		{
-			consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,   "server socket error: %d (%s)\n", errno, strerror(errno));
+			debug_msg(   "server socket error: %d (%s)\n", errno, strerror(errno));
 			vTaskDelay(500);
 			continue;
 		} 
@@ -213,25 +211,25 @@ static void telnet_initListenClients(void)
 		int flags = 1;
 
 		flags = 1;
-  		if (setsockopt(telnetServer.socket, IPPROTO_TCP, TCP_KEEPIDLE, (void *)&flags, sizeof(flags))) { consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,  "ERROR: setsocketopt(), SO_KEEPIDLE"); };
+  		if (setsockopt(telnetServer.socket, IPPROTO_TCP, TCP_KEEPIDLE, (void *)&flags, sizeof(flags))) { debug_msg("ERROR: setsocketopt(), SO_KEEPIDLE"); };
 
  	 	flags = 1;
-  		if (setsockopt(telnetServer.socket, IPPROTO_TCP, TCP_KEEPCNT, (void *)&flags, sizeof(flags))) { consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,  "ERROR: setsocketopt(), SO_KEEPCNT");};
+  		if (setsockopt(telnetServer.socket, IPPROTO_TCP, TCP_KEEPCNT, (void *)&flags, sizeof(flags))) { debug_msg("ERROR: setsocketopt(), SO_KEEPCNT");};
 
   		flags = 1;
-  		if (setsockopt(telnetServer.socket, IPPROTO_TCP, TCP_KEEPINTVL, (void *)&flags, sizeof(flags))) { consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,  "ERROR: setsocketopt(), SO_KEEPINTVL"); };
+  		if (setsockopt(telnetServer.socket, IPPROTO_TCP, TCP_KEEPINTVL, (void *)&flags, sizeof(flags))) { debug_msg("ERROR: setsocketopt(), SO_KEEPINTVL"); };
 
 		int rc = bind(telnetServer.socket, (struct sockaddr *)&telnetServer.addr, sizeof(telnetServer.addr));
 		if (rc < 0) {
-			consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,   "bind: %d (%s)\n", errno, strerror(errno));
+			debug_msg("bind: %d (%s)\n", errno, strerror(errno));
 			vTaskDelay(500);
 			continue;
 		}
 
 		rc = listen(telnetServer.socket, 5);
-		//consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,   "listen");
+		//debug_msg(   "listen");
 		if (rc < 0) {
-			consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,   "listen: %d (%s)\n", errno, strerror(errno));
+			debug_msg("listen: %d (%s)\n", errno, strerror(errno));
 			vTaskDelay(500);
 			continue;
 		}
@@ -254,7 +252,7 @@ static void telnet_listenForClients(void *arg)
 		{
 			telnet_initListenClients();
 			status_telnet = 1;
-			consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, "was init listen telnet thd \n");
+			debug_msg( "was init listen telnet thd \n");
 		}
 		socklen_t len = sizeof(telnetServer.addr);
 		fd_set set;
@@ -269,20 +267,20 @@ static void telnet_listenForClients(void *arg)
 		rv = select(telnetServer.socket + 1, &set, NULL, NULL, &timeout);
 		if (rv<0)
 		{
-			consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,   "listenForClients select: %d (%s)\n", errno, strerror(errno)); /* an error accured */
+			debug_msg(   "listenForClients select: %d (%s)\n", errno, strerror(errno)); /* an error accured */
 		}
 		else if(rv == 0)
 		{
-    		// consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,  "timeout occurred (10 second) \n"); /* a timeout occured */
+    		// debug_msg(  "timeout occurred (10 second) \n"); /* a timeout occured */
 		}
 		else 
 		{
 			int partnerSocket = accept(telnetServer.socket, (struct sockaddr *)&telnetServer.addr, &len);
 			if (partnerSocket < 0) {
-				consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,   "accept: %d (%s)\n", errno, strerror(errno));
+				debug_msg(   "accept: %d (%s)\n", errno, strerror(errno));
 				continue;
 			}
-			consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,   "We have a new client connection! %d\n", partnerSocket);
+			debug_msg(   "We have a new client connection! %d\n", partnerSocket);
 			if (telnetServer.client_count<TELNET_MAX_CLIENT)
 			{
 				
@@ -294,12 +292,6 @@ static void telnet_listenForClients(void *arg)
 						telnetInitUserData(&pTelnetUserData[i], partnerSocket);
 						tnHandle[i] = telnet_init(my_telopts, telnetHandler, 0, &pTelnetUserData[i]);
 						portEXIT_CRITICAL();
-						if (tnHandle[i] == NULL)
-						{
-							consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT,   "ERROR telnet_init\n");
-							while(1);
-						}
-						setStatusEthConsole(i, 1);
 						telnet_negotiate(tnHandle[i], TELNET_WILL, TELNET_TELOPT_ECHO);
 						telnetServer.client_count++;
 						break;
@@ -354,7 +346,7 @@ void telnetSendToAll(const char * data, size_t size)
 	{
 		if (tnHandle[i] != 0)
 		{
-			telnet_send(*(con0telnet[i].telnet), data, size);
+			telnet_send(tnHandle[i], data, size);
 		}
 	}
 }
@@ -365,12 +357,12 @@ void telnetPrintfToAll(const char *format, ...)
 	va_list ap;
 	va_start(ap, format);
 	vsnprintf(buff, CONFIG_CONSOLE_VSNPRINTF_BUFF_SIZE, format, ap);
-
+	va_end (ap);
 	for (uint8_t i = 0; i < TELNET_MAX_CLIENT; i++)
 	{
 		if (tnHandle[i] != 0)
 		{
-			telnet_send(*(con0telnet[i].telnet), buff, strlen(buff));
+			telnet_send(tnHandle[i], buff, strlen(buff));
 		}
 	}
 }

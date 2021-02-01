@@ -20,6 +20,9 @@
 
 #define CONFIG_DEVICE_SIEWNIK TRUE
 
+#define T_DEV_TYPE_SERVER 1
+#define T_DEV_TYPE_CLIENT 2
+
 /////////////////////  CONFIG PERIPHERALS  ////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
 // LED
@@ -36,15 +39,10 @@
 #define CONFIG_DEBUG_LWIP FALSE
 ///////////////////////////////////////////////////////////////////////////////////////////
 // CONSOLE
-#define CONFIG_USE_CONSOLE TRUE
-#define CONFIG_USE_CONSOLE_TOKEN TRUE
-#define CONFIG_USE_CONSOLE_TOKEN_DEBUG FALSE
-#define CONFIG_USE_CONSOLE_CMDSHORT FALSE
-
-#define CONFIG_USE_CONSOLE_SERIAL TRUE
+#define CONFIG_CONSOLE_VSNPRINTF_BUFF_SIZE 64
 #define CONFIG_USE_CONSOLE_TELNET TRUE
-#define CONFIG_CONSOLE_ECHO TRUE
-#define CONFIG_CONSOLE_PROMPT ""
+#define CONFIG_CONSOLE_SERIAL_SPEED 115200
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 //// ERROR
 #define CONFIG_USE_ERROR_MOTOR TRUE
@@ -58,24 +56,6 @@
 #define SERVO_VIBRO_LED_SET(x) gpio_set_level(SERVO_VIBRO_LED, x);
 
 //////////////////////////////////////  END  //////////////////////////////////////////////
-
-#if (CONFIG_TEST_WDG == TRUE && CONFIG_USE_WDG == FALSE)
-#error "Dla testowania WDG aktywuj CONFIG_USE_WDG"
-#endif
-
-#if (CONFIG_TEST_CAN == TRUE && (CONFIG_USE_CAN1 == FALSE && CONFIG_USE_CAN2 == FALSE))
-#error "Dla testowania CAN aktywuj CONFIG_USE_CAN1 lub CONFIG_USE_CAN2"
-#endif
-
-#if (CONFIG_TEST_UNIO == TRUE && CONFIG_USE_UNIO == FALSE)
-#error "Dla testowania UNIO aktywuj CONFIG_USE_UNIO"
-#endif
-
-#if (CONFIG_USE_CONSOLE == FALSE && CONFIG_USE_SLCAN == TRUE)
-#error "SLCAN działa tylko na konsoli"
-#endif
-
-//#include "hw.h"
 
 #define NORMALPRIOR 5
 
@@ -134,65 +114,9 @@ int configRead(config_t *config);
 void telnetPrintfToAll(const char *format, ...);
 void telnetSendToAll(const char * data, size_t size);
 
-enum
-{
-	T_HELP = 1,
-	T_CLEAR,
-#if CONFIG_USE_CONSOLE_TOKEN_DEBUG
-	T_DEBUG,
-#endif //CONFIG_USE_CONSOLE_TOKEN_DEBUG
-	T_CONFIG,
-#if CONFIG_USE_SERIAL_PLOT
-	T_MONITOR,
-#endif
-	T_ECHO,
-	T_MQTT,
-	T_ADDRESS,
-	T_PORT,
-	
-	T_ON,
-	T_OFF,
-	T_LIST,
-	T_SET,
-	T_ADD,
-	T_RESET,
-	T_SAVE,
-	T_BOOT,
-	T_PERIOD,
-	
-	T_CAN_ID,
-	T_DEV_TYPE,
-
-	T_DEV_TYPE_SERVER,
-	T_DEV_TYPE_CLIENT,
-
-	#if CONFIG_USE_SERIAL_PLOT
-	T_TEST_CH_1,
-	T_TEST_CH_2,
-	T_TEST_CH_3,
-	T_MONITOR_START_SEQ,
-	#endif
-
-	T_WIFI,
-	T_SSID,
-	T_SSID_NUMBER,
-	T_PASSWORD,
-	T_CONNECT,
-	T_SHOW,
-
-	T_TOKENLINE,
-};
-
-/*
-for (int i = 0; i < strlen(debug_buff); i++) { 
-				if (debug_buff[i] == '\n') {		
-					telnetPrintfToAll("\n\rESP: ");	
-					break;							
-				}									
-			}
-			*/
-
 #if 1
+#include "driver/uart.h"
+extern void uartPrintfTimeout(const char *format, ...);
 #define debug_msg(...) { 							\
 		if (config.dev_type == T_DEV_TYPE_SERVER) 	\
 		{											\
@@ -200,7 +124,7 @@ for (int i = 0; i < strlen(debug_buff); i++) {
 			telnetPrintfToAll(__VA_ARGS__);			\
 		} 											\
 		else { 										\
-			consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__);	\
+			uartPrintfTimeout(__VA_ARGS__);			\
 		} 											\
 	}
 #define debug_data(data, size) telnetSendToAll((char *)data, size)
@@ -210,19 +134,6 @@ for (int i = 0; i < strlen(debug_buff); i++) {
 
 #define debug_printf(format, ...) print(format, ##__VA_ARGS__)
 #define CONFIG_BUFF_SIZE 512
-#define CONFIG_DEBUG_FLAGS_DEFAULT 0xFFFFFFFF //DBG_DUMP | DBG_OUT
-//#define CONFIG_USE_SERIAL_CONSOLE
-
-#define CONFIG_DUMP_FLAGS_DEFAULT 1
-//#define CONFIG_DEBUG_FLAGS_DEFAULT 0xFFFFFFFF
-#define CONFIG_CON0_PRINTF_FLAGS_DEFAULT 0xFFFFFFFF //DBG_CAN1
-#define CONFIG_CON1_PRINTF_FLAGS_DEFAULT 0xFFFFFFFF //DBG_CAN1
-
-#define CONFIG_CON_DEFAULT con0usb
-#define CON_PRINTF(format, ...) consolePrintfTimeout(&CONFIG_CON_DEFAULT, TIME_INFINITE, format, ##__VA_ARGS__)
-#define cdebug(format, ...) consolePrintfTimeout(&CONFIG_CON_DEFAULT, TIME_INFINITE, format, ##__VA_ARGS__)
-#define CONFIG_USE_PANIC FALSE
-//#include "assert.h"
 
 // thdTCPShell
 #define CONFIG_thdTCPShell_CLIENTS_MAX 1
@@ -239,7 +150,6 @@ for (int i = 0; i < strlen(debug_buff); i++) {
 #define ASSERT() 
 #define ESP_OK 0
 
-//#define xTaskCreateStatic(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, none1, none2) xTaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, NULL)
 typedef int esp_err_t;
 ///////////////////////////////////////////////////////////////////////////////////////////
 

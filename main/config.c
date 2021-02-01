@@ -3,9 +3,9 @@
 #include "config.h"
 #include "configCmd.h"
 //#include "led.h"
-#include "token.h"
+
 #include "stdio.h"
-#include "console.h"
+
 
 #include "nvs_flash.h"
 
@@ -140,121 +140,3 @@ void configRebootToBlt(void)
 {
     esp_restart();
 }
-
-#if CONFIG_USE_CONSOLE
-
-int configEcho(console_t *con, t_tokenline_parsed *p)
-{
-	(void) con;
-	switch (p->tokens[1])
-	{
-		case T_ON:
-			cosole_echo_flag = 1;
-		break;
-
-		case T_OFF:
-			cosole_echo_flag = 0;
-		break;
-
-		default:
-			return FALSE;
-		break;
-	}
-	return TRUE;
-}
-
-int configMQTT(console_t *con, t_tokenline_parsed *p)
-{
-	#if CONFIG_USE_MQTT
-	(void) con;
-	switch (p->tokens[1])
-	{
-		case T_ADDRESS:
-			strcpy(MQTTServerAddress, p->buf);
-			MQTTDrvDisconnect();
-		break;
-		case T_PORT:
-			memcpy(&MQTTServerPort, p->buf, sizeof(uint32_t));
-			MQTTDrvDisconnect();
-		break;
-		case T_LIST:
-			consolePrintfTimeout(con, 100, MQTTServerAddress);
-			consolePrintfTimeout(con, 100, ":%d\n\r", MQTTServerPort);
-		break;
-		default:
-			return FALSE;
-		break;
-	}
-	#endif
-	return TRUE;
-}
-
-int configReset(console_t *con, t_tokenline_parsed *p)
-{
-	(void) con;
-	(void) p;
-	configRebootToBlt();
-	return TRUE;
-}
-
-void iterate(console_t *con, config_t *aStruct)
-{
-	consolePrintfTimeout(con, 100, "can_id: 0x%X\n\r", aStruct->can_id);
-	consolePrintfTimeout(con, 100, "name: %s\n\r", BOARD_NAME);
-	consolePrintfTimeout(con, 100, "hw_ver: %u.%u.%u\n\r", aStruct->hw_ver[0], aStruct->hw_ver[1], aStruct->hw_ver[2]);
-	consolePrintfTimeout(con, 100, "sw_ver: %u.%u.%u\n\r", aStruct->sw_ver[0], aStruct->sw_ver[1], aStruct->sw_ver[2]);
-	consolePrintfTimeout(con, 100, "dev type: ");
-	switch(config.dev_type)
-	{
-		case T_DEV_TYPE_SERVER:
-		consolePrintfTimeout(con, 100, "server\n\r");
-		break;
-		case T_DEV_TYPE_CLIENT:
-		consolePrintfTimeout(con, 100, "client\n\r");
-		break;
-		default:
-		consolePrintfTimeout(con, 100, "None\n\r");
-		break;
-	}
-}
-
-int configCmd(console_t *con, t_tokenline_parsed *p)
-{
-	(void) con;
-	int err = 1;
-
-	switch (p->tokens[1])
-	{
-	case T_LIST:
-		iterate(con, &config);
-		break;
-	case T_DEV_TYPE:
-		config.dev_type = p->tokens[2];
-		break;
-	case T_SAVE:
-		err = configSave(&config);
-		break;
-	case T_BOOT:
-		configRebootToBlt();
-		break;	
-	case T_CAN_ID:
-		memcpy(&config.can_id, p->buf, sizeof(uint32_t));
-		break;
-
-	default:
-		err = -1;
-		break;
-	}
-
-	if (err)
-	{
-		consolePrintf("ERR: %d\r\n\r", err);
-		return FALSE;
-	}
-	else
-	{
-		consolePrintf("OK\r\n\r", err);
-		return TRUE;		
-	}
-}
-#endif

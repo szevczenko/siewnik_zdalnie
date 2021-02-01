@@ -39,7 +39,7 @@ uint8_t vibro_is_started(void) {
 static void vibro_process(void * pv) {
 	while(1) {
 		if (vibroD.state == VIBRO_STATE_START) {
-			if (vibroD.period >= vibroD.working_time) {
+			if (vibroD.period <= vibroD.working_time) {
 				vibroD.type = VIBRO_TYPE_ON;
 				vTaskDelay(MS2ST(100));
 			}
@@ -56,11 +56,12 @@ static void vibro_process(void * pv) {
 			vibroD.type = VIBRO_TYPE_OFF;
 			vTaskDelay(MS2ST(250));
 		}
+		debug_msg("period %d working_time %d, type %d state %d\n\r", vibroD.period, vibroD.working_time, vibroD.type, vibroD.state);
 	}
 }
 
 void vibro_init(void) {
 	memset(&vibroD, 0, sizeof(vibroD));
 	vibroD.state = VIBRO_STATE_READY;
-	xTaskCreate(vibro_process, "vibro_process", 512, NULL, 10, NULL);
+	xTaskCreate(vibro_process, "vibro_process", 1024, NULL, 10, NULL);
 }

@@ -3,17 +3,19 @@
 #include "menu.h"
 #include "nvs.h"
 #include "nvs_flash.h"
-#include "console.h"
+
 
 #define STORAGE_NAMESPACE "MENU"
 
 // #undef debug_msg
-// #define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+// #define debug_msg(...) //debug_msg( __VA_ARGS__)
 
 static menuPStruct_t menuParameters[] = 
 {
 	[MENU_MOTOR] = {.max_value = 100, .default_value = 0},
 	[MENU_SERVO] = {.max_value = 100, .default_value = 0},
+	[MENU_VIBRO_PERIOD] = {.max_value = 100, .default_value = 0},
+	[MENU_VIBRO_WORKING_TIME] = {.max_value = 100, .default_value = 0},
 	[MENU_MOTOR_IS_ON] = {.max_value = 1, .default_value = 0},
 	[MENU_SERVO_IS_ON] = {.max_value = 1, .default_value = 0},
 	[MENU_MOTOR_ERROR_IS_ON] = {.max_value = 1, .default_value = 0},

@@ -12,7 +12,7 @@
 
 #include "freertos/queue.h"
 #include "config.h"
-#include "console.h"
+
 #include "keepalive.h"
 #include "parse_cmd.h"
 

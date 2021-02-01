@@ -1,10 +1,10 @@
 #include "ssdFigure.h"
 #include "ssd1306.h"
-#include "console.h"
+
 #include "math.h"
 
 #undef debug_msg
-#define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+#define debug_msg(...) //debug_msg( __VA_ARGS__)
 
 bool bitmap[] = 
 {

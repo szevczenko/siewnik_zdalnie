@@ -13,9 +13,9 @@ Please refer to LICENSE file for licensing information.
 
 #include "pcf8574.h"
 
-#include "console.h"
+
 // #undef debug_msg
-// #define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+// #define debug_msg(...) //debug_msg( __VA_ARGS__)
 
 #ifndef PCF8574_I2C_PORT
 #define PCF8574_I2C_PORT		I2C_NUM_0

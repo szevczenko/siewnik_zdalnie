@@ -5,7 +5,7 @@
 #include "freertos/task.h"
 #include "driver/adc.h"
 #include "config.h"
-#include "console.h"
+
 
 //max ADC: 375 - 4.2 V
 

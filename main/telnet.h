@@ -6,7 +6,7 @@
 #include <lwip/def.h>
 #include <lwip/sockets.h>
 #include "config.h"
-#include "console.h"
+
 #include "ringBuff.h"
 
 

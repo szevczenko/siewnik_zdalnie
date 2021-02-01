@@ -2,7 +2,7 @@
 #include "cmd_client.h"
 #include "cmd_server.h"
 #include "keepalive.h"
-#include "console.h"
+
 #include "menu_param.h"
 #include "error_siewnik.h"
 

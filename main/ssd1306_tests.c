@@ -3,7 +3,7 @@
 #include "ssd1306.h"
 #include "ssd1306_tests.h"
 #include "config.h"
-#include "console.h"
+
 #include "ssdFigure.h"
 
 loadBar_t bar = {

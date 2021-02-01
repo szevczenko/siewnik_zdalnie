@@ -4,7 +4,7 @@
 #include "ssd1306.h"
 #include "ssdFigure.h"
 #include "but.h"
-#include "console.h"
+
 #include "semphr.h"
 #include "wifidrv.h"
 #include "cmd_client.h"
@@ -14,7 +14,7 @@
 #include "driver/gpio.h"
 
 //#undef debug_msg
-//#define debug_msg(...) //consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, __VA_ARGS__)
+//#define debug_msg(...) //debug_msg( __VA_ARGS__)
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push

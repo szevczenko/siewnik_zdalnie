@@ -2,9 +2,9 @@
 #include "menu_param.h"
 #include "driver/gpio.h"
 #include "driver/uart.h"
-#include "console.h"
+
 #include "freertos/timers.h"
-#include "console.h"
+
 #include "motor.h"
 #include "servo.h"
 #include "vibro.h"
@@ -117,6 +117,17 @@ void at_read_byte(uint8_t byte) {
 	}
 }
 
+static void read_uart_data(void * arg)
+{
+	char input;
+	while (1)
+	{
+		if (uart_read_bytes(UART_NUM_0, (uint8_t *)&input, 1, 100) > 0) {
+			at_read_byte((uint8_t) input);
+		}
+	}
+}
+
 static void atm_com(void * arg) {
 	uint16_t motor_pmw, servo_pwm;
 	while(1) {
@@ -127,6 +138,7 @@ static void atm_com(void * arg) {
 		#if !CONFIG_DEVICE_SIEWNIK
 		data_write[AT_W_SERVO_VALUE] = (uint16_t)servo_process((uint8_t)menuGetValue(MENU_SERVO));
 		#endif
+		vibro_config(menuGetValue(MENU_VIBRO_PERIOD) * 1000, menuGetValue(MENU_VIBRO_WORKING_TIME) * 1000);
 		if (menuGetValue(MENU_SERVO_IS_ON)) {
 			vibro_start();
 		}
@@ -149,28 +161,8 @@ static void atm_com(void * arg) {
 	}
 }
 
-// static void uart_init(uint32_t baud_rate) {
-//     uart_config_t uart_config = {
-//         .baud_rate = baud_rate,
-//         .data_bits = UART_DATA_8_BITS,
-//         .parity = UART_PARITY_DISABLE,
-//         .stop_bits = UART_STOP_BITS_1,
-//         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-//     };
-//     // We won't use a buffer for sending data.
-//     if (uart_driver_install(CONFIG_CONSOLE_SERIAL, 256, 256, 0, NULL, 0) != ESP_OK) {
-//         printf("UART: uart_driver_install error\n\r");
-//         return;
-//     }
-//     if (uart_param_config(CONFIG_CONSOLE_SERIAL, &uart_config) != ESP_OK) {
-//         printf("UART: uart_param_config error\n\r");
-//         return;
-//     }
-// 	serial_init_flag = 1;
-// }
-
 void at_communication_init(void) {
 	xTaskCreate(atm_com, "atm_com", 1024, NULL, 10, NULL);
-	con0serial.console_mode = CON_MODE_AT_COM;
+	xTaskCreate(read_uart_data, "read_uart_data", 1024, NULL, 10, NULL);
 	xTimers = xTimerCreate("at_com_tim", 100 / portTICK_RATE_MS, pdFALSE, ( void * ) 0, vTimerCallback);
 }

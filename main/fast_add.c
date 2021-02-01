@@ -1,6 +1,6 @@
 #include "config.h"
 #include "fast_add.h"
-#include "console.h"
+
 
 #define FAST_ADD_LIST_SIZE 8
 #define CONFIG_FAST_ADD_THD_WA_SIZE 1024
@@ -19,7 +19,6 @@ void fastProcessStart(uint32_t * value, uint32_t max, uint32_t min, fast_process
 		{
 			if (value == list[i].value)
 			{
-				consolePrintfTimeout(&con0serial, CONFIG_CONSOLE_TIMEOUT, "FIND_SECOND\n");
 				fastProcessStop(value);
 				xSemaphoreGive( xSemaphore );
 				return;
