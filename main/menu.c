@@ -648,7 +648,11 @@ static void menu_task(void * arg)
 		switch(menu->arg_type)
 		{
 			case T_ARG_TYPE_BOOL:
-				if (menu->value == NULL) return;
+				if (menu->value == NULL) 
+				{
+					debug_msg("T_ARG_TYPE_BOOL menu->value == NULL\n\r");
+					continue;
+				}
 				ssd1306_SetCursor(50, MENU_HEIGHT + 5);
 				if (*((bool*)menu->value) == 1)
 					ssd1306_WriteString("ON", Font_11x18, White);
@@ -659,7 +663,10 @@ static void menu_task(void * arg)
 			break;
 
 			case T_ARG_TYPE_VALUE:
-				if (menu->value == NULL) return;
+				if (menu->value == NULL) {
+					debug_msg("T_ARG_TYPE_VALUE menu->value == NULL\n\r");
+					continue;
+				}
 				{
 					ssd1306_SetCursor(55, MENU_HEIGHT + 5);
 					char buff[8];
@@ -671,7 +678,10 @@ static void menu_task(void * arg)
 			break;
 
 			case T_ARG_TYPE_MENU:
-				if (menu->menu_list == NULL || menu->menu_list[menu->position] == NULL) return;
+				if (menu->menu_list == NULL || menu->menu_list[menu->position] == NULL) {
+					debug_msg("T_ARG_TYPE_MENU menu->value == NULL\n\r");
+					continue;
+				}
 				{
 					if (line_end - line_start != MAX_LINE - 1)
 					{
@@ -928,7 +938,10 @@ static void menu_task(void * arg)
 				break;
 
 			default:
-				return;
+				{
+					debug_msg("MENU switch default\n\r");
+					continue;
+				}
 		}
 		ssd1306_UpdateScreen();
 		/* Update status led */
@@ -1009,7 +1022,7 @@ void init_menu(void)
 	entered_menu_tab[0] = &main_menu;
 	xSemaphore = xSemaphoreCreateBinary();
 	xTimers = xTimerCreate("Timer", MS2ST(2000), pdFALSE, ( void * ) 0, timerCallback);
-	xTaskCreate(menu_task, "menu_task", 2048, NULL, 12, NULL);
+	xTaskCreate(menu_task, "menu_task", 4096, NULL, 12, NULL);
 	wifiDrvGetAPName(devName);
 	if (connectToDevice(devName) == FALSE)
 	{

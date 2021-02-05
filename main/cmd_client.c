@@ -35,9 +35,6 @@ pthread_mutexattr_t mutexattr;
 static keepAlive_t keepAlive;
 struct sockaddr_in tcpServerAddr;
 
-
-
-
 int NetworkConnect(char* addr, int port)
 {
 	int retVal = -1;

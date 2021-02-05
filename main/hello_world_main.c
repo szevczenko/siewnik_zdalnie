@@ -32,6 +32,7 @@
 #include "battery.h"
 #include "motor.h"
 #include "vibro.h"
+#include "esp_attr.h"
 
 
 uint16_t test_value;
@@ -82,7 +83,8 @@ void uartPrintfTimeout(const char *format, ...)
     uart_write_bytes(UART_NUM_0, buff, len);
 }
 
-static char * last_task_name;
+RTC_NOINIT_ATTR char * last_task_name;
+static char * restart_task_name;
 
 void debug_last_task(char * task_name) {
     last_task_name = task_name;
@@ -102,7 +104,7 @@ static void checkDevType(void) {
 }
 
 static void esp_task_wdt_isr(void * arg) {
-    ets_printf("Wdt reset, last task: %s\n\r", last_task_name);
+    ets_printf("Wdt reset, last task: %s %p\n\r", last_task_name, last_task_name);
 }
 
 static uint32_t interruptMask;
@@ -137,6 +139,11 @@ void my_enable_interrupts(void) {
             _xt_isr_unmask(1 << i);
         }
     }
+}
+
+int __esp_os_init(void) {
+    restart_task_name = last_task_name;
+    return 0;
 }
 
 void app_main()
@@ -179,11 +186,10 @@ void app_main()
         io_conf.pull_up_en = 0;
         gpio_config(&io_conf);
     }
-    interruptFlag = 1;
+
     _xt_isr_attach(ETS_WDT_INUM, esp_task_wdt_isr, NULL);
-    my_disable_interrupts();
-    my_enable_interrupts();
-    vTaskDelay(MS2ST(975));
+    ets_printf("Init last task: %s %p\n\r", restart_task_name, restart_task_name);
+
     while(1)
     {
         vTaskDelay(MS2ST(975));
