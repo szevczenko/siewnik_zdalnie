@@ -862,11 +862,11 @@ static void menu_task(void * arg)
 						if (line + line_start == menu->position)
 						{
 							ssdFigureFillLine(MENU_HEIGHT + LINE_HEIGHT*line, LINE_HEIGHT);
-							ssd1306_WriteString(wifi_device_list[line + line_start], Font_7x10, Black);
+							ssd1306_WriteString(&wifi_device_list[line + line_start][6], Font_7x10, Black);
 						}
 						else
 						{
-							ssd1306_WriteString(wifi_device_list[line + line_start], Font_7x10, White);
+							ssd1306_WriteString(&wifi_device_list[line + line_start][6], Font_7x10, White);
 						}
 						
 						line++;
@@ -1074,10 +1074,10 @@ static void servo_fast_add(uint32_t value) {
 	(void) value;
 	#if CONFIG_DEVICE_SIEWNIK
 	if (menu_start_line) {
-		cmdClientSetValueWithoutRespI(MENU_VIBRO_WORKING_TIME, menu_start_wt_value);
+		cmdClientSetValueWithoutResp(MENU_VIBRO_WORKING_TIME, menu_start_wt_value);
 	}
 	else {
-		cmdClientSetValueWithoutRespI(MENU_VIBRO_PERIOD, menu_start_period_value);
+		cmdClientSetValueWithoutResp(MENU_VIBRO_PERIOD, menu_start_period_value);
 	}
 	#else
 	cmdClientSetValueWithoutResp(MENU_SERVO, servo_value);

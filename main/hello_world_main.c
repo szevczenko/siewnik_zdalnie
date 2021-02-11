@@ -110,37 +110,6 @@ static void esp_task_wdt_isr(void * arg) {
 static uint32_t interruptMask;
 static uint8_t interruptFlag;
 
-void my_disable_interrupts(void) {
-    if (interruptFlag == 0) {
-        __asm__ volatile ("rsil %0, " XTSTR(XCHAL_EXCM_LEVEL) : "=a" (cpu_sr) :: "memory");
-    }
-    else {
-        uint32_t mask = soc_get_int_mask();
-        interruptMask = mask;
-        for (int i = 0; i < ETS_INT_MAX && mask; i++) {
-            int bit = 1 << i;
-            if (!(bit & mask) || i == ETS_WDT_INUM)
-                continue;
-            _xt_isr_mask(1 << i);
-        }
-    }
-}
-
-void my_enable_interrupts(void) {
-    if (interruptFlag == 0) {
-        __asm__ volatile ("wsr %0, ps" :: "a" (cpu_sr) : "memory");
-    }
-    else {
-        uint32_t mask = interruptMask;
-        for (int i = 0; i < ETS_INT_MAX && mask; i++) {
-            int bit = 1 << i;
-            if (!(bit & mask) || i == ETS_WDT_INUM)
-                continue;
-            _xt_isr_unmask(1 << i);
-        }
-    }
-}
-
 int __esp_os_init(void) {
     restart_task_name = last_task_name;
     return 0;

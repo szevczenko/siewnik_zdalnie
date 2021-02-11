@@ -5,6 +5,9 @@
         },
         {
             "path": "..\\ESP8266_RTOS_SDK"
+        },
+        {
+            "path": "../../esp/ESP8266_RTOS_SDK"
         }
     ],
     

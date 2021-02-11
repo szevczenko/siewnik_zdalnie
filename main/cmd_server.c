@@ -24,6 +24,7 @@ static uint8_t rx_buff[32];
 static uint32_t rx_buff_len;
 static uint8_t status_telnet;
 static uint8_t error_counter;
+static uint8_t starting_flag;
 static struct client_network n_clients[NUMBER_CLIENT];
 static struct server_network network;
 static TaskHandle_t thread_task_handle;

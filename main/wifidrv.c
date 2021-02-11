@@ -47,8 +47,6 @@ static wifi_config_t wifi_config;
 
 wifi_config_t wifi_config_ap = {
   .ap = {
-    .ssid = STORAGE_NAMESPACE,
-    .ssid_len = strlen(STORAGE_NAMESPACE),
     .password = WIFI_AP_PASSWORD,
     .max_connection = 2,
     .authmode = WIFI_AUTH_WPA_WPA2_PSK
@@ -162,6 +160,19 @@ esp_err_t wifiDataRead(wifiConData_t *data)
 
 static void wifi_init(void)
 {
+  /* Nadawanie nazwy WiFi Access point oraz przypisanie do niego mac adresu */
+  if (config.dev_type == T_DEV_TYPE_SERVER)
+  {
+    uint8_t mac[6];
+    esp_efuse_mac_get_default(mac);
+    strcpy((char *)wifi_config_ap.ap.ssid, STORAGE_NAMESPACE);
+    for (int i = 0; i < sizeof(mac); i++) {
+      sprintf((char *)&wifi_config_ap.ap.ssid[strlen((char *)wifi_config_ap.ap.ssid)], ":%x", mac[i]);
+    }
+    wifi_config_ap.ap.ssid_len = strlen((char *)wifi_config_ap.ap.ssid);
+  }
+
+  /* Inicjalizacja WiFi */
   ESP_ERROR_CHECK(esp_netif_init());
   ESP_ERROR_CHECK(esp_event_loop_create_default());
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -170,7 +181,6 @@ static void wifi_init(void)
   ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &got_ip_event_handler, NULL));
   if (config.dev_type == T_DEV_TYPE_SERVER)
   {
-    
     wifiStartAccessPoint();
   }
   else
