@@ -37,9 +37,6 @@
 
 #define DEFAULT_SCAN_LIST_SIZE 16
 
-#define STORAGE_NAMESPACE "Zefir"
-#define WIFI_AP_PASSWORD "12345678"
-
 static uint32_t stastus_reg_eth;
 
 static wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
@@ -108,7 +105,7 @@ int wifiDataSave(wifiConData_t *data)
 	nvs_handle my_handle;
     esp_err_t err;
 	 // Open
-    err = nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &my_handle);
+    err = nvs_open(WIFI_AP_NAME, NVS_READWRITE, &my_handle);
     if (err != ESP_OK) {
 		nvs_close(my_handle);
 		return err;
@@ -137,7 +134,7 @@ esp_err_t wifiDataRead(wifiConData_t *data)
 	nvs_handle my_handle;
   esp_err_t err;
 	// Open
-  err = nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &my_handle);
+  err = nvs_open(WIFI_AP_NAME, NVS_READWRITE, &my_handle);
   if (err != ESP_OK) return err;
 	// Read the size of memory space required for blob
   size_t required_size = 0;  // value will default to 0, if not set yet in NVS
@@ -165,7 +162,7 @@ static void wifi_init(void)
   {
     uint8_t mac[6];
     esp_efuse_mac_get_default(mac);
-    strcpy((char *)wifi_config_ap.ap.ssid, STORAGE_NAMESPACE);
+    strcpy((char *)wifi_config_ap.ap.ssid, WIFI_AP_NAME);
     for (int i = 0; i < sizeof(mac); i++) {
       sprintf((char *)&wifi_config_ap.ap.ssid[strlen((char *)wifi_config_ap.ap.ssid)], ":%x", mac[i]);
     }

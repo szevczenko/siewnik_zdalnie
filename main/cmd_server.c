@@ -20,11 +20,10 @@
 #define MAX_VALUE(OLD_V, NEW_VAL) NEW_VAL>OLD_V?NEW_VAL:OLD_V
 
 static uint8_t buffer_cmd[BUFFER_CMD];
-static uint8_t rx_buff[32];
+static uint8_t rx_buff[128];
 static uint32_t rx_buff_len;
 static uint8_t status_telnet;
 static uint8_t error_counter;
-static uint8_t starting_flag;
 static struct client_network n_clients[NUMBER_CLIENT];
 static struct server_network network;
 static TaskHandle_t thread_task_handle;
@@ -311,6 +310,106 @@ int cmdServerSetValueWithoutRespI(menuValue_t val, uint32_t value) {
 	taskENTER_CRITICAL();
 
 	return TRUE;
+}
+
+int cmdServerGetValue(menuValue_t val, uint32_t * value, uint32_t timeout) {
+
+	if (val >= MENU_LAST_VALUE)
+		return FALSE;
+
+	if (xSemaphoreTake(mutexSemaphore, timeout) == pdTRUE)
+	{
+		static uint8_t sendBuff[4];
+		sendBuff[0] = 4;
+		sendBuff[1] = CMD_REQEST;
+		sendBuff[2] = PC_GET;
+		sendBuff[3] = val;
+		xQueueReset((QueueHandle_t )waitSemaphore);
+		cmdServerSendData(NULL, sendBuff, sizeof(sendBuff));
+		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
+			if (PC_GET != rx_buff[2]) {
+				xSemaphoreGive(mutexSemaphore);
+				return 0;
+			}	
+
+			uint32_t return_value;
+
+			memcpy(&return_value, rx_buff, sizeof(return_value));
+
+			if (menuSetValue(val, *value) == FALSE) {
+				rx_buff_len = 0;
+				xSemaphoreGive(mutexSemaphore);
+				return FALSE;
+			}
+
+			if (value != 0)
+				*value = return_value;
+
+			rx_buff_len = 0;
+			xSemaphoreGive(mutexSemaphore);
+			return 1;
+		}
+		else {
+			xSemaphoreGive(mutexSemaphore);
+			debug_msg("Timeout cmdClientGetValue\n");
+		}
+	}
+	return FALSE;
+}
+
+int cmdServerSetAllValue(void) {
+
+	void * data;
+	uint32_t data_size;
+	static uint8_t sendBuff[128];
+
+	menuParamGetDataNSize(&data, &data_size);
+
+	sendBuff[0] = 3 + data_size;
+	sendBuff[1] = CMD_DATA;
+	sendBuff[2] = PC_SET_ALL;
+	memcpy(&sendBuff[3], data, data_size);
+
+	cmdServerSendData(NULL, sendBuff, 3 + data_size);
+
+	return TRUE;
+}
+
+int cmdServerGetAllValue(uint32_t timeout) {
+
+	if (xSemaphoreTake(mutexSemaphore, timeout) == pdTRUE)
+	{
+		static uint8_t sendBuff[3];
+
+		sendBuff[0] = 3;
+		sendBuff[1] = CMD_REQEST;
+		sendBuff[2] = PC_GET_ALL;
+
+		xQueueReset((QueueHandle_t )waitSemaphore);
+		cmdServerSendData(NULL, sendBuff, sizeof(sendBuff));
+		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
+			if (PC_GET_ALL != rx_buff[2]) {
+				xSemaphoreGive(mutexSemaphore);
+				return 0;
+			}	
+
+			uint32_t * return_data = (uint32_t *) &rx_buff[3];
+			for (int i = 0; i < (rx_buff_len - 3) / 4; i++) {
+				if (menuSetValue(i, return_data[i]) == FALSE) {
+					debug_msg("Error Set Value %d = %d\n", i, return_data[i]);
+				}
+			}
+
+			rx_buff_len = 0;
+			xSemaphoreGive(mutexSemaphore);
+			return 1;
+		}
+		else {
+			xSemaphoreGive(mutexSemaphore);
+			debug_msg("Timeout cmdServerGetAllValue\n");
+		}
+	}
+	return FALSE;
 }
 
 static int keepAliveSend(uint8_t * data, uint32_t dataLen) {

@@ -11,6 +11,8 @@ void menuSetDefaultValue(void);
 uint32_t menuGetValue(menuValue_t val);
 uint32_t menuGetMaxValue(menuValue_t val);
 uint8_t menuSetValue(menuValue_t val, uint32_t value);
+void menuParamGetDataNSize(void ** data, uint32_t * size);
+void menuParamSetDataNSize(void * data, uint32_t size);
 
 void menuPrintParameters(void);
 

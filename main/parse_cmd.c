@@ -8,7 +8,7 @@
 
 
 
-static uint8_t sendBuff[32];
+static uint8_t sendBuff[128];
 static uint32_t frameLenClient;
 
 void parse_client_buffer(uint8_t * buff, uint32_t len) {
@@ -63,6 +63,44 @@ void parse_client(uint8_t * buff, uint32_t len)
 				if (buff[1] != CMD_DATA)
 					cmdClientSend(sendBuff, 4);
 				break;
+
+			case PC_SET_ALL:
+			{
+				sendBuff[0] = 4;
+				sendBuff[1] = CMD_ANSWER;
+				sendBuff[2] = PC_SET_ALL;
+
+				uint32_t * return_data = (uint32_t *) &buff[3];
+				for (int i = 0; i < (len - 3) / 4; i++) {
+					if (menuSetValue(i, return_data[i]) == FALSE) {
+						debug_msg("Parse Error Set Value %d = %d\n", i, return_data[i]);
+					}
+				}
+
+				sendBuff[3] = POSITIVE_RESP;
+
+				if (buff[1] != CMD_DATA)
+					cmdClientSend(sendBuff, 4);
+				menuPrintParameters();
+			}
+			break;
+
+			case PC_GET_ALL:
+			{
+				void * data;
+				uint32_t data_size;
+
+				menuParamGetDataNSize(&data, &data_size);
+
+				sendBuff[0] = 3 + data_size;
+				sendBuff[1] = CMD_ANSWER;
+				sendBuff[2] = PC_GET_ALL;
+
+				memcpy(&sendBuff[3], data, data_size);
+				cmdClientSend(sendBuff, 3 + data_size);
+
+			}
+			break;
 		}
 	}
 	else if (buff[1] == CMD_ANSWER) {
@@ -70,6 +108,8 @@ void parse_client(uint8_t * buff, uint32_t len)
 		switch(buff[2]) {
 			case PC_SET:
 			case PC_GET:
+			case PC_GET_ALL:
+			case PC_SET_ALL:
 			case PC_KEEP_ALIVE:
 				cmdClientAnswerData(buff, len);
 				break;
@@ -141,6 +181,27 @@ void parse_server(uint8_t * buff, uint32_t len)
 					cmdServerSendData(NULL, sendBuff, 4);
 				menuPrintParameters();
 				break;
+
+			case PC_SET_ALL:
+			{
+				sendBuff[0] = 4;
+				sendBuff[1] = CMD_ANSWER;
+				sendBuff[2] = PC_SET_ALL;
+
+				uint32_t * return_data = (uint32_t *) &buff[3];
+				for (int i = 0; i < (len - 3) / 4; i++) {
+					if (menuSetValue(i, return_data[i]) == FALSE) {
+						debug_msg("Parse Error Set Value %d = %d\n", i, return_data[i]);
+					}
+				}
+
+				sendBuff[3] = POSITIVE_RESP;
+
+				if (buff[1] != CMD_DATA)
+					cmdServerSendData(NULL, sendBuff, 4);
+				menuPrintParameters();
+			}
+			break;
 		}
 	}
 	else if (buff[1] == CMD_ANSWER) {
@@ -149,6 +210,8 @@ void parse_server(uint8_t * buff, uint32_t len)
 			case PC_KEEP_ALIVE:
 			case PC_SET:
 			case PC_GET:
+			case PC_GET_ALL:
+			case PC_SET_ALL:
 				cmdServerAnswerData(buff, len);
 				break;
 		}

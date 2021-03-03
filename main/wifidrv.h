@@ -3,6 +3,14 @@
 
 #include "config.h"
 
+#ifndef WIFI_AP_NAME
+#define WIFI_AP_NAME "Zefir"
+#endif
+
+#ifndef WIFI_AP_PASSWORD
+#define WIFI_AP_PASSWORD "12345678"
+#endif
+
 typedef struct
 {
   char ssid[33];

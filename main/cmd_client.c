@@ -155,6 +155,51 @@ int cmdClientSetValueWithoutRespI(menuValue_t val, uint32_t value) {
 	return ret_val;
 }
 
+int cmdClientGetValue(menuValue_t val, uint32_t * value, uint32_t timeout) {
+
+	if (val >= MENU_LAST_VALUE)
+		return FALSE;
+
+	if (xSemaphoreTake(mutexSemaphore, timeout) == pdTRUE)
+	{
+		static uint8_t sendBuff[4];
+		sendBuff[0] = 4;
+		sendBuff[1] = CMD_REQEST;
+		sendBuff[2] = PC_GET;
+		sendBuff[3] = val;
+		xQueueReset((QueueHandle_t )waitSemaphore);
+		send(network.socket, sendBuff, sizeof(sendBuff), 0);
+		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
+			if (PC_GET != rx_buff[2]) {
+				xSemaphoreGive(mutexSemaphore);
+				return 0;
+			}	
+
+			uint32_t return_value;
+
+			memcpy(&return_value, rx_buff, sizeof(return_value));
+
+			if (menuSetValue(val, return_value) == FALSE) {
+				rx_buff_len = 0; 
+				xSemaphoreGive(mutexSemaphore);
+				return FALSE;
+			}
+
+			if (value != 0)
+				*value = return_value;
+
+			rx_buff_len = 0;
+			xSemaphoreGive(mutexSemaphore);
+			return 1;
+		}
+		else {
+			xSemaphoreGive(mutexSemaphore);
+			debug_msg("Timeout cmdClientGetValue\n");
+		}
+	}
+	return FALSE;
+}
+
 int cmdClientSendCmd(parseCmd_t cmd) {
 	int ret_val = TRUE;
 	if (cmd > PC_CMD_LAST) { 
@@ -212,6 +257,61 @@ int cmdClientSetValue(menuValue_t val, uint32_t value, uint32_t timeout_ms) {
 		return 1;
 
 	return 0;
+}
+
+int cmdClientSetAllValue(void) {
+
+	void * data;
+	uint32_t data_size;
+	static uint8_t sendBuff[128];
+
+	menuParamGetDataNSize(&data, &data_size);
+
+	sendBuff[0] = 3 + data_size;
+	sendBuff[1] = CMD_DATA;
+	sendBuff[2] = PC_SET_ALL;
+	memcpy(&sendBuff[3], data, data_size);
+
+	cmdClientSend(sendBuff, 3 + data_size);
+
+	return TRUE;
+}
+
+int cmdClientGetAllValue(uint32_t timeout) {
+
+	if (xSemaphoreTake(mutexSemaphore, timeout) == pdTRUE)
+	{
+		static uint8_t sendBuff[3];
+
+		sendBuff[0] = 3;
+		sendBuff[1] = CMD_REQEST;
+		sendBuff[2] = PC_GET_ALL;
+
+		xQueueReset((QueueHandle_t )waitSemaphore);
+		send(network.socket, sendBuff, sizeof(sendBuff), 0);
+		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
+			if (PC_GET_ALL != rx_buff[2]) {
+				xSemaphoreGive(mutexSemaphore);
+				return 0;
+			}	
+
+			uint32_t * return_data = (uint32_t *) &rx_buff[3];
+			for (int i = 0; i < (rx_buff_len - 3) / 4; i++) {
+				if (menuSetValue(i, return_data[i]) == FALSE) {
+					debug_msg("Error Set Value %d = %d\n", i, return_data[i]);
+				}
+			}
+
+			rx_buff_len = 0;
+			xSemaphoreGive(mutexSemaphore);
+			return 1;
+		}
+		else {
+			xSemaphoreGive(mutexSemaphore);
+			debug_msg("Timeout cmdServerGetAllValue\n");
+		}
+	}
+	return FALSE;
 }
 
 int cmdClientAnswerData(uint8_t * buff, uint32_t len) {

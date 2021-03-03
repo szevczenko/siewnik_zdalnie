@@ -15,6 +15,8 @@ typedef enum
 	PC_KEEP_ALIVE,
 	PC_SET,
 	PC_GET,
+	PC_SET_ALL,
+	PC_GET_ALL,
 	PC_LAST
 }parseType_t;
 
@@ -39,6 +41,7 @@ typedef enum
 	MENU_CURRENT_MOTOTR,
 	MENU_VOLTAGE_ACCUM,
 	MENU_ERRORS,
+	MENU_START_SYSTEM,
 
 	/* calibration value */
 	MENU_ERROR_SERVO,

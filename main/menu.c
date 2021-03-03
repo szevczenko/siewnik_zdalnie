@@ -209,7 +209,7 @@ void menu_start_find_device_I(void)
 	{
 		wifiDrvGetNameFromScannedList(i, dev_name);
 		//debug_msg("%s\n", dev_name);
-		if (memcmp(dev_name, "Zefir", strlen("Zefir")) == 0)
+		if (memcmp(dev_name, WIFI_AP_NAME, strlen(WIFI_AP_NAME) - 1) == 0)
 		{
 			strcpy(wifi_device_list[dev_count++], dev_name);
 		}
@@ -227,7 +227,7 @@ void menu_start_find_device(void)
 static int connectToDevice(char *dev)
 {
 
-	if (memcmp("Zefir", dev, strlen("Zefir")) == 0)
+	if (memcmp(WIFI_AP_NAME, dev, strlen(WIFI_AP_NAME) - 1) == 0)
 	{
 		if (wifiDrvIsConnected()){
 			if (wifiDrvDisconnect() != ESP_OK){
@@ -243,7 +243,7 @@ static int connectToDevice(char *dev)
 			entered_menu_tab[i] = NULL;
 		}
 		wifiDrvSetAPName(dev, strlen(dev));
-		wifiDrvSetPassword("12345678", strlen("12345678"));
+		wifiDrvSetPassword(WIFI_AP_PASSWORD, strlen(WIFI_AP_PASSWORD));
 		if (wifiDrvConnect() != ESP_OK) {
 			//debug_msg("MENU: wifiDrvConnect failed");
 			menuPrintfInfo("wifiDrvConnect failed");

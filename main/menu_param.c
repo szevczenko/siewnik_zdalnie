@@ -119,9 +119,6 @@ uint32_t menuGetMaxValue(menuValue_t val) {
 }
 
 uint8_t menuSetValue(menuValue_t val, uint32_t value) {
-	if (val == MENU_SERVO_IS_ON) {
-		debug_msg("MENU_SERVO_IS_ON %d %s\n\r", value, pcTaskGetTaskName(NULL));
-	}
 	if (val >= MENU_LAST_VALUE)
 		return FALSE;
 
@@ -132,6 +129,19 @@ uint8_t menuSetValue(menuValue_t val, uint32_t value) {
 	menuSaveParameters_data[val] = value;
 	//ToDo send to Drv
 	return TRUE;
+}
+
+void menuParamGetDataNSize(void ** data, uint32_t * size) {
+	if (data == NULL || size == NULL)
+		return;
+	*data = (void *) menuSaveParameters_data;
+	*size = sizeof(menuSaveParameters_data);
+}
+
+void menuParamSetDataNSize(void * data, uint32_t size) {
+	if (data == NULL)
+		return;
+	memcpy(menuSaveParameters_data, data, size);
 }
 
 void menuParamInit(void) {
