@@ -154,5 +154,6 @@ typedef int esp_err_t;
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 void configInit(void);
+void debug_function_name(char * name);
 
 #endif /* CONFIG_H_ */

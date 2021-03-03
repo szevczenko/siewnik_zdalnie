@@ -13,6 +13,7 @@ static uint32_t frameLenClient;
 
 void parse_client_buffer(uint8_t * buff, uint32_t len) {
 	uint32_t parsed_len = 0;
+	debug_function_name("parse_client_buffer");
 	do {
 		frameLenClient = buff[parsed_len];
 
@@ -27,6 +28,7 @@ void parse_client_buffer(uint8_t * buff, uint32_t len) {
 
 void parse_client(uint8_t * buff, uint32_t len)
 {
+	debug_function_name("parse_client");
 	//uint32_t * val;
 	uint32_t value;
 	if (buff[1] == CMD_REQEST || buff[1] == CMD_DATA) {
@@ -74,6 +76,9 @@ void parse_client(uint8_t * buff, uint32_t len)
 				for (int i = 0; i < (len - 3) / 4; i++) {
 					if (menuSetValue(i, return_data[i]) == FALSE) {
 						debug_msg("Parse Error Set Value %d = %d\n", i, return_data[i]);
+					}
+					else {
+						debug_msg("Parse Set Value %d = %d\n\r", i, return_data[i]);
 					}
 				}
 

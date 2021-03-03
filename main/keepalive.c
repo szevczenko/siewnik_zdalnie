@@ -12,6 +12,9 @@ static uint8_t tabSize;
 static uint8_t keep_alive_frame[] = {3, CMD_REQEST, PC_KEEP_ALIVE};
 
 void keepAliveInit(keepAlive_t * keep, uint32_t timeout, int (*send)(uint8_t * data, uint32_t dataLen), void (*errorCb)(void)) {
+	if (keep == NULL) {
+		return;
+	}
 	keep->keepAliveSend = send;
 	keep->keepAliveErrorCb = errorCb;
 	if (timeout < KEEP_ALIVE_TIME_TO_NEXT)
@@ -25,6 +28,10 @@ void keepAliveInit(keepAlive_t * keep, uint32_t timeout, int (*send)(uint8_t * d
 
 void keepAliveAccept(keepAlive_t * keep)
 {
+	if (keep == NULL) {
+		return;
+	}
+	debug_function_name("keepAliveAccept");
 	keep->keepAlive = ST2MS(xTaskGetTickCount()) + keep->timeout;
 	keep->keepAliveTry = 0;
 	keep->keepAliveErrorFlag = 0;
@@ -78,11 +85,14 @@ static void keepAliveProcess(void * pv)
 
 void keepAliveStartTask(void)
 {
-	xTaskCreate(keepAliveProcess, "keepAliveProcess", 1024, NULL, NORMALPRIO, NULL);
+	xTaskCreate(keepAliveProcess, "keepAliveProcess", 2048, NULL, NORMALPRIO, NULL);
 }
 
 void keepAliveStart(keepAlive_t * keep)
 {
+	if (keep == NULL) {
+		return;
+	}
 	keep->keepAliveActiveFlag = 1;
 	keep->keepAliveErrorFlag = 0;
 	keepAliveAccept(keep);
@@ -90,5 +100,8 @@ void keepAliveStart(keepAlive_t * keep)
 
 void keepAliveStop(keepAlive_t * keep)
 {
+	if (keep == NULL) {
+		return;
+	}
 	keep->keepAliveActiveFlag = 0;
 }

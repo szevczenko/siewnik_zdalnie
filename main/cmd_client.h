@@ -41,6 +41,8 @@ int cmdClientIsConnected(void);
 int cmdClientSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, uint32_t * rx_len, uint32_t timeout);
 int cmdClientAnswerData(uint8_t * buff, uint32_t len);
 
+
+int cmdClientGetAllValue(uint32_t timeout);
 int cmdClientSetValue(menuValue_t val, uint32_t value, uint32_t timeout_ms);
 int cmdClientSetValueWithoutResp(menuValue_t val, uint32_t value);
 int cmdClientSetValueWithoutRespI(menuValue_t val, uint32_t value);

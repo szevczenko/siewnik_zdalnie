@@ -304,6 +304,19 @@ static void wifi_event_task(void * pv)
         else
         {
           cmdClientStart();
+          /* Wait to connect to server */
+          uint32_t time_to_connect = 0;
+          while(cmdClientIsConnected() == 0 && time_to_connect < 10) {
+            time_to_connect++;
+            osDelay(275);
+          }
+          /* Get all data from server */
+          if (cmdClientIsConnected()) {
+            cmdClientGetAllValue(2500);
+          }
+          else {
+            debug_msg("Timeout connected client to server\n\r");
+          }
         }
         
 			}
