@@ -299,7 +299,7 @@ void button_up_callback(void * arg)
 		debug_msg("Error button_up_callback: menu == NULL\n");
 		return;
 	}
-
+	debug_function_name("button_up_callback");
 	switch(menu->arg_type)
 	{
 		case T_ARG_TYPE_START:
@@ -336,7 +336,7 @@ void button_down_callback(void * arg)
 		debug_msg("Error button_down_callback: menu == NULL\n");
 		return;
 	}
-
+	debug_function_name("button_down_callback");
 	switch(menu->arg_type)
 	{
 		case T_ARG_TYPE_START:
@@ -370,6 +370,7 @@ void button_plus_callback(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
+	debug_function_name("button_plus_callback");
 	switch(menu->arg_type)
 	{
 		case T_ARG_TYPE_BOOL:
@@ -460,6 +461,7 @@ void button_minus_callback(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
+	debug_function_name("button_minus_callback");
 	switch(menu->arg_type)
 	{
 		case T_ARG_TYPE_BOOL:
@@ -539,6 +541,7 @@ void button_enter_callback(void * arg)
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
 	//debug_msg("Enter cur (%s)\n", menu->name);
+	debug_function_name("button_enter_callback");
 	switch(menu->arg_type)
 	{
 		case T_ARG_TYPE_BOOL:
@@ -588,6 +591,7 @@ void button_exit_callback(void * arg)
 	menu_token_t * menu = last_tab_element();
 	//debug_msg("Exit\n", len_menu(menu), menu->position);
 	if (menu == NULL) return;
+	debug_function_name("button_exit_callback");
 	switch(menu->arg_type)
 	{
 		case T_ARG_TYPE_BOOL:
@@ -1037,6 +1041,7 @@ void button_plus_servo_callback(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
+	debug_function_name("button_plus_servo_callback");
 	switch(menu->arg_type)
 	{
 	
@@ -1114,6 +1119,7 @@ void button_plus_servo_up_callback(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
+	debug_function_name("button_plus_servo_up_callback");
 	switch(menu->arg_type)
 	{
 		
@@ -1136,6 +1142,7 @@ void button_minus_servo_callback(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
+	debug_function_name("button_minus_servo_callback");
 	switch(menu->arg_type)
 	{
 	
@@ -1173,6 +1180,7 @@ void button_minus_servo_time_callback(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
+	debug_function_name("button_minus_servo_time_callback");
 	switch(menu->arg_type){
 
 		case T_ARG_TYPE_START:
@@ -1220,6 +1228,7 @@ void button_motor_state(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
+	debug_function_name("button_motor_state");
 	switch(menu->arg_type)
 	{
 		
@@ -1248,6 +1257,7 @@ void button_servo_state(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
+	debug_function_name("button_servo_state");
 	switch(menu->arg_type)
 	{
 		

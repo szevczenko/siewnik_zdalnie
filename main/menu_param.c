@@ -109,12 +109,14 @@ void menuSetDefaultValue(void) {
 uint32_t menuGetValue(menuValue_t val) {
 	if (val >= MENU_LAST_VALUE)
 		return 0;
+	debug_function_name("menuGetValue");
 	return menuSaveParameters_data[val];
 }
 
 uint32_t menuGetMaxValue(menuValue_t val) {
 	if (val >= MENU_LAST_VALUE)
 		return 0;
+	debug_function_name("menuGetMaxValue");
 	return menuParameters[val].max_value;
 }
 
@@ -125,7 +127,7 @@ uint8_t menuSetValue(menuValue_t val, uint32_t value) {
 	if (value > menuParameters[val].max_value) {
 		return FALSE;
 	}
-
+	debug_function_name("menuSetValue");
 	menuSaveParameters_data[val] = value;
 	//ToDo send to Drv
 	return TRUE;
@@ -134,6 +136,7 @@ uint8_t menuSetValue(menuValue_t val, uint32_t value) {
 void menuParamGetDataNSize(void ** data, uint32_t * size) {
 	if (data == NULL || size == NULL)
 		return;
+	debug_function_name("menuParamGetDataNSize");
 	*data = (void *) menuSaveParameters_data;
 	*size = sizeof(menuSaveParameters_data);
 }
@@ -141,6 +144,7 @@ void menuParamGetDataNSize(void ** data, uint32_t * size) {
 void menuParamSetDataNSize(void * data, uint32_t size) {
 	if (data == NULL)
 		return;
+	debug_function_name("menuParamSetDataNSize");
 	memcpy(menuSaveParameters_data, data, size);
 }
 
