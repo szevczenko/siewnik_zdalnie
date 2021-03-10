@@ -124,7 +124,7 @@ extern void uartPrintfTimeout(const char *format, ...);
 			telnetPrintfToAll(__VA_ARGS__);			\
 		} 											\
 		else { 										\
-			uartPrintfTimeout(__VA_ARGS__);			\
+			printf(__VA_ARGS__);			\
 		} 											\
 	}
 #define debug_data(data, size) telnetSendToAll((char *)data, size)

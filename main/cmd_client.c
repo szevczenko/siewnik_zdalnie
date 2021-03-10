@@ -34,6 +34,7 @@ pthread_mutex_t mutex_client;
 pthread_mutexattr_t mutexattr;
 static keepAlive_t keepAlive;
 struct sockaddr_in tcpServerAddr;
+uint8_t task_status;
 
 int NetworkConnect(char* addr, int port)
 {
@@ -56,12 +57,6 @@ int NetworkConnect(char* addr, int port)
 	}
 exit:
 	return retVal;
-}
-
-
-void NetworkDisconnect(void)
-{
-	close(network.socket);
 }
 
 
@@ -100,22 +95,32 @@ int cmdClientSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, u
 	debug_function_name("cmdClientSendDataWaitResp");
 	if (buff[1] != CMD_REQEST)
 		return FALSE;
+	//debug_msg("cmdClientSendDataWaitResp start: %d\n\r",len);
 	if (xSemaphoreTake(mutexSemaphore, timeout) == pdTRUE)
 	{
 		xQueueReset((QueueHandle_t )waitSemaphore);
-		send(network.socket, buff, len, 0);
+		cmdClientSend(buff, len);
 		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
 			if (buff[2] != rx_buff[2]) {
 				xSemaphoreGive(mutexSemaphore);
+				memset(rx_buff, 0, sizeof(rx_buff));
+				rx_buff_len = 0;
+				debug_msg("cmdClientSendDataWaitResp end error: %d\n\r",len);
 				return 0;
 			}	
-			if (buff_rx != 0)
-				memcpy(buff_rx, rx_buff, rx_buff_len);
-			if (rx_len != 0)
+
+			if (rx_len != 0) {
+				debug_msg("cmdClientSendDataWaitResp answer len: %d\n\r",rx_buff_len);
 				*rx_len = rx_buff_len;
+			}
+
+			if (buff_rx != 0) {
+				memcpy(buff_rx, rx_buff, rx_buff_len);
+			}
 
 			rx_buff_len = 0;
 			xSemaphoreGive(mutexSemaphore);
+			//debug_msg("cmdClientSendDataWaitResp end: %d\n\r",len);
 			return 1;
 		}
 		else {
@@ -175,7 +180,7 @@ int cmdClientGetValue(menuValue_t val, uint32_t * value, uint32_t timeout) {
 		sendBuff[2] = PC_GET;
 		sendBuff[3] = val;
 		xQueueReset((QueueHandle_t )waitSemaphore);
-		send(network.socket, sendBuff, sizeof(sendBuff), 0);
+		cmdClientSend(sendBuff, sizeof(sendBuff));
 		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
 			if (PC_GET != rx_buff[2]) {
 				xSemaphoreGive(mutexSemaphore);
@@ -291,14 +296,14 @@ int cmdClientGetAllValue(uint32_t timeout) {
 	debug_function_name("cmdClientGetAllValue");
 	if (xSemaphoreTake(mutexSemaphore, timeout) == pdTRUE)
 	{
-		static uint8_t sendBuff[3];
+		uint8_t sendBuff[3];
 
 		sendBuff[0] = 3;
 		sendBuff[1] = CMD_REQEST;
 		sendBuff[2] = PC_GET_ALL;
 
 		xQueueReset((QueueHandle_t )waitSemaphore);
-		send(network.socket, sendBuff, sizeof(sendBuff), 0);
+		cmdClientSend(sendBuff, sizeof(sendBuff));
 		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
 			if (PC_GET_ALL != rx_buff[2]) {
 				xSemaphoreGive(mutexSemaphore);
@@ -307,6 +312,7 @@ int cmdClientGetAllValue(uint32_t timeout) {
 
 			uint32_t * return_data = (uint32_t *) &rx_buff[3];
 			for (int i = 0; i < (rx_buff_len - 3) / 4; i++) {
+				debug_msg("VALUE: %d, %d\n\r", i, return_data[i]);
 				if (menuSetValue(i, return_data[i]) == FALSE) {
 					debug_msg("Error Set Value %d = %d\n", i, return_data[i]);
 				}
@@ -332,9 +338,11 @@ int cmdClientAnswerData(uint8_t * buff, uint32_t len) {
 		debug_msg("cmdClientAnswerData error len %d\n", len);
 		return FALSE;
 	}
+	//debug_msg("cmdClientAnswerData len %d %p\n", len, buff);
 	rx_buff_len = len;
 	memcpy(rx_buff, buff, rx_buff_len);
-	xSemaphoreGive(waitSemaphore);
+
+	xSemaphoreGiveFromISR(waitSemaphore, NULL);
 	return TRUE;
 }
 
@@ -345,6 +353,13 @@ static void cmdClientlisten(void * pv)
 	cmdClientStop();
     while(1)
     {
+		if (task_status == 0) {
+			if (network.socket != -1) {
+				cmdClientDisconnect();
+			}
+			vTaskDelay(MS2ST(250));
+				continue;
+		}
 		if (status_telnet == 0)
 		{
 			if (NetworkConnect(cmd_ip_addr, cmd_port) == -1)
@@ -356,16 +371,13 @@ static void cmdClientlisten(void * pv)
 			keepAliveStart(&keepAlive);
 			status_telnet = 1;
 		}
-		data_len = read_tcp(buffer_cmd, sizeof(buffer_cmd), 100);
+		data_len = read_tcp(buffer_cmd, sizeof(buffer_cmd), 5000);
 		if(data_len > 0)
 		{
-			debug_msg("Client data %d\n\r", data_len);
-			for (uint16_t i = 0; i < data_len; i++) {
-				debug_msg("%d ", buffer_cmd[i]);
-			}
-			debug_msg("\n\r");
 			keepAliveAccept(&keepAlive);
+			taskENTER_CRITICAL();
 			parse_client_buffer(buffer_cmd, data_len);
+			taskEXIT_CRITICAL();
 			/* Data Receive */
 		}
 		else if (data_len < 0)
@@ -373,12 +385,11 @@ static void cmdClientlisten(void * pv)
 			debug_msg("client close socket %d\n", data_len);
 			cmdClientDisconnect();		
 		}
-		vTaskDelay(10);
     }// end while
 }
 
 static int keepAliveSend(uint8_t * data, uint32_t dataLen) {
-	return cmdClientSendDataWaitResp(data, dataLen, NULL, NULL, 500);
+	return cmdClientSendDataWaitResp(data, dataLen, NULL, NULL, 1000);
 }
 
 static void cmdClientErrorKACb(void) {
@@ -392,13 +403,16 @@ void cmdClientStartTask(void)
 	waitSemaphore = xSemaphoreCreateBinary();
 	mutexSemaphore = xSemaphoreCreateBinary();
 	xSemaphoreGive(mutexSemaphore); 
+	network.socket = -1;
 	xTaskCreate(cmdClientlisten, "cmdClientlisten", 8192, NULL, NORMALPRIO, &thread_task_handle);
 }
 
 void cmdClientStart(void)
 {
+	if (task_status == 1)
+		return;
 	status_telnet = 0;
-	vTaskResume(thread_task_handle);
+	task_status = 1;
 }
 
 void cmdClientSetIp(char * ip)
@@ -413,19 +427,19 @@ void cmdClientSetPort(uint32_t port)
 
 void cmdClientDisconnect(void)
 {
+	if (status_telnet == 0)
+		return;
 	status_telnet = 0;
 	keepAliveStop(&keepAlive);
-	close(network.socket);
+	if (network.socket != -1) {
+		close(network.socket); 
+		network.socket = -1;
+	}	
 }
 
 int cmdClientIsConnected(void)
 {
-	if (status_telnet)
-	{
-		if (strcmp(inet_ntoa(tcpServerAddr.sin_addr), cmd_ip_addr) == 0 && tcpServerAddr.sin_port == htons(cmd_port))
-			return 1;
-	}
-	return 0;
+	return status_telnet;
 }
 
 int cmdClientConnect(uint32_t timeout)
@@ -448,6 +462,8 @@ int cmdClientConnect(uint32_t timeout)
 
 void cmdClientStop(void)
 {
-	close(network.socket);
-	vTaskSuspend(thread_task_handle);
+	if (status_telnet == 0)
+		return;
+	cmdClientDisconnect();
+	status_telnet = 0;
 }

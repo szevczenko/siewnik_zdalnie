@@ -68,7 +68,7 @@ void ssd1306_Reset(void) {
 // Send a byte to the command register
 int ssd1306_WriteCommand(uint8_t byte) {
 	//HAL_I2C_Mem_Write(&SSD1306_I2C_PORT, SSD1306_I2C_ADDR, 0x00, 1, &byte, 1, HAL_MAX_DELAY);
-    int ret;
+    int ret = 0;
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, SSD1306_I2C_ADDR | I2C_MASTER_WRITE, ACK_CHECK_EN);
@@ -84,7 +84,7 @@ int ssd1306_WriteCommand(uint8_t byte) {
 // Send data
 int ssd1306_WriteData(uint8_t* buffer, size_t buff_size) {
 	//HAL_I2C_Mem_Write(&SSD1306_I2C_PORT, SSD1306_I2C_ADDR, 0x40, 1, buffer, buff_size, HAL_MAX_DELAY);
-    int ret;
+    int ret = 0;
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, SSD1306_I2C_ADDR | I2C_MASTER_WRITE, ACK_CHECK_EN);

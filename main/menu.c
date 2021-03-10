@@ -49,6 +49,8 @@ uint32_t menu_start_period_value, menu_start_wt_value;
 
 bool servo_vibro_on;
 
+void menu_test(void);
+
 menu_token_t test_val = 
 {
 	.name = "test_val1",
@@ -1025,8 +1027,10 @@ void init_menu(void)
 {
 	entered_menu_tab[0] = &main_menu;
 	xSemaphore = xSemaphoreCreateBinary();
+	osDelay(250);
 	xTimers = xTimerCreate("Timer", MS2ST(2000), pdFALSE, ( void * ) 0, timerCallback);
-	xTaskCreate(menu_task, "menu_task", 4096, NULL, 12, NULL);
+	//xTaskCreate(menu_task, "menu_task", 4096, NULL, 12, NULL);
+	xTaskCreate(menu_test, "menu_test", 4096, NULL, 12, NULL);
 	wifiDrvGetAPName(devName);
 	if (connectToDevice(devName) == FALSE)
 	{
@@ -1277,6 +1281,69 @@ void button_servo_state(void * arg)
 			return;
 	}
 	update_screen();
+}
+
+//toDo testowanie connect disconnect wifi
+//menu backend and front-end
+//nie dziala get all value
+void menu_test(void) 
+{
+	while (1)
+	{
+		if (wifiState != ST_WIFI_CONNECT) {
+			switch(wifiState) {
+				case  ST_WIFI_DEVICE_LIST:
+				{
+					if (dev_count == 0)
+					{
+						debug_msg("Device not found start scan\n\r");
+						menu_start_find_device_I();
+					}
+					else {
+						debug_msg("Try to connect device %s\n\r", wifi_device_list[0]);
+						connectToDevice(wifi_device_list[0]);
+					}
+				}
+				break;
+				case ST_WIFI_DEVICE_TRY_CONNECT:
+				{
+					if (wifiDrvIsConnected() == 1)
+					{
+						debug_msg("Connected\n\r");
+						wifiState = ST_WIFI_CONNECT;
+					}
+					else
+					{
+						if (connect_timeout < xTaskGetTickCount())
+						{
+							dev_count = 0;
+							wifiState = ST_WIFI_DEVICE_LIST;
+						}
+					}
+						
+				}
+				break;
+				default:
+					debug_msg("Default state\n\r");
+				break;
+			} //end switch
+			vTaskDelay(250);
+		}//end if
+		
+		if (cmdClientIsConnected() == 0) {
+			debug_msg("Client not connected\n\r");
+			vTaskDelay(1000);
+		}
+		else{
+			cmdClientSetValueWithoutResp(MENU_MOTOR, motor_value++);
+			cmdClientSetValueWithoutResp(MENU_VIBRO_PERIOD, motor_value++);
+			if (motor_value > 99) {
+				motor_value = 0;
+			}
+			vTaskDelay(75);
+		}
+	}
+	
 }
 
 

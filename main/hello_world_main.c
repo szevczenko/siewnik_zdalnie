@@ -87,8 +87,12 @@ RTC_NOINIT_ATTR char * last_task_name;
 RTC_NOINIT_ATTR char * last_out_task_name;
 RTC_NOINIT_ATTR char * last_function_name;
 RTC_NOINIT_ATTR char * last_function_out_name;
+RTC_NOINIT_ATTR char * last_function_out_out_name;
+RTC_NOINIT_ATTR char * last_function_out_out_out_name;
 
 void debug_function_name(char * name) {
+    last_function_out_out_out_name = last_function_out_out_name;
+    last_function_out_out_name = last_function_out_name;
     last_function_out_name = last_function_name;
     last_function_name = name;
 }
@@ -97,6 +101,8 @@ static char * restart_task_name;
 static char * restart_task_out_name;
 static char * restart_function_name;
 static char * restart_function_out_name;
+static char * restart_function_out_out_name;
+static char * restart_function_out_out_out_name;
 
 void debug_last_task(char * task_name) {
     last_task_name = task_name;
@@ -128,6 +134,8 @@ int __esp_os_init(void) {
     restart_task_name = last_task_name;
     restart_task_out_name = last_out_task_name;
     restart_function_out_name = last_function_out_name;
+    restart_function_out_out_name = last_function_out_out_name;
+    restart_function_out_out_out_name = last_function_out_out_out_name;
     return 0;
 }
 
@@ -139,10 +147,9 @@ void app_main()
     wifiDrvInit();
     keepAliveStartTask();
     menuParamInit();
-
     if (config.dev_type != T_DEV_TYPE_SERVER)
     {
-        uart_init(CONFIG_CONSOLE_SERIAL_SPEED);
+        //uart_init(CONFIG_CONSOLE_SERIAL_SPEED);
         battery_init();
         init_buttons();
         fastProcessStartTask();
@@ -171,13 +178,14 @@ void app_main()
         io_conf.pull_up_en = 0;
         gpio_config(&io_conf);
     }
-
     _xt_isr_attach(ETS_WDT_INUM, esp_task_wdt_isr, NULL);
     ets_printf("Init last out task: %s\n\r", restart_task_out_name);
     ets_printf("Init last task: %s\n\r", restart_task_name);
+    ets_printf("Last func name out out: %s \n\r", restart_function_out_out_out_name);
+    ets_printf("Last func name out: %s \n\r", restart_function_out_out_name);
     ets_printf("Last func name out: %s \n\r", restart_function_out_name);
     ets_printf("Last func name: %s \n\r", restart_function_name);
-
+    printf("-----------------------START SYSTEM--------------------------\n\r");
     while(1)
     {
         vTaskDelay(MS2ST(975));

@@ -19,7 +19,11 @@ void parse_client_buffer(uint8_t * buff, uint32_t len) {
 
 		if (frameLenClient > len)
 			break;
-
+		// debug_msg("frameLenClient %d len %d parsed_len %d %p\n\r", frameLenClient, len, parsed_len, buff);
+		// for (uint8_t i = 0; i < frameLenClient; i++) {
+		// 	debug_msg("%d ", buff[i]);
+		// }
+		// debug_msg("\n\r");
 		parse_client(&buff[parsed_len], frameLenClient);
 		len -= frameLenClient;
 		parsed_len += frameLenClient;
@@ -205,6 +209,23 @@ void parse_server(uint8_t * buff, uint32_t len)
 				if (buff[1] != CMD_DATA)
 					cmdServerSendData(NULL, sendBuff, 4);
 				menuPrintParameters();
+			}
+			break;
+
+			case PC_GET_ALL:
+			{
+				void * data;
+				uint32_t data_size;
+
+				menuParamGetDataNSize(&data, &data_size);
+				debug_msg("GET_ALL data %p, size %d\n\r", data, data_size);
+				sendBuff[0] = 3 + data_size;
+				sendBuff[1] = CMD_ANSWER;
+				sendBuff[2] = PC_GET_ALL;
+
+				memcpy(&sendBuff[3], data, data_size);
+				cmdServerSendData(NULL, sendBuff, 3 + data_size);
+
 			}
 			break;
 		}

@@ -36,8 +36,8 @@ static menuPStruct_t menuParameters[] =
 };
 
 
-static uint32_t menuSaveParameters_data[sizeof(menuParameters)/sizeof(menuPStruct_t)];
-#define PARAMETERS_TAB_SIZE sizeof(menuParameters)/sizeof(menuPStruct_t)
+static uint32_t menuSaveParameters_data[MENU_LAST_VALUE];
+#define PARAMETERS_TAB_SIZE MENU_LAST_VALUE
 
 void menuPrintParameters(void)
 {

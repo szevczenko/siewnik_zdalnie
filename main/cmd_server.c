@@ -247,9 +247,7 @@ int cmdServerSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, u
 	
 	if (xSemaphoreTake(mutexSemaphore, timeout) == pdTRUE)
 	{
-		for(uint8_t i = 0; i < network.count_clients; i++) {
-			send(network.clients[i].client_socket, buff, len, 0);
-		}
+		cmdServerSendData(NULL, buff, len);
 	
 		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
 
