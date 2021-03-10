@@ -309,12 +309,13 @@ int cmdClientGetAllValue(uint32_t timeout) {
 				xSemaphoreGive(mutexSemaphore);
 				return FALSE;
 			}	
-
-			uint32_t * return_data = (uint32_t *) &rx_buff[3];
+			
+			uint32_t return_data;
 			for (int i = 0; i < (rx_buff_len - 3) / 4; i++) {
-				debug_msg("VALUE: %d, %d\n\r", i, return_data[i]);
-				if (menuSetValue(i, return_data[i]) == FALSE) {
-					debug_msg("Error Set Value %d = %d\n", i, return_data[i]);
+				return_data = (uint32_t) rx_buff[3 + i*4];
+				//debug_msg("VALUE: %d, %d\n\r", i, return_data);
+				if (menuSetValue(i, return_data) == FALSE) {
+					debug_msg("Error Set Value %d = %d\n", i, return_data);
 				}
 			}
 
