@@ -33,6 +33,7 @@
 #include "nvs_flash.h"
 #include "cmd_server.h"
 #include "cmd_client.h"
+#include "menu.h"
 
 
 #define DEFAULT_SCAN_LIST_SIZE 16
@@ -277,6 +278,38 @@ int wifiDrvIsConnected(void)
   return stastus_reg_eth;
 }
 
+static void clientGetServerStatus(void) {
+  /* Wait to connect to server */
+  uint32_t time_to_connect = 0;
+  while(cmdClientIsConnected() == 0) {
+    if (time_to_connect < 10) {
+      time_to_connect++;
+      osDelay(275);
+    }
+    else {
+      debug_msg("Timeout connected client to server\n\r");
+      return;
+    }
+  }
+
+  uint32_t start_status = 0;
+  /* Get start status */
+  if (cmdClientGetValue(MENU_START_SYSTEM, &start_status, 2500) == 0) {
+    debug_msg("Timeout get MENU_START_SYSTEM\n\r");
+    return;
+  }
+  /* Get all data from server */
+  if (cmdClientGetAllValue(2500) == 0) {
+    debug_msg("Timeout get ALL VALUES\n\r");
+    return;
+  }
+  /* Go to start menu */
+  debug_msg("WifDrv: GO To START MENU\n\r");
+  taskENTER_CRITICAL();
+  menuEnterStartFromServer();
+  taskEXIT_CRITICAL();
+}
+
 static void wifi_event_task(void * pv)
 { 
   wifi_init();
@@ -304,19 +337,7 @@ static void wifi_event_task(void * pv)
         else
         {
           cmdClientStart();
-          /* Wait to connect to server */
-          uint32_t time_to_connect = 0;
-          while(cmdClientIsConnected() == 0 && time_to_connect < 10) {
-            time_to_connect++;
-            osDelay(275);
-          }
-          /* Get all data from server */
-          if (cmdClientIsConnected()) {
-            cmdClientGetAllValue(2500);
-          }
-          else {
-            debug_msg("Timeout connected client to server\n\r");
-          }
+          clientGetServerStatus();
         }
         
 			}

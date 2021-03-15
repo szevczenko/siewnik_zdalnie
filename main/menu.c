@@ -49,7 +49,8 @@ uint32_t menu_start_period_value, menu_start_wt_value;
 
 bool servo_vibro_on;
 
-void menu_test(void);
+void menu_test(void * arg) ;
+void menuEnterStartProcess(void);
 
 menu_token_t test_val = 
 {
@@ -559,8 +560,10 @@ void button_enter_callback(void * arg)
 			add_menu_tab(menu->menu_list[menu->position]);
 			if (last_tab_element() == &wifi_menu)
 			{
-				//debug_msg("Enter wifi_menu\n");
 				menu_start_find_device();
+			}
+			else if (last_tab_element() == &start_menu) {
+				menuEnterStartProcess();
 			}
 		break;
 
@@ -1286,8 +1289,25 @@ void button_servo_state(void * arg)
 //toDo testowanie connect disconnect wifi
 //menu backend and front-end
 //nie dziala get all value
-void menu_test(void) 
+
+void menuEnterStartProcess(void) {
+	servo_vibro_on = menuGetValue(MENU_SERVO_IS_ON);
+	motor_on = menuGetValue(MENU_MOTOR_IS_ON);
+	motor_value = menuGetValue(MENU_MOTOR);
+	menu_start_wt_value = menuGetValue(MENU_VIBRO_WORKING_TIME);
+	menu_start_period_value = menuGetValue(MENU_VIBRO_PERIOD);
+	cmdClientSetValueWithoutRespI(MENU_START_SYSTEM, 1);
+}
+
+void menuEnterStartFromServer(void) {
+	go_to_main_menu();
+	add_menu_tab(&start_menu);
+	menuEnterStartProcess();
+}
+
+void menu_test(void * arg) 
 {
+	uint32_t task_cnt = 0;
 	while (1)
 	{
 		if (wifiState != ST_WIFI_CONNECT) {
@@ -1335,12 +1355,23 @@ void menu_test(void)
 			vTaskDelay(1000);
 		}
 		else{
+			if (task_cnt == 0) {
+				vTaskDelay(3000);
+				if (menuGetValue(MENU_START_SYSTEM) == 0) {
+					debug_msg("MENU_START_SYSTEM is 0. Set 1\n\r");
+					cmdClientSetValueWithoutRespI(MENU_START_SYSTEM, 1);
+				}
+				else {
+					debug_msg("MENU_START_SYSTEM is 1\n\r");
+				}
+			}
 			cmdClientSetValueWithoutResp(MENU_MOTOR, motor_value++);
 			cmdClientSetValueWithoutResp(MENU_VIBRO_PERIOD, motor_value++);
 			if (motor_value > 99) {
 				motor_value = 0;
 			}
 			vTaskDelay(75);
+			task_cnt++;
 		}
 	}
 	

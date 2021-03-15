@@ -42,5 +42,6 @@ void button_minus_callback(void * arg);
 void menuDeactivateButtons(void);
 void menuActivateButtons(void);
 void menuPrintfInfo(const char *format, ...);
+void menuEnterStartFromServer(void);
 
 #endif
