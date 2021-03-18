@@ -24,6 +24,7 @@ static menuPStruct_t menuParameters[] =
 	[MENU_CURRENT_MOTOTR] = {.max_value = 0xFFFF, .default_value = 0},
 	[MENU_VOLTAGE_ACCUM] = {.max_value = 0xFFFF, .default_value = 0},
 	[MENU_ERRORS] = {.max_value = 0xFFFF, .default_value = 0},
+	[MENU_START_SYSTEM] = {.max_value = 1, .default_value = 0},
 
 	[MENU_ERROR_SERVO] = {.max_value = 1, .default_value = 1},
 	[MENU_ERROR_MOTOR] = {.max_value = 1, .default_value = 1},

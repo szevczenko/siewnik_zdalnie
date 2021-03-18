@@ -183,15 +183,17 @@ int cmdClientGetValue(menuValue_t val, uint32_t * value, uint32_t timeout) {
 		cmdClientSend(sendBuff, sizeof(sendBuff));
 		if (xSemaphoreTake(waitSemaphore, timeout) == pdTRUE) {
 			if (PC_GET != rx_buff[2]) {
+				debug_msg("cmdClientGetValue error PC_GET != rx_buff[2]\n\r");
 				xSemaphoreGive(mutexSemaphore);
 				return 0;
 			}	
 
 			uint32_t return_value;
 
-			memcpy(&return_value, rx_buff, sizeof(return_value));
+			memcpy(&return_value, &rx_buff[4], sizeof(return_value));
 
 			if (menuSetValue(val, return_value) == FALSE) {
+				debug_msg("cmdClientGetValue error val %d = %d\n\r", val, return_value);
 				rx_buff_len = 0; 
 				xSemaphoreGive(mutexSemaphore);
 				return FALSE;
