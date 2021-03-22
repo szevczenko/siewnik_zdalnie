@@ -411,7 +411,7 @@ static void cmdClientErrorKACb(void) {
 
 void cmdClientStartTask(void)
 {
-	keepAliveInit(&keepAlive, 800, keepAliveSend, cmdClientErrorKACb);
+	keepAliveInit(&keepAlive, 3800, keepAliveSend, cmdClientErrorKACb);
 	waitSemaphore = xSemaphoreCreateBinary();
 	mutexSemaphore = xSemaphoreCreateBinary();
 	xSemaphoreGive(mutexSemaphore); 

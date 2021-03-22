@@ -35,6 +35,7 @@ void parse_client(uint8_t * buff, uint32_t len)
 	debug_function_name("parse_client");
 	//uint32_t * val;
 	uint32_t value;
+	debug_msg("Parse: %d %d\n\r", buff[1], buff[2]);
 	if (buff[1] == CMD_REQEST || buff[1] == CMD_DATA) {
 		switch(buff[2]) {
 			case PC_KEEP_ALIVE:
@@ -153,6 +154,8 @@ void parse_server_buffer(uint8_t * buff, uint32_t len) {
 void parse_server(uint8_t * buff, uint32_t len)
 {
 	//uint32_t * val;
+	debug_function_name("parse_server");
+	debug_msg("Parse: %d %d\n\r", buff[1], buff[2]);
 	uint32_t value;
 	if (buff[1] == CMD_REQEST || buff[1] == CMD_DATA) {
 		switch(buff[2]) {

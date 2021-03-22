@@ -55,16 +55,29 @@ static wifiConData_t wifiData;
 
 #define CONFIG_TCPIP_EVENT_THD_WA_SIZE 2048
 
+static int s_retry_num = 0;
+
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                               int32_t event_id, void *event_data)
 {
+  debug_msg("wifi_event_handler %d\n\r", event_id);
   switch(event_id)
   {
     case WIFI_EVENT_STA_START:
     break;
     case WIFI_EVENT_STA_CONNECTED:
+    s_retry_num = 0;
     break;
     case WIFI_EVENT_STA_DISCONNECTED:
+      s_retry_num++;
+      esp_wifi_connect();
+      stastus_reg_eth = 0;
+    break;
+    case WIFI_EVENT_STA_AUTHMODE_CHANGE:
+      esp_wifi_connect();
+      stastus_reg_eth = 0;
+    break;
+    case WIFI_EVENT_STA_STOP:
       esp_wifi_connect();
       stastus_reg_eth = 0;
     break;
@@ -293,11 +306,19 @@ static void clientGetServerStatus(void) {
   }
 
   uint32_t start_status = 0;
+  time_to_connect = 0;
   /* Get start status */
-  if (cmdClientGetValue(MENU_START_SYSTEM, &start_status, 2500) == 0) {
-    debug_msg("Timeout get MENU_START_SYSTEM\n\r");
-    return;
+  while(cmdClientGetValue(MENU_START_SYSTEM, &start_status, 1250) == 0) {
+    if (time_to_connect < 4) {
+      time_to_connect++;
+      osDelay(500);
+    }
+    else {
+      debug_msg("Timeout get MENU_START_SYSTEM\n\r");
+      return;
+    }
   }
+
   if (start_status == 0) {
     debug_msg("WifDrv: System not started\n\r");
     return;
@@ -324,6 +345,13 @@ static void wifi_event_task(void * pv)
   #endif
 	while(1)
 	{
+    if (s_retry_num > 10) {
+      stastus_reg_eth = 0;
+      esp_wifi_stop();
+      osDelay(1000);
+      wifiDrvConnect();
+      s_retry_num = 0;
+    }
 		if(stastus_reg_eth != previos_st_eth)
 		{
 			if (stastus_reg_eth)

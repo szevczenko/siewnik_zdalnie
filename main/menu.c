@@ -1248,7 +1248,9 @@ static void menu_task(void * arg)
 				ssd1306_UpdateScreen();
 				vTaskDelay(MS2ST(1500));
 				menuActivateButtons();
-				remove_last_menu_tab();
+				menu = last_tab_element();
+				if (last_tab_element() == &info_menu)
+					remove_last_menu_tab();
 				break;
 
 			default:

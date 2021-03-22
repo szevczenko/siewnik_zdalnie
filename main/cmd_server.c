@@ -451,7 +451,7 @@ static void cmdServerErrorKACb(void) {
 void cmdServerStartTask(void)
 {
 	for (uint8_t i = 0; i < NUMBER_CLIENT; i++) {
-		keepAliveInit(&n_clients[i].keepAlive, 1000, keepAliveSend, cmdServerErrorKACb);
+		keepAliveInit(&n_clients[i].keepAlive, 4000, keepAliveSend, cmdServerErrorKACb);
 	}
 	waitSemaphore = xSemaphoreCreateBinary();
 	mutexSemaphore = xSemaphoreCreateBinary();
