@@ -15,5 +15,6 @@ void menuParamGetDataNSize(void ** data, uint32_t * size);
 void menuParamSetDataNSize(void * data, uint32_t size);
 
 void menuPrintParameters(void);
+void menuPrintParameter(menuValue_t val);
 
 #endif

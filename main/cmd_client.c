@@ -35,6 +35,9 @@ pthread_mutexattr_t mutexattr;
 static keepAlive_t keepAlive;
 struct sockaddr_in tcpServerAddr;
 uint8_t task_status;
+uint8_t deinit_status_flag;
+
+static void cmdClientDisconnectProcess(void);
 
 int NetworkConnect(char* addr, int port)
 {
@@ -71,6 +74,12 @@ static int read_tcp(unsigned char* buffer, int len, int timeout_ms)
 	timeout_time.tv_sec=timeout_ms/1000;
 	timeout_time.tv_usec =(timeout_ms%1000)*1000;
 	ret = select(network.socket + 1, &set, NULL, NULL, &timeout_time);
+
+	if (deinit_status_flag) {
+		cmdClientDisconnectProcess();
+		return 0;
+	}
+
 	if (ret < 0) return -1;
 	else if (ret == 0) return 0;
 
@@ -416,6 +425,7 @@ void cmdClientStart(void)
 		return;
 	status_telnet = 0;
 	task_status = 1;
+	cmdClientDisconnect();
 }
 
 void cmdClientSetIp(char * ip)
@@ -428,8 +438,7 @@ void cmdClientSetPort(uint32_t port)
 	cmd_port = port;
 }
 
-void cmdClientDisconnect(void)
-{
+static void cmdClientDisconnectProcess(void) {
 	if (status_telnet == 0)
 		return;
 	status_telnet = 0;
@@ -438,6 +447,12 @@ void cmdClientDisconnect(void)
 		close(network.socket); 
 		network.socket = -1;
 	}	
+	deinit_status_flag = 0;
+}
+
+void cmdClientDisconnect(void)
+{
+	deinit_status_flag = 1;
 }
 
 int cmdClientIsConnected(void)

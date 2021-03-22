@@ -28,6 +28,7 @@
 #include "measure.h"
 #include "driver/gpio.h"
 #include "driver/i2c.h"
+#include "driver/uart.h"
 #include "pcf8574.h"
 #include "battery.h"
 #include "motor.h"
@@ -164,10 +165,12 @@ void app_main()
         gpio_config(&io_conf);
     }
     else {
-        uart_init(57600);
+
+        uart_init(115200);
         vibro_init();
         at_communication_init();
         motor_init();
+        //WYLACZONE
         //errorSiewnikStart();
         measure_start();
         //LED on

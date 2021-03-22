@@ -3,7 +3,7 @@
 
 
 #define FAST_ADD_LIST_SIZE 8
-#define CONFIG_FAST_ADD_THD_WA_SIZE 1024
+#define CONFIG_FAST_ADD_THD_WA_SIZE 2048
 
 static fast_add_t list[FAST_ADD_LIST_SIZE];
 static uint8_t list_cnt;

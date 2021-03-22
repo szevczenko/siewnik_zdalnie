@@ -95,7 +95,7 @@ void data_process(void) {
 	servo_vibro_is_on = atmega_get_data(AT_R_SERVO_VIBRO_IS_ON);
 	motor_is_on = atmega_get_data(AT_R_MOTOR_IS_ON);
 	
-	debug_msg("mot: %d %d, servo: %d %d \n\r",motor_is_on, motor_read_value, servo_vibro_is_on, servo_read_value);
+	//debug_msg("mot: %d %d, servo: %d %d \n\r",motor_is_on, motor_read_value, servo_vibro_is_on, servo_read_value);
 
 	/* MOTOR SECTION */
 	if (motor_is_on) {

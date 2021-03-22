@@ -29,6 +29,7 @@ static struct server_network network;
 static TaskHandle_t thread_task_handle;
 static int max_socket = 0;
 static xSemaphoreHandle waitSemaphore, mutexSemaphore;
+static int deinit_status_flag = 0;
 
 
 
@@ -55,6 +56,9 @@ static int init_client(void)
     network.clients = n_clients;
 	network.buffer = buffer_cmd;
 
+	int optval = 1;
+	setsockopt(network.socket_tcp, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int));
+	
     int rc = bind(network.socket_tcp, (struct sockaddr *) &network.servaddr,sizeof(network.servaddr));
     if(rc<0)
     {
@@ -76,8 +80,21 @@ static int init_client(void)
 
 static void deInitClient(void)
 {
+	deinit_status_flag = 1;
+}
+
+static void deinitCallback(void) {
+	taskENTER_CRITICAL();
 	status_telnet = 0;
 	close(network.socket_tcp);
+	network.socket_tcp = -1;
+	for (uint8_t i = 0; i < network.count_clients; i++) {
+		close(network.clients[i].client_socket);
+		network.clients[i].client_socket = -1;
+	}
+	network.count_clients = 0;
+	taskEXIT_CRITICAL();
+	deinit_status_flag = 0;
 }
 
 
@@ -117,6 +134,11 @@ static void listen_client(void * pv)
 		} 
 
         rv = select(max_socket + 1, &set, NULL, NULL, &time_select);  // return the number of file description contained in the three returned sets
+
+		if (deinit_status_flag) {
+			deinitCallback();
+			continue;
+		}
 
 	    if (rv<0)
 	    {
@@ -418,11 +440,12 @@ static int keepAliveSend(uint8_t * data, uint32_t dataLen) {
 
 static void cmdServerErrorKACb(void) {
 	debug_msg("cmdServerErrorKACb keepAlive");
-	for (uint8_t j = 0; j<network.count_clients; j++)
-	{
-		close(network.clients[j].client_socket);
-	}
-	max_socket = network.socket_tcp; 
+	// for (uint8_t j = 0; j<network.count_clients; j++)
+	// {
+	// 	close(network.clients[j].client_socket);
+	// }
+	// max_socket = network.socket_tcp; 
+	deInitClient();
 }
 
 void cmdServerStartTask(void)

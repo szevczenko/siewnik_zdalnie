@@ -157,7 +157,7 @@ static void atm_com(void * arg) {
 
 		at_write_data();
 		taskEXIT_CRITICAL();
-		debug_msg("mot: %d %d, servo: %d %d \n\r", data_write[AT_W_MOTOR_IS_ON], data_write[AT_W_MOTOR_VALUE], data_write[AT_W_SERVO_IS_ON], data_write[AT_W_SERVO_VALUE]);
+		//debug_msg("mot: %d %d, servo: %d %d \n\r", data_write[AT_W_MOTOR_IS_ON], data_write[AT_W_MOTOR_VALUE], data_write[AT_W_SERVO_IS_ON], data_write[AT_W_SERVO_VALUE]);
 	}
 }
 

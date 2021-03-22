@@ -298,6 +298,10 @@ static void clientGetServerStatus(void) {
     debug_msg("Timeout get MENU_START_SYSTEM\n\r");
     return;
   }
+  if (start_status == 0) {
+    debug_msg("WifDrv: System not started\n\r");
+    return;
+  }
   /* Get all data from server */
   if (cmdClientGetAllValue(2500) == 0) {
     debug_msg("Timeout get ALL VALUES\n\r");

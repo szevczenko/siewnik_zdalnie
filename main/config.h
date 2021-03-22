@@ -120,8 +120,8 @@ extern void uartPrintfTimeout(const char *format, ...);
 #define debug_msg(...) { 							\
 		if (config.dev_type == T_DEV_TYPE_SERVER) 	\
 		{											\
-			telnetPrintfToAll("\n\rESP: ");			\
-			telnetPrintfToAll(__VA_ARGS__);			\
+			ets_printf("\n\rESP: ");			\
+			ets_printf(__VA_ARGS__);			\
 		} 											\
 		else { 										\
 			printf(__VA_ARGS__);			\
@@ -129,7 +129,8 @@ extern void uartPrintfTimeout(const char *format, ...);
 	}
 #define debug_data(data, size) telnetSendToAll((char *)data, size)
 #else
-#define debug_msg(...)
+#define debug_msg(...) ets_printf(__VA_ARGS__);
+#define debug_data(data, size) 
 #endif
 
 #define debug_printf(format, ...) print(format, ##__VA_ARGS__)

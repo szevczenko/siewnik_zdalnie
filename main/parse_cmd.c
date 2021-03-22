@@ -90,7 +90,7 @@ void parse_client(uint8_t * buff, uint32_t len)
 
 				if (buff[1] != CMD_DATA)
 					cmdClientSend(sendBuff, 4);
-				menuPrintParameters();
+				//menuPrintParameters();
 			}
 			break;
 
@@ -188,7 +188,7 @@ void parse_server(uint8_t * buff, uint32_t len)
 				}
 				if (buff[1] != CMD_DATA)
 					cmdServerSendData(NULL, sendBuff, 4);
-				menuPrintParameters();
+				menuPrintParameter(buff[3]);
 				break;
 
 			case PC_SET_ALL:
@@ -208,7 +208,7 @@ void parse_server(uint8_t * buff, uint32_t len)
 
 				if (buff[1] != CMD_DATA)
 					cmdServerSendData(NULL, sendBuff, 4);
-				menuPrintParameters();
+				//menuPrintParameters();
 			}
 			break;
 
