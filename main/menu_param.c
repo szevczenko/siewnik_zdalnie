@@ -22,8 +22,9 @@ static menuPStruct_t menuParameters[] =
 	[MENU_MOTOR_ERROR_IS_ON] = {.max_value = 1, .default_value = 0},
 	[MENU_SERVO_ERROR_IS_ON] = {.max_value = 1, .default_value = 0},
 	[MENU_CURRENT_SERVO] = {.max_value = 0xFFFF, .default_value = 0},
-	[MENU_CURRENT_MOTOTR] = {.max_value = 0xFFFF, .default_value = 0},
-	[MENU_VOLTAGE_ACCUM] = {.max_value = 0xFFFF, .default_value = 0},
+	[MENU_CURRENT_MOTOR] = {.max_value = 0xFFFF, .default_value = 500},
+	[MENU_VOLTAGE_ACCUM] = {.max_value = 0xFFFF, .default_value = 12000},
+	[MENU_TEMPERATURE] = {.max_value = 0xFFFF, .default_value = 20000},
 	[MENU_ERRORS] = {.max_value = 0xFFFF, .default_value = 0},
 	[MENU_START_SYSTEM] = {.max_value = 1, .default_value = 0},
 
@@ -31,6 +32,8 @@ static menuPStruct_t menuParameters[] =
 	[MENU_ERROR_MOTOR] = {.max_value = 1, .default_value = 1},
 	[MENU_ERROR_SERVO_CALIBRATION] = {.max_value = 99, .default_value = 20},
 	[MENU_ERROR_MOTOR_CALIBRATION] = {.max_value = 99, .default_value = 50},
+	[MENU_MOTOR_MIN_CALIBRATION] = {.max_value = 255, .default_value = 150},
+	[MENU_MOTOR_MAX_CALIBRATION] = {.max_value = 255, .default_value = 255},
 	[MENU_BUZZER] = {.max_value = 1, .default_value = 1},
 	[MENU_CLOSE_SERVO_REGULATION] = {.max_value = 99, .default_value = 50},
 	[MENU_OPEN_SERVO_REGULATION] = {.max_value = 99, .default_value = 50},
@@ -63,9 +66,23 @@ menu_token_t servo_calibration_tok =
 
 menu_token_t motor_calibration_tok = 
 {
-	.name = "Motor calibration",
+	.name = "Motor error plot",
 	.arg_type = T_ARG_TYPE_VALUE,
 	.value = &menuSaveParameters_data[MENU_ERROR_MOTOR_CALIBRATION]
+};
+
+menu_token_t motor_min_calibration_tok = 
+{
+	.name = "Motor minimal",
+	.arg_type = T_ARG_TYPE_VALUE,
+	.value = &menuSaveParameters_data[MENU_MOTOR_MIN_CALIBRATION]
+};
+
+menu_token_t motor_max_calibration_tok = 
+{
+	.name = "Motor maximum",
+	.arg_type = T_ARG_TYPE_VALUE,
+	.value = &menuSaveParameters_data[MENU_MOTOR_MAX_CALIBRATION]
 };
 
 menu_token_t buzzer_tok = 
@@ -96,7 +113,7 @@ menu_token_t try_open_reg_tok =
 	.value = &menuSaveParameters_data[MENU_TRY_OPEN_CALIBRATION]
 };
 
-menu_token_t *setting_tokens[] = {&error_motor_tok, &servo_calibration_tok, &motor_calibration_tok, &buzzer_tok, &close_servo_reg_tok, &open_servo_reg_tok, &try_open_reg_tok, NULL};
+menu_token_t *setting_tokens[] = {&error_motor_tok, &servo_calibration_tok, &motor_calibration_tok, &motor_min_calibration_tok, &motor_max_calibration_tok, &buzzer_tok, &close_servo_reg_tok, &open_servo_reg_tok, &try_open_reg_tok, NULL};
 
 void menuPrintParameters(void)
 {
@@ -208,6 +225,13 @@ uint32_t menuGetMaxValue(menuValue_t val) {
 		return 0;
 	debug_function_name("menuGetMaxValue");
 	return menuParameters[val].max_value;
+}
+
+uint32_t menuGetDefaultValue(menuValue_t val) {
+	if (val >= MENU_LAST_VALUE)
+		return 0;
+	debug_function_name("menuGetDefaultValue"); 
+	return menuParameters[val].default_value;
 }
 
 uint8_t menuSetValue(menuValue_t val, uint32_t value) {

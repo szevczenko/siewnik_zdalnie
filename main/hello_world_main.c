@@ -166,7 +166,7 @@ void app_main()
     }
     else {
 
-        uart_init(115200);
+        uart_init(57600);
         vibro_init();
         at_communication_init();
         motor_init();

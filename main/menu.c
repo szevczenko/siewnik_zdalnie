@@ -36,6 +36,7 @@ static TickType_t animation_timeout;
 static TickType_t save_timeout;
 static uint8_t save_flag;
 static uint8_t animation_cnt;
+static uint8_t parameters_menu_flag;
 static TimerHandle_t xTimers;
 
 static stateWifiMenu_t wifiState;
@@ -91,6 +92,12 @@ menu_token_t info_menu =
 	.arg_type = T_ARG_TYPE_INFO,
 };
 
+menu_token_t parameters_menu = 
+{
+	.name = "PARAMETERS",
+	.arg_type = T_ARG_TYPE_PARAMETERS,
+};
+
 menu_token_t setings = 
 {
 	.name = "SETINGS",
@@ -111,6 +118,7 @@ menu_token_t main_menu =
 void menu_test(void * arg) ;
 static void menu_task(void * arg);
 void menuEnterStartProcess(void);
+void menuEnterParametersMenu(void);
 
 static void save_parameters(void) {
 	save_timeout = xTaskGetTickCount() + MS2ST(1000);
@@ -342,6 +350,11 @@ void button_plus_callback(void * arg)
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
 	debug_function_name("button_plus_callback");
+	parameters_menu_flag++;
+	if (parameters_menu_flag == 2) {
+		menuEnterParametersMenu();
+		return;
+	}
 	switch(menu->arg_type)
 	{
 		case T_ARG_TYPE_BOOL:
@@ -419,6 +432,7 @@ void button_plus_up_callback(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
+	parameters_menu_flag--;
 	switch(menu->arg_type)
 	{
 		
@@ -437,6 +451,11 @@ void button_minus_callback(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
+	parameters_menu_flag++;
+	if (parameters_menu_flag == 2) {
+		menuEnterParametersMenu();
+		return;
+	}
 	debug_function_name("button_minus_callback");
 	switch(menu->arg_type)
 	{
@@ -503,6 +522,7 @@ void button_minus_up_callback(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
+	parameters_menu_flag--;
 	switch(menu->arg_type)
 	{
 		
@@ -864,6 +884,29 @@ void button_servo_state(void * arg)
 //menu backend and front-end
 //nie dziala get all value
 
+void button_parameters(void * arg)
+{
+	menu_token_t * menu = last_tab_element();
+	if (menu == &parameters_menu)
+	{
+		menuActivateButtons();
+		remove_last_menu_tab();
+	}
+}
+
+void menuParametersButton(void)
+{
+	button1.fall_callback = button_parameters;
+	button2.fall_callback = button_parameters;
+	button6.fall_callback = button_parameters;
+	button4.fall_callback = button_parameters;
+	button7.fall_callback = button_parameters;
+	button5.fall_callback = button_parameters;
+	button3.fall_callback = button_parameters;
+	button8.fall_callback = button_parameters;
+	button9.fall_callback = button_parameters;
+}
+
 void menuDeactivateButtons(void)
 {
 	button1.fall_callback = NULL;
@@ -914,6 +957,15 @@ void menuPrintfInfo(const char *format, ...)
 	add_menu_tab(&info_menu);
 }
 
+void menuEnterParametersMenu(void)
+{
+	add_menu_tab(&parameters_menu);
+	menuDeactivateButtons();
+	menuParametersButton();
+	update_screen();
+	parameters_menu_flag = 0;
+}
+
 void init_menu(void)
 {
 	entered_menu_tab[0] = &main_menu;
@@ -943,7 +995,7 @@ static void menu_task(void * arg)
 	menu_token_t * menu;
 	while(1)
 	{
-		xSemaphoreTake( xSemaphore, ( TickType_t ) MS2ST(100) );
+		xSemaphoreTake( xSemaphore, ( TickType_t ) MS2ST(500) );
 		//taskENTER_CRITICAL();
 		save_process();
 		menu = last_tab_element();
@@ -1036,6 +1088,27 @@ static void menu_task(void * arg)
 					scrollBar.all_line = len_menu(menu) - 1;
 					ssdFigureDrawScrollBar(&scrollBar);
 				}
+			break;
+
+			case T_ARG_TYPE_PARAMETERS:
+			{
+				char param_buff[32];
+				uint32_t voltage = 0;
+				uint32_t temperature = 0;
+				uint32_t current = 0;
+				cmdClientGetValue(MENU_VOLTAGE_ACCUM, &voltage, 500);
+				cmdClientGetValue(MENU_TEMPERATURE, &temperature, 500);
+				cmdClientGetValue(MENU_CURRENT_MOTOR, &current, 500);
+				sprintf(param_buff, "Voltage: %.2f [V]", (float)voltage / 100);
+				ssd1306_SetCursor(2, MENU_HEIGHT + LINE_HEIGHT);
+				ssd1306_WriteString(param_buff, Font_7x10, White);
+				sprintf(param_buff, "Current: %.2f [A]", (float)current / 100);
+				ssd1306_SetCursor(2, MENU_HEIGHT + 2*LINE_HEIGHT);
+				ssd1306_WriteString(param_buff, Font_7x10, White);
+				sprintf(param_buff, "Temperature: %.2f [*C]", (float)temperature / 100);
+				ssd1306_SetCursor(2, MENU_HEIGHT + 3*LINE_HEIGHT);
+				ssd1306_WriteString(param_buff, Font_7x10, White);
+			}
 			break;
 
 			case T_ARG_TYPE_START:
@@ -1274,6 +1347,8 @@ void menuEnterStartProcess(void) {
 	menu_start_wt_value = menuGetValue(MENU_VIBRO_WORKING_TIME);
 	menu_start_period_value = menuGetValue(MENU_VIBRO_PERIOD);
 	cmdClientSetValueWithoutRespI(MENU_START_SYSTEM, 1);
+	cmdClientSetAllValue();
+	update_screen();
 }
 
 void menuEnterStartFromServer(void) {

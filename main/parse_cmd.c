@@ -200,10 +200,12 @@ void parse_server(uint8_t * buff, uint32_t len)
 				sendBuff[1] = CMD_ANSWER;
 				sendBuff[2] = PC_SET_ALL;
 
-				uint32_t * return_data = (uint32_t *) &buff[3];
+				uint32_t return_data;
 				for (int i = 0; i < (len - 3) / 4; i++) {
-					if (menuSetValue(i, return_data[i]) == FALSE) {
-						debug_msg("Parse Error Set Value %d = %d\n", i, return_data[i]);
+					return_data = (uint32_t) buff[3 + i*4];
+					//debug_msg("VALUE: %d, %d\n\r", i, return_data);
+					if (menuSetValue(i, return_data) == FALSE) {
+						debug_msg("Parse Error Set Value %d = %d\n", i, return_data);
 					}
 				}
 

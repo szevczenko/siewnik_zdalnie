@@ -30,5 +30,6 @@ uint16_t measure_get_filtered_value(_type_measure type);
 uint16_t measure_get_value(_type_measure type);
 float measure_get_current(_type_measure type, float resistor);
 float accum_get_voltage(void);
+float measure_get_temperature(void);
 
 #endif

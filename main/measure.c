@@ -3,9 +3,11 @@
 #include "config.h"
 #include "atmega_communication.h"
 #include "freertos/timers.h"
+#include "menu_param.h"
+#include "parse_cmd.h"
 
-#undef debug_msg
-#define debug_msg(...)
+//#undef debug_msg
+//#define debug_msg(...)
 
 #ifndef ADC_REFRES
 #define ADC_REFRES 1024
@@ -78,7 +80,7 @@ static void measure_process(void * arg)
 {
 	(void)arg;
 	while(1) {
-		vTaskDelay(100 / portTICK_RATE_MS);
+		vTaskDelay(250 / portTICK_RATE_MS);
 		accum_adc = atmega_get_data(AT_R_MEAS_ACCUM); 
 		#if CONFIG_DEVICE_SOLARKA
 		#endif
@@ -117,6 +119,15 @@ static void measure_process(void * arg)
 		if (iteration_adc_accum_table == ACCUMULATOR_SIZE_TAB) iteration_adc_accum_table = 0;
 		if (s_o_t_iteration_adc_table == FILTER_TABLE_S_SIZE) s_o_t_iteration_adc_table = 0;
 		if (iteration_adc_motor_table == FILTER_TABLE_SIZE) iteration_adc_motor_table = 0;
+		
+		menuSetValue(MENU_VOLTAGE_ACCUM, (uint32_t)(accum_get_voltage() * 100.0));
+		menuSetValue(MENU_CURRENT_MOTOR, (uint32_t)(measure_get_current(MEAS_MOTOR, 0.1) * 100.0));
+		menuSetValue(MENU_TEMPERATURE, (uint32_t)(measure_get_temperature() * 100.0));
+		/* DEBUG */
+		debug_msg("%d %d %d\n\r", accum_adc, motor_adc, s_o_t_adc);
+		menuPrintParameter(MENU_VOLTAGE_ACCUM);
+		menuPrintParameter(MENU_CURRENT_MOTOR);
+		menuPrintParameter(MENU_TEMPERATURE);
 	}
 }
 
@@ -164,6 +175,11 @@ uint16_t measure_get_value(_type_measure type)
         break;
     }
 	return 0;
+}
+
+float measure_get_temperature(void)
+{
+	return s_o_t_filter_value;
 }
 
 float measure_get_current(_type_measure type, float resistor)

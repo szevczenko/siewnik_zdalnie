@@ -4,6 +4,8 @@
 #include "config.h"
 
 #include "motor.h"
+#include "menu.h"
+#include "menu_param.h"
 
 #undef debug_msg
 #define debug_msg(...)
@@ -90,17 +92,35 @@ int motor_start(void)
 
 int dcmotor_set_pwm(int pwm)
 {
-	if (pwm >= 0 && pwm < 100)
-	{
-		//debug_msg("dcmotor_set_pwm %d\n", pwm);
-		motorD.pwm_value = pwm;
-		CMD_MOTOTR_SET_PWM(count_pwm(motorD.pwm_value));
+	uint32_t pwm_set = 0;
+	if (pwm > 100) {
+		debug_msg("dcmotor_set_pwm > 100 %d\n\r", pwm);
+		pwm = 100;
+	}
+
+	if (pwm < 0) {
+		debug_msg("dcmotor_set_pwm < 0 %d\n\r", pwm);
+		pwm = 0;
+	}
+
+	if (pwm == 0) {
+		motorD.pwm_value = 0;
 		return 1;
 	}
-	else
-	{
-		return 0;
+
+	//debug_msg("dcmotor_set_pwm %d\n", pwm);
+	uint32_t min_value = menuGetValue(MENU_MOTOR_MIN_CALIBRATION);
+	uint32_t max_value = menuGetValue(MENU_MOTOR_MAX_CALIBRATION);
+	uint32_t range = 100;
+	if (min_value > max_value) {
+		debug_msg("dcmotor_set_pwm min_value > max_value\n\r", pwm);
+		min_value = menuGetDefaultValue(MENU_MOTOR_MIN_CALIBRATION);
+		max_value = menuGetDefaultValue(MENU_MOTOR_MAX_CALIBRATION);
 	}
+	pwm_set = (max_value - min_value) * pwm / range + min_value;
+	motorD.pwm_value = pwm_set;
+	CMD_MOTOTR_SET_PWM(count_pwm(motorD.pwm_value));
+	return 1;
 }
 
 int dcmotor_get_pwm(void)

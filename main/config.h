@@ -120,8 +120,8 @@ extern void uartPrintfTimeout(const char *format, ...);
 #define debug_msg(...) { 							\
 		if (config.dev_type == T_DEV_TYPE_SERVER) 	\
 		{											\
-			ets_printf("\n\rESP: ");			\
-			ets_printf(__VA_ARGS__);			\
+			telnetPrintfToAll("\n\rESP: ");			\
+			telnetPrintfToAll(__VA_ARGS__);			\
 		} 											\
 		else { 										\
 			printf(__VA_ARGS__);			\
