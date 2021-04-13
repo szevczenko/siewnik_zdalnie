@@ -25,7 +25,7 @@ Please refer to LICENSE file for licensing information.
 #endif
 
 #if CONFIG_DEVICE_SIEWNIK
-#define DCMOTORPWM_MINVEL dark_menu_get_value(MENU_MOTOR_MINIMUM_REGULATION)
+#define DCMOTORPWM_MINVEL 125
 #endif
 
 //freq = 1 / time

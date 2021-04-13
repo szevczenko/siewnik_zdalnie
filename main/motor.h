@@ -10,7 +10,7 @@
 #endif
 
 #if CONFIG_DEVICE_SIEWNIK
-#define motor_MINVEL dark_menu_get_value(MENU_MOTOR_MINIMUM_REGULATION)
+#define motor_MINVEL 125
 #endif
 
 

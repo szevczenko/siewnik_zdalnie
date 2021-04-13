@@ -19,8 +19,8 @@
 #define FALSE 0 
 //////////////////////////////////////////////////
 // DEVICE
-#define CONFIG_DEVICE_SOLARKA 1
-#define CONFIG_DEVICE_SIEWNIK 0
+#define CONFIG_DEVICE_SOLARKA 0
+#define CONFIG_DEVICE_SIEWNIK 1
 
 #if CONFIG_DEVICE_SOLARKA
 #define CONFIG_VIBRO_TIME_ON 1

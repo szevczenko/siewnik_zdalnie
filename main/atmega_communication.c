@@ -135,9 +135,13 @@ static void atm_com(void * arg) {
 		taskENTER_CRITICAL();
 		motor_pmw = dcmotor_process((uint8_t)menuGetValue(MENU_MOTOR));
 		data_write[AT_W_MOTOR_VALUE] = motor_pmw;
-		#if !CONFIG_DEVICE_SIEWNIK
-		data_write[AT_W_SERVO_VALUE] = (uint16_t)servo_process((uint8_t)menuGetValue(MENU_SERVO));
+		#if CONFIG_DEVICE_SIEWNIK
+		servo_pwm = servo_process((uint8_t)menuGetValue(MENU_SERVO));
+		data_write[AT_W_SERVO_VALUE] = (uint16_t)servo_pwm;
+		data_write[AT_W_SERVO_IS_ON] = (uint16_t)menuGetValue(MENU_SERVO_IS_ON);
 		#endif
+
+		#if CONFIG_DEVICE_SOLARKA
 		vibro_config(menuGetValue(MENU_VIBRO_PERIOD) * 1000, menuGetValue(MENU_VIBRO_WORKING_TIME) * 1000);
 		if (menuGetValue(MENU_SERVO_IS_ON)) {
 			vibro_start();
@@ -145,8 +149,10 @@ static void atm_com(void * arg) {
 		else {
 			vibro_stop();
 		}
-		data_write[AT_W_MOTOR_IS_ON] = (uint16_t)menuGetValue(MENU_MOTOR_IS_ON);
 		data_write[AT_W_SERVO_IS_ON] = (uint16_t)vibro_is_on();
+		#endif
+		
+		data_write[AT_W_MOTOR_IS_ON] = (uint16_t)menuGetValue(MENU_MOTOR_IS_ON);
 
 		if (data_write[AT_W_MOTOR_IS_ON]) {
 			motor_start();

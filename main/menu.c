@@ -45,9 +45,9 @@ uint32_t motor_value;
 uint32_t servo_value;
 bool motor_on;
 static int line_start, line_end, last_button;
-
-#if CONFIG_DEVICE_SIEWNIK
 static int menu_start_line;
+
+#if CONFIG_DEVICE_SOLARKA
 uint32_t menu_start_period_value, menu_start_wt_value;
 #endif
 
@@ -645,7 +645,7 @@ void button_plus_servo_callback(void * arg)
 	{
 	
 		case T_ARG_TYPE_START:
-		#if CONFIG_DEVICE_SIEWNIK
+		#if CONFIG_DEVICE_SOLARKA
 			if (menu_start_line) {
 				if (menu_start_wt_value < 100) {
 					menu_start_wt_value++;
@@ -660,7 +660,7 @@ void button_plus_servo_callback(void * arg)
 					cmdClientSetValueWithoutRespI(MENU_VIBRO_PERIOD, menu_start_period_value);
 				}
 			}
-		#else
+		#elif CONFIG_DEVICE_SIEWNIK
 			if (servo_value < 100) {
 				servo_value++;
 				cmdClientSetValueWithoutRespI(MENU_SERVO, servo_value);
@@ -676,14 +676,14 @@ void button_plus_servo_callback(void * arg)
 
 static void servo_fast_add(uint32_t value) {
 	(void) value;
-	#if CONFIG_DEVICE_SIEWNIK
+	#if CONFIG_DEVICE_SOLARKA
 	if (menu_start_line) {
 		cmdClientSetValueWithoutResp(MENU_VIBRO_WORKING_TIME, menu_start_wt_value);
 	}
 	else {
 		cmdClientSetValueWithoutResp(MENU_VIBRO_PERIOD, menu_start_period_value);
 	}
-	#else
+	#elif CONFIG_DEVICE_SIEWNIK
 	cmdClientSetValueWithoutResp(MENU_SERVO, servo_value);
 	#endif
 	//debug_msg("servo_value %d\n", servo_value);
@@ -696,14 +696,14 @@ void button_plus_servo_time_callback(void * arg)
 	switch(menu->arg_type){
 
 		case T_ARG_TYPE_START:
-			#if CONFIG_DEVICE_SIEWNIK
+			#if CONFIG_DEVICE_SOLARKA
 			if (menu_start_line) {
 				fastProcessStart(&menu_start_wt_value, 100, 0, FP_PLUS, servo_fast_add);
 			}
 			else {
 				fastProcessStart(&menu_start_period_value, 100, 0, FP_PLUS, servo_fast_add);
 			}
-			#else
+			#elif CONFIG_DEVICE_SIEWNIK
 			fastProcessStart(&servo_value, 100, 0, FP_PLUS, servo_fast_add);
 			#endif
 		break;
@@ -723,10 +723,10 @@ void button_plus_servo_up_callback(void * arg)
 	{
 		
 		case T_ARG_TYPE_START:
-		#if CONFIG_DEVICE_SIEWNIK
+		#if CONFIG_DEVICE_SOLARKA
 			fastProcessStop(&menu_start_wt_value);
 			fastProcessStop(&menu_start_period_value);
-		#else
+		#elif CONFIG_DEVICE_SIEWNIK
 			fastProcessStop(&servo_value);
 		#endif
 		save_parameters();
@@ -747,7 +747,7 @@ void button_minus_servo_callback(void * arg)
 	{
 	
 		case T_ARG_TYPE_START:
-		#if CONFIG_DEVICE_SIEWNIK
+		#if CONFIG_DEVICE_SOLARKA
 			if (menu_start_line) {
 				if (menu_start_wt_value > 0) {
 					menu_start_wt_value--;
@@ -762,7 +762,7 @@ void button_minus_servo_callback(void * arg)
 					cmdClientSetValueWithoutRespI(MENU_VIBRO_PERIOD, menu_start_period_value);
 				}
 			}
-		#else
+		#elif CONFIG_DEVICE_SIEWNIK
 			if (servo_value > 0) {
 				servo_value--;
 				cmdClientSetValueWithoutRespI(MENU_SERVO, servo_value);
@@ -784,14 +784,14 @@ void button_minus_servo_time_callback(void * arg)
 	switch(menu->arg_type){
 
 		case T_ARG_TYPE_START:
-			#if CONFIG_DEVICE_SIEWNIK
+			#if CONFIG_DEVICE_SOLARKA
 			if (menu_start_line) {
 				fastProcessStart(&menu_start_wt_value, 100, 0, FP_MINUS, servo_fast_add);
 			}
 			else {
 				fastProcessStart(&menu_start_period_value, 100, 0, FP_MINUS, servo_fast_add);
 			}
-			#else
+			#elif CONFIG_DEVICE_SIEWNIK
 			fastProcessStart(&servo_value, 100, 0, FP_MINUS, servo_fast_add);
 			#endif
 		break;
@@ -810,10 +810,10 @@ void button_minus_servo_up_callback(void * arg)
 	{
 		
 		case T_ARG_TYPE_START:
-			#if CONFIG_DEVICE_SIEWNIK
+			#if CONFIG_DEVICE_SOLARKA
 			fastProcessStop(&menu_start_wt_value);
 			fastProcessStop(&menu_start_period_value);
-			#else
+			#elif CONFIG_DEVICE_SIEWNIK
 			fastProcessStop(&servo_value);
 			#endif
 			save_parameters();
@@ -1163,7 +1163,7 @@ static void menu_task(void * arg)
 							drawMotor(2, 10 - cnt);
 						}
 					}
-					#if CONFIG_DEVICE_SIEWNIK
+					#if CONFIG_DEVICE_SOLARKA
 
 					/* PERIOD CURSOR */
 					#define MENU_START_OFFSET 42
@@ -1193,7 +1193,7 @@ static void menu_task(void * arg)
 					{
 						ssd1306_WriteString(menu_buff, Font_7x10, White);
 					}
-					#else
+					#elif CONFIG_DEVICE_SIEWNIK
 					servo_bar.fill = servo_value;
 					sprintf(str, "%d", servo_bar.fill);
 					ssdFigureDrawLoadBar(&servo_bar);
@@ -1344,8 +1344,16 @@ void menuEnterStartProcess(void) {
 	servo_vibro_on = menuGetValue(MENU_SERVO_IS_ON);
 	motor_on = menuGetValue(MENU_MOTOR_IS_ON);
 	motor_value = menuGetValue(MENU_MOTOR);
+	
+	#if CONFIG_DEVICE_SOLARKA
 	menu_start_wt_value = menuGetValue(MENU_VIBRO_WORKING_TIME);
 	menu_start_period_value = menuGetValue(MENU_VIBRO_PERIOD);
+	#endif
+
+	#if CONFIG_DEVICE_SIEWNIK
+	servo_value = menuGetValue(MENU_SERVO);
+	#endif
+
 	cmdClientSetValueWithoutRespI(MENU_START_SYSTEM, 1);
 	cmdClientSetAllValue();
 	update_screen();
