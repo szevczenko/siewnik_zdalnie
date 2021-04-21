@@ -213,12 +213,13 @@ void menu_start_find_device_I(void)
 	for (uint16_t i = 0; i < ap_count; i++)
 	{
 		wifiDrvGetNameFromScannedList(i, dev_name);
-		//debug_msg("%s\n", dev_name);
 		if (memcmp(dev_name, WIFI_AP_NAME, strlen(WIFI_AP_NAME) - 1) == 0)
 		{
+			debug_msg("%s\n", dev_name);
 			strcpy(wifi_device_list[dev_count++], dev_name);
 		}
 	}
+	debug_msg("Dev found %d\n", dev_count);
 	wifiState = ST_WIFI_DEVICE_LIST;
 }
 
@@ -996,7 +997,7 @@ static void menu_task(void * arg)
 	while(1)
 	{
 		xSemaphoreTake( xSemaphore, ( TickType_t ) MS2ST(500) );
-		//taskENTER_CRITICAL();
+		taskENTER_CRITICAL();
 		save_process();
 		menu = last_tab_element();
 		if (menu == NULL) 
@@ -1220,7 +1221,7 @@ static void menu_task(void * arg)
 						ssd1306_SetCursor(2, MENU_HEIGHT + 2*LINE_HEIGHT);
 						ssd1306_WriteString("Click button for", Font_7x10, White);
 						ssd1306_SetCursor(2, MENU_HEIGHT + 3*LINE_HEIGHT);
-						ssd1306_WriteString("try found device", Font_7x10, White);
+						ssd1306_WriteString("try find device", Font_7x10, White);
 						break;
 					}
 					if (line_end - line_start != MAX_LINE - 1)
@@ -1241,7 +1242,7 @@ static void menu_task(void * arg)
 							line_start = line_end - MAX_LINE + 1;
 						}
 					}
-					//debug_msg("position %d, dev_count %d\n", menu->position, dev_count);
+					//debug_msg("position %d, dev_count %d line_start %d\n", menu->position, dev_count, line_start);
 					int line = 0;
 					do
 					{
@@ -1257,7 +1258,7 @@ static void menu_task(void * arg)
 						}
 						
 						line++;
-					} while (line + line_start < dev_count - 1 && line < MAX_LINE);
+					} while (line + line_start < dev_count && line < MAX_LINE);
 					scrollBar.actual_line = menu->position;
 					scrollBar.all_line = dev_count - 1;
 					ssdFigureDrawScrollBar(&scrollBar);
@@ -1336,7 +1337,7 @@ static void menu_task(void * arg)
 		/* Update status led */
 		MOTOR_LED_SET(motor_on);
 		SERVO_VIBRO_LED_SET(servo_vibro_on);
-		//taskEXIT_CRITICAL();
+		taskEXIT_CRITICAL();
 	}
 }
 
