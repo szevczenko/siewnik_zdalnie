@@ -48,5 +48,20 @@
             "utility": "c",
             "sdkconfig.h": "c"
         },
+        "files.exclude": {
+            "**/.git": true,         // this is a default value
+            "avr_code": true,    // this is a default value
+
+            "avr_siewnik": true, // this excludes all folders 
+                                    // named "node_modules" from 
+                                    // the explore tree
+        },
+        "search.exclude": {
+            "**/.git": true,         // this is a default value
+            "avr_code": true,    // this is a default value
+
+            "avr_siewnik": true, 
+            "freertos": true, 
+        }
     }
 }    

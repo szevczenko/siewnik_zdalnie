@@ -88,12 +88,14 @@ uint16_t motor_read_value;
 uint16_t servo_read_value;
 uint16_t servo_vibro_is_on;
 uint16_t motor_is_on;
+uint16_t system_is_on;
 
 void data_process(void) {
 	motor_read_value = atmega_get_data(AT_R_MOTOR_VALUE) & 0xFF;
 	servo_read_value = atmega_get_data(AT_R_SERVO_VIBRO_VALUE);
 	servo_vibro_is_on = atmega_get_data(AT_R_SERVO_VIBRO_IS_ON);
 	motor_is_on = atmega_get_data(AT_R_MOTOR_IS_ON);
+	system_is_on = atmega_get_data(AT_R_SYSTEM_ON);
 	
 	//debug_msg("mot: %d %d, servo: %d %d \n\r",motor_is_on, motor_read_value, servo_vibro_is_on, servo_read_value);
 
@@ -120,6 +122,13 @@ void data_process(void) {
 	}
 	else {
 		OFF_VIBRO_PIN;
+	}
+	
+	if (system_is_on) {
+		ON_SYSTEM_PIN;
+	}
+	else {
+		OFF_SYSTEM_PIN;
 	}
 }
 
@@ -194,5 +203,6 @@ void atm_com_process(void) {
 
 void at_communication_init(void) {
 	VIBRO_INIT_PIN;
+	SYSTEM_INIT_PIN;
 	evTime_init(&xTimers);
 }

@@ -167,12 +167,16 @@ void app_main()
     else {
 
         uart_init(57600);
+        #if CONFIG_DEVICE_SOLARKA
         vibro_init();
+        #endif
+        #if CONFIG_DEVICE_SIEWNIK
+        measure_start();
+        #endif
         at_communication_init();
         motor_init();
         //WYLACZONE
         //errorSiewnikStart();
-        measure_start();
         //LED on
         io_conf.intr_type = GPIO_INTR_DISABLE;
         io_conf.mode = GPIO_MODE_OUTPUT;

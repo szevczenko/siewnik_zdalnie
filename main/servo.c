@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 #include "servo.h"
+#include "menu_param.h"
 //#include "error_siewnik.h"
 
 #define LED_SERVO_OFF
@@ -24,21 +25,14 @@ static void servo_exit_try(void);
 sDriver servoD;
 static uint8_t try_count = 0;
 
-static void set_pwm(uint16_t pwm)
-{
-	#if !TEST_APP
-	//OCR1A = pwm;
-	#endif
-	//OCR1B = pwm;
-}
-
 void servo_set_pwm_val(uint8_t value)
 {
-	int min = 2000 /*+ (50 - dark_menu_get_value(MENU_CLOSE_SERVO_REGULATION))*10 */;
-	int max = 1275 /*+ (50 - dark_menu_get_value(MENU_OPEN_SERVO_REGULATION))*10 */;
+	int min = 2000 + (50 - menuGetValue(MENU_CLOSE_SERVO_REGULATION))*10;
+	int max = 1275 + (50 - menuGetValue(MENU_OPEN_SERVO_REGULATION))*10;
 	uint16_t pwm = (uint16_t)((float)(max-min)*(float)value/(float)99 + (float)min);
 	//debug_msg("REG: close %d, open %d, pwm %d\n", min, max, pwm);
-	set_pwm(pwm);
+	servoD.value = pwm;
+	
 	/*if (value == 0)
 	set_pwm(2000);
 	else if(value < 50)
@@ -243,8 +237,10 @@ static void servo_exit_try(void)
 	servoD.try_cnt++;
 }
 
-uint8_t servo_process(uint8_t value)
+uint16_t servo_process(uint16_t value)
 {
+	servo_set_pwm_val(value);
+	#if 0
 	if (value == 0 && servoD.value != 0) {
 		servo_close();
 		return 0;
@@ -284,6 +280,7 @@ uint8_t servo_process(uint8_t value)
 		servoD.timeout = 0;
 		debug_msg("SERVO: Zero try cnt\n");
 	}
+	#endif
 	return servoD.value;
 }
 

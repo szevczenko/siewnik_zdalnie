@@ -25,6 +25,7 @@ typedef enum
 	AT_W_SERVO_VALUE,
 	AT_W_MOTOR_IS_ON,
 	AT_W_SERVO_IS_ON,
+	AT_W_SYSTEM_ON,
 	AT_W_LAST_POSITION,
 }atmega_data_write_t;
 

@@ -39,14 +39,14 @@ typedef struct
 	uint8_t state;
 	uint8_t last_state;
 	uint8_t error_code;
-	uint8_t value; // 0 - 100%
+	uint16_t value; // PWM 16bit timer
 	TickType_t timeout;
 	uint8_t try_cnt;
 }sDriver;
 
 void servo_init(uint8_t prescaler);
 void servo_error(uint8_t close);
-uint8_t servo_process(uint8_t value);
+uint16_t servo_process(uint16_t value);
 int servo_close(void);
 void servo_enable_try(void);
 int servo_open(uint8_t value);

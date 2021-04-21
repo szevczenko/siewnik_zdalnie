@@ -111,11 +111,12 @@ static void measure_process(void * arg)
 		filtered_accum_adc_val = filtered_value(accumulator_tab, ACCUMULATOR_SIZE_TAB);
 		motor_filter_value = filtered_value(motor_f_table, FILTER_TABLE_SIZE);
 		s_o_t_filter_value = filtered_value(s_o_t_f_table, FILTER_TABLE_S_SIZE);
+		#if CONFIG_DEVICE_SIEWNIK
 		if ((debug_msg_counter%160 == 0) || (debug_msg_counter%10 == 0 && SERVO_CALIBRATION_VALUE == 0)) {
 			//debug_msg("ADC_not filtered: accum %d, servo %d, motor %d, calibration %d\n",accum_adc, s_o_t_adc, motor_adc, SERVO_CALIBRATION_VALUE);
 		}
 		debug_msg_counter++;
-		
+		#endif
 		if (iteration_adc_accum_table == ACCUMULATOR_SIZE_TAB) iteration_adc_accum_table = 0;
 		if (s_o_t_iteration_adc_table == FILTER_TABLE_S_SIZE) s_o_t_iteration_adc_table = 0;
 		if (iteration_adc_motor_table == FILTER_TABLE_SIZE) iteration_adc_motor_table = 0;
@@ -133,8 +134,10 @@ static void measure_process(void * arg)
 
 void measure_start(void) {
 	xTaskCreate(measure_process, "measure_process", 1024, NULL, 10, NULL);
+	#if CONFIG_DEVICE_SIEWNIK
 	xTimers = xTimerCreate("at_com_tim", 2000 / portTICK_RATE_MS, pdFALSE, ( void * ) 0, measure_get_servo_calibration);
 	xTimerStart( xTimers, 0 );
+	#endif
 }
 
 uint16_t measure_get_filtered_value(_type_measure type)

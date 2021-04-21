@@ -153,6 +153,7 @@ static void atm_com(void * arg) {
 		#endif
 		
 		data_write[AT_W_MOTOR_IS_ON] = (uint16_t)menuGetValue(MENU_MOTOR_IS_ON);
+		data_write[AT_W_SYSTEM_ON] = (uint16_t)menuGetValue(MENU_START_SYSTEM);
 
 		if (data_write[AT_W_MOTOR_IS_ON]) {
 			motor_start();
