@@ -8,7 +8,6 @@
 			"type": "process",
 			"isBackground": true,
 			"options": {
-			  "cwd": "C:\\Users\\Comarch\\Downloads\\OpenOCD-20200729-0.10.0\\bin",
 			},
 			"command": "openocd.exe",
 			"args": ["-s", "C:\\msys32\\home\\Demetriusz\\esp\\esp8266-openocd\\tcl", "-f", "interface/jlink.cfg", "-f", "target/esp8266.cfg"],
