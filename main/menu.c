@@ -855,24 +855,17 @@ void button_motor_state(void * arg)
 	update_screen();
 }
 
-void button_servo_state(void * arg)
+void button_system_state(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
-	debug_function_name("button_servo_state");
+	debug_function_name("button_system_state");
+	debug_msg("button_system_state");
 	switch(menu->arg_type)
 	{
 		
 		case T_ARG_TYPE_START:
-			xTimerStop(xTimers, 0);
-			if (servo_vibro_on) {
-				servo_vibro_on = 0;
-				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_vibro_on);
-			}
-			else {
-				servo_vibro_on = 1;
-				cmdClientSetValueWithoutRespI(MENU_SERVO_IS_ON, servo_vibro_on);
-			}
+			
 		break;
 
 		default:
@@ -946,7 +939,7 @@ void menuActivateButtons(void)
 	button3.fall_callback = button_enter_callback;
 	button8.fall_callback = button_exit_callback;
 	button9.fall_callback = button_motor_state;
-	//button10.fall_callback = button_servo_state;
+	button10.fall_callback = button_system_state;
 }
 
 void menuPrintfInfo(const char *format, ...)

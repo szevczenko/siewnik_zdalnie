@@ -13,6 +13,7 @@
 #include "stdint.h"
 #include "but.h"
 #include "pcf8574.h"
+#include "buzzer.h"
 
 
 
@@ -137,9 +138,11 @@ static void process_button(void * arg)
 			if(red_val != but_tab[i]->value)
 			{
 				but_tab[i]->value = red_val;
-				if (red_val == 1 && but_tab[i]->rise_callback != 0)
-				{
-					but_tab[i]->rise_callback(but_tab[i]);
+				if (red_val == 1) {
+					buzzer_click();
+					if (but_tab[i]->rise_callback != 0) {
+						but_tab[i]->rise_callback(but_tab[i]);
+					}
 				}
 				else if(red_val == 0 && but_tab[i]->fall_callback != 0) {
 					but_tab[i]->fall_callback(but_tab[i]);

@@ -25,7 +25,7 @@ void init_buttons(void);
 #define BUT7_GPIO 1
 #define BUT8_GPIO 4
 #define BUT9_GPIO 14
-#define BUT10_GPIO 2
+#define BUT10_GPIO 16
 
 
 typedef struct

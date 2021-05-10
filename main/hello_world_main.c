@@ -34,7 +34,8 @@
 #include "motor.h"
 #include "vibro.h"
 #include "esp_attr.h"
-
+#include "buzzer.h"
+#include "esp_sleep.h"
 
 uint16_t test_value;
 static gpio_config_t io_conf;
@@ -163,6 +164,7 @@ void app_main()
         io_conf.pull_down_en = 0;
         io_conf.pull_up_en = 0;
         gpio_config(&io_conf);
+        buzzer_init();
     }
     else {
 
@@ -211,5 +213,8 @@ void app_main()
         {
             //debug_msg("CLIENT INIT\n\r");
         }
+
+        // vTaskDelay(MS2ST(5000));
+        // esp_deep_sleep(5000000);
     }
 }
