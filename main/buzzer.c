@@ -3,11 +3,11 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "driver/gpio.h"
 #include "config.h"
+#include "buzzer.h"
 
-#define BUZZER_ON()
-#define BUZZER_OFF()
-#define BUZZER_INIT()
+#define BUZZER_INIT() 
 
 static uint32_t buzzer_timer;
 
@@ -15,10 +15,9 @@ void buzzer_click(void)
 {
 	buzzer_timer = xTaskGetTickCount() + MS2ST(100);
 	BUZZER_ON();
-	debug_msg("buzzer on \n\r");
 }
 
-static void buzzer_task(void)
+static void buzzer_task(void * arg)
 {
 	
 	while(1)
@@ -27,7 +26,6 @@ static void buzzer_task(void)
 		{
 			BUZZER_OFF();
 			buzzer_timer = 0;
-			debug_msg("buzzer off\n\r");
 		}
 		vTaskDelay(MS2ST(20));
 	}
@@ -36,6 +34,18 @@ static void buzzer_task(void)
 void buzzer_init(void)
 {
 	BUZZER_INIT();
+	gpio_config_t io_conf;
+	//disable interrupt
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    //disable pull-down mode
+    io_conf.pull_down_en = 0;
+	//interrupt of rising edge
+	io_conf.pin_bit_mask = (1ULL << BUZZER_PIN);
+    //set as input mode
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    //enable pull-up mode
+    io_conf.pull_up_en = 0;
+    gpio_config(&io_conf);
 	BUZZER_OFF();
-	xTaskCreate(buzzer_task, "buzzer_task", 1024, NULL, 12, NULL);
+	xTaskCreate(buzzer_task, "buzzer_task", 1024, NULL, 13, NULL);
 }

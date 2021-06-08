@@ -25,7 +25,7 @@ void init_buttons(void);
 #define BUT7_GPIO 1
 #define BUT8_GPIO 4
 #define BUT9_GPIO 14
-#define BUT10_GPIO 16
+#define BUT10_GPIO 12
 
 
 typedef struct
@@ -50,6 +50,5 @@ typedef enum
 }   but_state;
 
 extern but_t button1, button2, button3, button4, button5, button6, button7, button8, button9, button10;
-
 
 #endif /* BUT_H_ */

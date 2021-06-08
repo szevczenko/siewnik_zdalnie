@@ -36,6 +36,7 @@
 #include "esp_attr.h"
 #include "buzzer.h"
 #include "esp_sleep.h"
+#include "sleep_e.h"
 
 uint16_t test_value;
 static gpio_config_t io_conf;
@@ -151,12 +152,13 @@ void app_main()
     menuParamInit();
     if (config.dev_type != T_DEV_TYPE_SERVER)
     {
-        //uart_init(CONFIG_CONSOLE_SERIAL_SPEED);
         battery_init();
         init_buttons();
         fastProcessStartTask();
         ssd1306_Init();
         init_menu();
+        init_sleep();
+        // Inicjalizacja diod
         blink_pin = GPIO_NUM_15;
         io_conf.intr_type = GPIO_INTR_DISABLE;
         io_conf.mode = GPIO_MODE_OUTPUT;
@@ -213,8 +215,5 @@ void app_main()
         {
             //debug_msg("CLIENT INIT\n\r");
         }
-
-        // vTaskDelay(MS2ST(5000));
-        // esp_deep_sleep(5000000);
     }
 }

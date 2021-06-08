@@ -9,6 +9,7 @@ typedef enum
 	T_ARG_TYPE_START,
 	T_ARG_TYPE_WIFI,
 	T_ARG_TYPE_INFO,
+	T_ARG_TYPE_SLEEP,
 	T_ARG_TYPE_PARAMETERS
 }menu_token_type_t;
 

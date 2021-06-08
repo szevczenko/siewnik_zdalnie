@@ -30,10 +30,26 @@
             "IDF_PATH": "/home/dmytro/esp/ESP8266_RTOS_SDK",
             "OPENOCD_SCRIPTS": "${env:IDF_TOOLS_PATH}/tools/openocd-esp32/v0.10.0-esp32-20200309/openocd-esp32/share/openocd/scripts",
         },
-        "terminal.integrated.shell.windows": "C:/msys32/usr/bin/bash.exe",
-        "terminal.integrated.shellArgs.windows": [
-            "--login",
-        ],
+        "terminal.integrated.profiles.windows": {
+            "Git Bash -user": {
+                "source": "Git Bash",
+                "path": ["C:/msys32/usr/bin/bash.exe"],
+                "args": ["--login"],
+                "env": {
+                    "CHERE_INVOKING": "1",
+                    "MSYSTEM": "MINGW32",
+                    "PATH": "${env:PATH}:/home/Demetriusz/esp/xtensa-lx106-elf/bin",
+                    "IDF_PATH": "/home/Demetriusz/esp/ESP8266_RTOS_SDK",
+                    "OPENOCD_SCRIPTS": "${env:IDF_TOOLS_PATH}/tools/openocd-esp32/v0.10.0-esp32-20200309/openocd-esp32/share/openocd/scripts",
+                }
+            }
+        },
+        "terminal.integrated.defaultProfile.windows": "Git Bash -user"
+        // "terminal.integrated.shell.windows": "C:/msys32/usr/bin/bash.exe",
+        // "terminal.integrated.shellArgs.windows": [
+        //     "--login",
+        // ],
+        "terminal.integrated.automationShell.windows": ,
         "editor.insertSpaces": false,
         "editor.tabCompletion": "on",
         "git.ignoreLimitWarning": true,
@@ -46,7 +62,8 @@
             "string_view": "c",
             "initializer_list": "c",
             "utility": "c",
-            "sdkconfig.h": "c"
+            "sdkconfig.h": "c",
+            "wifidrv.h": "c"
         },
         "files.exclude": {
             "**/.git": true,         // this is a default value

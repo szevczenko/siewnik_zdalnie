@@ -22,5 +22,6 @@ int keepAliveCheckError(keepAlive_t * keep);
 void keepAliveStartTask(void);
 void keepAliveStart(keepAlive_t * keep);
 void keepAliveStop(keepAlive_t * keep);
+void sendKeepAliveFrame(void);
 
 #endif

@@ -3,9 +3,6 @@
 #include "keepalive.h"
 #include "parse_cmd.h"
 
-
-
-
 static keepAlive_t * keepAliveTab[8];
 static uint8_t tabSize;
 
@@ -82,6 +79,22 @@ static void keepAliveProcess(void * pv)
 		vTaskDelay(MS2ST(25));
 	}
 	
+}
+
+void sendKeepAliveFrame(void)
+{
+	keepAlive_t * keep;
+	for(uint8_t i = 0; i < tabSize; i++)
+	{
+		keep = keepAliveTab[i];
+		if (keep == NULL) {
+			continue;
+		}
+		if (keep->keepAliveSend != NULL && keep->keepAliveActiveFlag == 1)
+		{
+			keep->keepAliveSend(keep_alive_frame, sizeof(keep_alive_frame));
+		}
+	}
 }
 
 void keepAliveStartTask(void)

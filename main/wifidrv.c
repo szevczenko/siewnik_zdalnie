@@ -34,6 +34,7 @@
 #include "cmd_server.h"
 #include "cmd_client.h"
 #include "menu.h"
+#include "sleep_e.h"
 
 
 #define DEFAULT_SCAN_LIST_SIZE 16
@@ -369,7 +370,10 @@ static void wifi_event_task(void * pv)
         else
         {
           cmdClientStart();
-          clientGetServerStatus();
+          if (is_sleeping())
+          {
+            clientGetServerStatus();
+          }
         }
         
 			}

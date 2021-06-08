@@ -998,44 +998,44 @@ END GROUP
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000     0x2573
+.debug_info     0x00000000     0x255b
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x00000000      0x4e6 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
- .debug_info    0x000004e6      0x3b6 main.o
- .debug_info    0x0000089c      0x182 src/accumulator.o
- .debug_info    0x00000a1e      0x225 src/adc.o
- .debug_info    0x00000c43      0x6fd src/at_communication.o
- .debug_info    0x00001340      0x2bd src/dcmotorpwm.o
- .debug_info    0x000015fd      0x467 src/measure.o
- .debug_info    0x00001a64      0x18b src/system.o
- .debug_info    0x00001bef      0x3ec src/tim.o
- .debug_info    0x00001fdb      0x598 src/usart.o
+ .debug_info    0x000004e6      0x39e main.o
+ .debug_info    0x00000884      0x182 src/accumulator.o
+ .debug_info    0x00000a06      0x225 src/adc.o
+ .debug_info    0x00000c2b      0x6fd src/at_communication.o
+ .debug_info    0x00001328      0x2bd src/dcmotorpwm.o
+ .debug_info    0x000015e5      0x467 src/measure.o
+ .debug_info    0x00001a4c      0x18b src/system.o
+ .debug_info    0x00001bd7      0x3ec src/tim.o
+ .debug_info    0x00001fc3      0x598 src/usart.o
 
-.debug_abbrev   0x00000000     0x120c
+.debug_abbrev   0x00000000     0x11f0
  *(.debug_abbrev)
  .debug_abbrev  0x00000000      0x4a3 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
- .debug_abbrev  0x000004a3      0x1a4 main.o
- .debug_abbrev  0x00000647      0x100 src/accumulator.o
- .debug_abbrev  0x00000747      0x12a src/adc.o
- .debug_abbrev  0x00000871      0x240 src/at_communication.o
- .debug_abbrev  0x00000ab1      0x13c src/dcmotorpwm.o
- .debug_abbrev  0x00000bed      0x1d7 src/measure.o
- .debug_abbrev  0x00000dc4       0xb1 src/system.o
- .debug_abbrev  0x00000e75      0x207 src/tim.o
- .debug_abbrev  0x0000107c      0x190 src/usart.o
+ .debug_abbrev  0x000004a3      0x188 main.o
+ .debug_abbrev  0x0000062b      0x100 src/accumulator.o
+ .debug_abbrev  0x0000072b      0x12a src/adc.o
+ .debug_abbrev  0x00000855      0x240 src/at_communication.o
+ .debug_abbrev  0x00000a95      0x13c src/dcmotorpwm.o
+ .debug_abbrev  0x00000bd1      0x1d7 src/measure.o
+ .debug_abbrev  0x00000da8       0xb1 src/system.o
+ .debug_abbrev  0x00000e59      0x207 src/tim.o
+ .debug_abbrev  0x00001060      0x190 src/usart.o
 
-.debug_line     0x00000000     0x157e
+.debug_line     0x00000000     0x1570
  *(.debug_line .debug_line.* .debug_line_end)
  .debug_line    0x00000000      0x115 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
- .debug_line    0x00000115      0x273 main.o
- .debug_line    0x00000388       0xf9 src/accumulator.o
- .debug_line    0x00000481      0x1b0 src/adc.o
- .debug_line    0x00000631      0x368 src/at_communication.o
- .debug_line    0x00000999      0x1e6 src/dcmotorpwm.o
- .debug_line    0x00000b7f      0x2bf src/measure.o
- .debug_line    0x00000e3e      0x121 src/system.o
- .debug_line    0x00000f5f      0x26f src/tim.o
- .debug_line    0x000011ce      0x3b0 src/usart.o
+ .debug_line    0x00000115      0x265 main.o
+ .debug_line    0x0000037a       0xf9 src/accumulator.o
+ .debug_line    0x00000473      0x1b0 src/adc.o
+ .debug_line    0x00000623      0x368 src/at_communication.o
+ .debug_line    0x0000098b      0x1e6 src/dcmotorpwm.o
+ .debug_line    0x00000b71      0x2bf src/measure.o
+ .debug_line    0x00000e30      0x121 src/system.o
+ .debug_line    0x00000f51      0x26f src/tim.o
+ .debug_line    0x000011c0      0x3b0 src/usart.o
 
 .debug_frame    0x00000000      0x5e8
  *(.debug_frame)
@@ -1049,26 +1049,26 @@ END GROUP
  .debug_frame   0x000003b4      0x114 src/tim.o
  .debug_frame   0x000004c8      0x120 src/usart.o
 
-.debug_str      0x00000000      0xd6c
+.debug_str      0x00000000      0xd65
  *(.debug_str)
  .debug_str     0x00000000      0x196 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
- .debug_str     0x00000196      0x2d8 main.o
-                                0x319 (size before relaxing)
- .debug_str     0x0000046e       0x98 src/accumulator.o
+ .debug_str     0x00000196      0x2d1 main.o
+                                0x312 (size before relaxing)
+ .debug_str     0x00000467       0x98 src/accumulator.o
                                 0x24d (size before relaxing)
- .debug_str     0x00000506       0xb7 src/adc.o
+ .debug_str     0x000004ff       0xb7 src/adc.o
                                 0x23d (size before relaxing)
- .debug_str     0x000005bd      0x26d src/at_communication.o
+ .debug_str     0x000005b6      0x26d src/at_communication.o
                                 0x46e (size before relaxing)
- .debug_str     0x0000082a       0xba src/dcmotorpwm.o
+ .debug_str     0x00000823       0xba src/dcmotorpwm.o
                                 0x2c0 (size before relaxing)
- .debug_str     0x000008e4      0x135 src/measure.o
+ .debug_str     0x000008dd      0x135 src/measure.o
                                 0x37c (size before relaxing)
- .debug_str     0x00000a19      0x19d src/system.o
+ .debug_str     0x00000a12      0x19d src/system.o
                                 0x35a (size before relaxing)
- .debug_str     0x00000bb6       0x99 src/tim.o
+ .debug_str     0x00000baf       0x99 src/tim.o
                                 0x2e4 (size before relaxing)
- .debug_str     0x00000c4f      0x11d src/usart.o
+ .debug_str     0x00000c48      0x11d src/usart.o
                                 0x2ce (size before relaxing)
 
 .debug_loc      0x00000000     0x12b9

@@ -12,6 +12,10 @@
 #include "battery.h"
 #include "vibro.h"
 #include "driver/gpio.h"
+#include "esp_sleep.h"
+#include "esp_wifi.h"
+#include "buzzer.h"
+#include "sleep_e.h"
 
 //#undef debug_msg
 //#define debug_msg(...) //debug_msg( __VA_ARGS__)
@@ -112,6 +116,12 @@ menu_token_t main_menu =
 	.name = "MENU",
 	.arg_type = T_ARG_TYPE_MENU,
 	.menu_list = main_menu_tokens
+};
+
+menu_token_t sleep_menu = 
+{
+	.name = "SLEEP",
+	.arg_type = T_ARG_TYPE_SLEEP,
 };
 
 
@@ -855,23 +865,46 @@ void button_motor_state(void * arg)
 	update_screen();
 }
 
+void light_sleep(void)
+{
+	debug_msg("light_sleep\n\r");
+	//esp_sleep_enable_gpio_wakeup();
+	//gpio_wakeup_enable(WAKE_UP_PIN, GPIO_INTR_ANYEDGE);
+	esp_sleep_enable_timer_wakeup(10 * 1000000);
+	esp_wifi_stop();
+	ssd1306_Fill(Black);
+	ssd1306_UpdateScreen();
+	BUZZER_OFF();
+	esp_err_t ret = esp_light_sleep_start();
+	debug_msg("light_sleep %d\n\r", ret);
+}
+
 void button_system_state(void * arg)
 {
 	menu_token_t * menu = last_tab_element();
 	if (menu == NULL) return;
 	debug_function_name("button_system_state");
-	debug_msg("button_system_state");
-	switch(menu->arg_type)
+	if (is_sleeping())
 	{
-		
-		case T_ARG_TYPE_START:
-			
-		break;
-
-		default:
-			return;
+		if (menu->arg_type == T_ARG_TYPE_SLEEP)
+		{
+			remove_last_menu_tab();
+		}
+		go_to_wake_up();
+		debug_msg("go_to_wake_up\n\r");
 	}
-	update_screen();
+	else
+	{
+		if (menu->arg_type != T_ARG_TYPE_SLEEP)
+		{
+			add_menu_tab(&sleep_menu);
+		}
+		go_to_sleep();
+		debug_msg("go_to_sleep\n\r");
+	}
+	
+	//light_sleep();
+
 }
 
 //toDo testowanie connect disconnect wifi
@@ -1007,6 +1040,18 @@ static void menu_task(void * arg)
 
 		switch(menu->arg_type)
 		{
+			case T_ARG_TYPE_SLEEP:
+				if (!is_sleeping())
+				{
+					ssd1306_SetCursor(2, MENU_HEIGHT + 2*LINE_HEIGHT);
+					ssd1306_WriteString("Go to sleep...", Font_7x10, White);
+				}
+				else 
+				{
+					ssd1306_Fill(Black);
+				}
+				break;
+
 			case T_ARG_TYPE_BOOL:
 				if (menu->value == NULL) 
 				{
