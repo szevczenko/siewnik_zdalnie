@@ -36,7 +36,7 @@ int cmdClientSend(uint8_t * buffer, uint32_t len);
 void cmdClientSetIp(char * ip);
 void cmdClientSetPort(uint32_t port);
 void cmdClientDisconnect(void);
-int cmdClientConnect(uint32_t timeout);
+int cmdClientTryConnect(uint32_t timeout);
 int cmdClientIsConnected(void);
 int cmdClientSendDataWaitResp(uint8_t * buff, uint32_t len, uint8_t * buff_rx, uint32_t * rx_len, uint32_t timeout);
 int cmdClientAnswerData(uint8_t * buff, uint32_t len);

@@ -11,6 +11,10 @@
 #define WIFI_AP_PASSWORD "12345678"
 #endif
 
+#ifndef CONFIG_USE_TCPIP
+#define CONFIG_USE_TCPIP 1
+#endif
+
 typedef struct
 {
   char ssid[33];

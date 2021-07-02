@@ -100,9 +100,9 @@ static void sleep_task(void * arg)
 					debug_msg("wifiDrvConnected\n\r");
 					if(!cmdClientIsConnected())
 					{
-						if (cmdClientConnect(3000) == 1)
+						if (cmdClientTryConnect(3000) == 1)
 						{
-							debug_msg("cmdClientConnected\n\r");
+							debug_msg("cmdClientTryConnected\n\r");
 							sendKeepAliveFrame();
 							vTaskDelay(MS2ST(1000));
 						}

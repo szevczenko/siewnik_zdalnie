@@ -2,11 +2,7 @@
 
 #include "config.h"
 #include "configCmd.h"
-//#include "led.h"
-
 #include "stdio.h"
-
-
 #include "nvs_flash.h"
 
 #define STORAGE_NAMESPACE "ESP32_CONFIG"

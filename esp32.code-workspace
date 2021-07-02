@@ -4,10 +4,7 @@
             "path": "."
         },
         {
-            "path": "..\\ESP8266_RTOS_SDK"
-        },
-        {
-            "path": "../../esp/ESP8266_RTOS_SDK"
+            "path": "tools/ESP8266_RTOS_SDK"
         }
     ],
     
@@ -21,35 +18,19 @@
         "terminal.integrated.env.windows": {
             "CHERE_INVOKING": "1",
             "MSYSTEM": "MINGW32",
-            "PATH": "${env:PATH}:/home/Demetriusz/esp/xtensa-lx106-elf/bin",
-            "IDF_PATH": "/home/Demetriusz/esp/ESP8266_RTOS_SDK",
+            "PATH": "${env:PATH}/usr/bin:./tools/python:./tools/python/Scripts:./tools/python/Scripts",
+            "IDF_PATH": "${workspaceFolder}/tools/ESP8266_RTOS_SDK",
+            "IDF_TOOLS_PATH": "${workspaceFolder}/tools",
             "OPENOCD_SCRIPTS": "${env:IDF_TOOLS_PATH}/tools/openocd-esp32/v0.10.0-esp32-20200309/openocd-esp32/share/openocd/scripts",
         },
-        "terminal.integrated.env.linux": {
-            "PATH": "${env:PATH}:/home/dmytro/esp/xtensa-lx106-elf/bin",
-            "IDF_PATH": "/home/dmytro/esp/ESP8266_RTOS_SDK",
-            "OPENOCD_SCRIPTS": "${env:IDF_TOOLS_PATH}/tools/openocd-esp32/v0.10.0-esp32-20200309/openocd-esp32/share/openocd/scripts",
+        "terminal.integrated.profiles.windows":{
+            "msys32": {
+                "path": "C:\\WINDOWS\\System32\\cmd.exe",
+                "args": ["/K", "${workspaceFolder}\\tools\\msys32\\usr\\bin\\bash.exe", "--init-file", "tools/ESP8266_RTOS_SDK/export.sh"],
+            },
         },
-        "terminal.integrated.profiles.windows": {
-            "Git Bash -user": {
-                "source": "Git Bash",
-                "path": ["C:/msys32/usr/bin/bash.exe"],
-                "args": ["--login"],
-                "env": {
-                    "CHERE_INVOKING": "1",
-                    "MSYSTEM": "MINGW32",
-                    "PATH": "${env:PATH}:/home/Demetriusz/esp/xtensa-lx106-elf/bin",
-                    "IDF_PATH": "/home/Demetriusz/esp/ESP8266_RTOS_SDK",
-                    "OPENOCD_SCRIPTS": "${env:IDF_TOOLS_PATH}/tools/openocd-esp32/v0.10.0-esp32-20200309/openocd-esp32/share/openocd/scripts",
-                }
-            }
-        },
-        "terminal.integrated.defaultProfile.windows": "Git Bash -user"
-        // "terminal.integrated.shell.windows": "C:/msys32/usr/bin/bash.exe",
-        // "terminal.integrated.shellArgs.windows": [
-        //     "--login",
-        // ],
-        "terminal.integrated.automationShell.windows": ,
+
+        "terminal.integrated.defaultProfile.windows": "msys32",
         "editor.insertSpaces": false,
         "editor.tabCompletion": "on",
         "git.ignoreLimitWarning": true,
@@ -63,7 +44,12 @@
             "initializer_list": "c",
             "utility": "c",
             "sdkconfig.h": "c",
-            "wifidrv.h": "c"
+            "wifidrv.h": "c",
+            "esp_spi_flash.h": "c",
+            "task.h": "c",
+            "stdio.h": "c",
+            "nvs_flash.h": "c",
+            "ethernet.h": "c"
         },
         "files.exclude": {
             "**/.git": true,         // this is a default value

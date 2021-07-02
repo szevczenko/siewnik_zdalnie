@@ -4,7 +4,6 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
-
 #define STORAGE_NAMESPACE "MENU"
 #define PARAMETERS_TAB_SIZE MENU_LAST_VALUE
 
