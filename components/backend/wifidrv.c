@@ -339,7 +339,7 @@ static void wifi_app_ready(void)
 
 void wifiDrvStartScan(void)
 {
-  if (ctx.state != WIFI_APP_IDLE)
+  if (ctx.state == WIFI_APP_IDLE || ctx.state == WIFI_APP_READY)
     return;
   ESP_ERROR_CHECK(esp_wifi_scan_start(NULL, true));
 }
