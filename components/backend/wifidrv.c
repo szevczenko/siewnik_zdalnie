@@ -79,7 +79,7 @@ typedef struct
   wifiConData_t wifi_con_data;
 } wifidrv_ctx_t;
 
-wifidrv_ctx_t ctx;
+static wifidrv_ctx_t ctx;
 
 wifi_config_t wifi_config_ap = {
   .ap = {
@@ -456,7 +456,7 @@ static void clientGetServerStatus(void) {
   /* Go to start menu */
   debug_msg("WifDrv: GO To START MENU\n\r");
   taskENTER_CRITICAL();
-  menuEnterStartFromServer();
+  //menuEnterStartFromServer();
   taskEXIT_CRITICAL();
 }
 

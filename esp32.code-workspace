@@ -18,7 +18,7 @@
         "terminal.integrated.env.windows": {
             "CHERE_INVOKING": "1",
             "MSYSTEM": "MINGW32",
-            "PATH": "${env:PATH}/usr/bin:./tools/python:./tools/python/Scripts:./tools/python/Scripts",
+            "PATH": "/usr/bin:./tools/python:./tools/python/Scripts:./tools/python/Scripts",
             "IDF_PATH": "${workspaceFolder}/tools/ESP8266_RTOS_SDK",
             "IDF_TOOLS_PATH": "${workspaceFolder}/tools",
             "OPENOCD_SCRIPTS": "${env:IDF_TOOLS_PATH}/tools/openocd-esp32/v0.10.0-esp32-20200309/openocd-esp32/share/openocd/scripts",
@@ -49,7 +49,8 @@
             "task.h": "c",
             "stdio.h": "c",
             "nvs_flash.h": "c",
-            "ethernet.h": "c"
+            "ethernet.h": "c",
+            "menu_drv.h": "c"
         },
         "files.exclude": {
             "**/.git": true,         // this is a default value

@@ -140,12 +140,12 @@ static void process_button(void * arg)
 				but_tab[i]->value = red_val;
 				if (red_val == 1) {
 					if (but_tab[i]->rise_callback != 0) {
-						but_tab[i]->rise_callback(but_tab[i]);
+						but_tab[i]->rise_callback(but_tab[i]->arg);
 					}
 				}
 				else if(red_val == 0 && but_tab[i]->fall_callback != 0) {
 					buzzer_click();
-					but_tab[i]->fall_callback(but_tab[i]);
+					but_tab[i]->fall_callback(but_tab[i]->arg);
 				}
 				
 			}
@@ -156,7 +156,7 @@ static void process_button(void * arg)
 				if (but_tab[i]->tim_cnt >=TIMER_CNT_TIMEOUT && but_tab[i]->state != 1)
 				{
 					if (but_tab[i]->timer_callback != 0)
-					but_tab[i]->timer_callback(&button1);
+					but_tab[i]->timer_callback(but_tab[i]->arg);
 					but_tab[i]->tim_cnt = 0;
 					but_tab[i]->state = 1;
 				}

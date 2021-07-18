@@ -24,21 +24,22 @@
 #define MENU_HEIGHT 18
 #define MAX_LINE (SSD1306_HEIGHT - MENU_HEIGHT) / LINE_HEIGHT
 
+#if 0
+
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
 
-menu_token_t * entered_menu_tab[8];
-static SemaphoreHandle_t xSemaphore = NULL;
+
+
 static char wifi_device_list[16][33];
 static char devName[33];
 static char infoBuff[256];
 static uint16_t dev_count;
 static TickType_t connect_timeout;
 static TickType_t animation_timeout;
-static TickType_t save_timeout;
-static uint8_t save_flag;
+
 static uint8_t animation_cnt;
 static uint8_t parameters_menu_flag;
 static TimerHandle_t xTimers;
@@ -77,12 +78,6 @@ loadBar_t servo_bar = {
 };
 
 extern menu_token_t *setting_tokens[];
-
-menu_token_t start_menu = 
-{
-	.name = "START",
-	.arg_type = T_ARG_TYPE_START,
-};
 
 menu_token_t wifi_menu = 
 {
@@ -130,38 +125,6 @@ static void menu_task(void * arg);
 void menuEnterStartProcess(void);
 void menuEnterParametersMenu(void);
 
-static void save_parameters(void) {
-	save_timeout = xTaskGetTickCount() + MS2ST(1000);
-	save_flag = 1;
-}
-
-static void save_process(void) {
-	if (save_flag == 1 && save_timeout < xTaskGetTickCount()) {
-		menuSaveParameters();
-		save_flag = 0;
-	}
-}
-
-static int len_menu(menu_token_t * menu)
-{
-	if (menu->menu_list == NULL)
-	{
-		debug_msg("menu->menu_list == NULL (%s)\n", menu->name);
-		return 0;
-	}
-	int len = 0;
-	menu_token_t ** actual_token = menu->menu_list;
-	do
-	{
-		if (actual_token[len] == NULL)
-		{
-			return len;
-		}
-		len++;
-	} while (len < 255);
-	return 0;
-}
-
 static void error_reset(void) {
 
 	if (cmdClientSendCmdI(PC_CMD_RESET_ERROR) == FALSE) {
@@ -171,44 +134,6 @@ static void error_reset(void) {
 	menuSetValue(MENU_SERVO_ERROR_IS_ON, 0);
 	motor_on = 0;
 	servo_vibro_on = 0;
-}
-
-static menu_token_t * last_tab_element(void)
-{
-	for (uint8_t i = 0; i < 8; i++)
-	{
-		if (entered_menu_tab[i] == NULL && i != 0)
-			return entered_menu_tab[i - 1];
-	}
-	return NULL;
-}
-
-static int tab_len(void)
-{
-	for (uint8_t i = 0; i < 8; i++)
-	{
-		if (entered_menu_tab[i] == NULL)
-			return i;
-	}
-	return 0;
-}
-
-static void add_menu_tab(menu_token_t * menu)
-{
-	int pos = tab_len();
-	entered_menu_tab[pos] = menu;
-}
-
-static void remove_last_menu_tab(void)
-{
-	int pos = tab_len();
-	if (pos > 1)
-		entered_menu_tab[pos - 1] = NULL;
-}
-
-static void update_screen(void)
-{
-	xSemaphoreGive( xSemaphore );
 }
 
 void menu_start_find_device_I(void)
@@ -271,14 +196,6 @@ static int connectToDevice(char *dev)
 		return TRUE;
 	}
 	return FALSE;
-}
-
-static void go_to_main_menu(void)
-{
-	for (uint8_t i = 1; i < 8; i++) {
-		entered_menu_tab[i] = NULL;
-	}
-	update_screen();
 }
 
 void button_up_callback(void * arg)
@@ -1479,4 +1396,6 @@ void menu_test(void * arg)
 
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
+
 #endif

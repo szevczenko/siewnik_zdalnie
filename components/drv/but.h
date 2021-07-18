@@ -36,9 +36,10 @@ typedef struct
 	uint8_t gpio;
 	uint8_t bit;
 	uint8_t is_gpio;
-	void (*rise_callback)(void *button);
-	void (*fall_callback)(void *button);
-	void (*timer_callback)(void *button);
+	void * arg;
+	void (*rise_callback)(void *arg);
+	void (*fall_callback)(void *arg);
+	void (*timer_callback)(void *arg);
 }but_t;
 
 

@@ -1,28 +1,70 @@
 #ifndef _MENU_H_
 #define _MENU_H_
+#include "stdint.h"
 
+#define LAST_BUTTON_UP 			true
+#define LAST_BUTTON_DOWN 		false
 typedef enum
 {
 	T_ARG_TYPE_BOOL,
 	T_ARG_TYPE_VALUE,
 	T_ARG_TYPE_MENU,
-	T_ARG_TYPE_START,
-	T_ARG_TYPE_WIFI,
-	T_ARG_TYPE_INFO,
-	T_ARG_TYPE_SLEEP,
 	T_ARG_TYPE_PARAMETERS
 }menu_token_type_t;
+
+typedef struct
+{
+	void (*new_value)(uint32_t value);
+	bool (*enter)(void * arg);
+	bool (*exit)(void * arg);
+	bool (*process)(void * arg);
+	bool (*button_init_cb)(void * arg);
+} menu_cb_t;
+
+typedef struct
+{
+	void (*rise_callback)(void *button);
+	void (*fall_callback)(void *button);
+	void (*timer_callback)(void *button);
+} menu_but_cb_t;
+
+typedef struct
+{
+	uint8_t start;
+	uint8_t end;
+} menu_line_t;
+
+typedef struct
+{
+	menu_but_cb_t up;
+	menu_but_cb_t down;
+	menu_but_cb_t enter;
+	menu_but_cb_t exit;
+	menu_but_cb_t up_minus;
+	menu_but_cb_t up_plus;
+	menu_but_cb_t down_minus;
+	menu_but_cb_t down_plus;
+	menu_but_cb_t on_off;
+	menu_but_cb_t motor_on;
+}menu_button_t;
 
 typedef struct menu_token
 {
 	int token;
 	char *name;
 	char *help;
-	void (*new_value)(uint32_t value);
 	menu_token_type_t arg_type;
 	struct menu_token **menu_list;
-	uint32_t * value;
+	uint32_t *value;
+	
+	/* For LCD position menu */
 	uint8_t position;
+	menu_line_t line; 
+	bool last_button;
+
+	/* Menu callbacks */
+	menu_cb_t menu_cb;
+	menu_button_t button;
 } menu_token_t;
 
 typedef enum
